@@ -1,10 +1,19 @@
 import * as Comlink from "comlink";
+import { simd } from "wasm-feature-detect";
 
 async function init() {
-  const mod = await import("./pkg/wasm_postflop.js");
+  let mod;
+  if (await simd()) {
+    mod = await import("./pkg-simd/wasm_postflop.js");
+  } else {
+    mod = await import("./pkg/wasm_postflop.js");
+  }
+
   const num_threads = Math.min(navigator.hardwareConcurrency || 1, 6);
+
   await mod.default();
   await mod.initThreadPool(num_threads);
+
   return Comlink.proxy({
     game: null,
     init() {

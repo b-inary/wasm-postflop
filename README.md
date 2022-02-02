@@ -6,12 +6,12 @@ Post-flop solver powered by WebAssembly (under development)
 
 ```sh
 $ # prerequisites
-$ rustup default nightly
+$ rustup install nightly
 $ rustup target add wasm32-unknown-unknown
 $ cargo install wasm-pack
 
 $ # build
-$ wasm-pack build --target web
+$ npm run wasm
 $ npm run build
 
 $ # serve
