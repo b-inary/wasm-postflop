@@ -9,7 +9,7 @@ async function init() {
     mod = await import("./pkg/wasm_postflop.js");
   }
 
-  const num_threads = Math.min(navigator.hardwareConcurrency || 1, 6);
+  const num_threads = navigator.hardwareConcurrency || 1;
 
   await mod.default();
   await mod.initThreadPool(num_threads);

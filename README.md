@@ -1,6 +1,6 @@
 # wasm-postflop
 
-Post-flop solver powered by WebAssembly (under development)
+Post-flop solver powered by WebAssembly (work in progress)
 
 ## Build
 
