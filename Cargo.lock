@@ -174,7 +174,7 @@ checksum = "da32515d9f6e6e489d7bc9d84c71b060db7247dc035bbe44eac88cf87486d8d5"
 [[package]]
 name = "postflop-solver"
 version = "0.1.0"
-source = "git+https://github.com/b-inary/postflop-solver#991b32c83a6f830e2bedc289481e07b6610249aa"
+source = "git+https://github.com/b-inary/postflop-solver#8edca292481f7fca1ebc785badb4cbff591ccfec"
 dependencies = [
  "holdem-hand-evaluator",
  "num-traits",

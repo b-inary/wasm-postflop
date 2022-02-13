@@ -28,9 +28,10 @@ impl GameManager {
             turn_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
             river_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
             max_num_bet: 5,
+            enable_compression: false,
         };
 
-        let game = PostFlopGame::new(&config, None);
+        let game = PostFlopGame::new(&config);
 
         if game.is_ok() {
             Self {
@@ -39,7 +40,7 @@ impl GameManager {
             }
         } else {
             Self {
-                game: Default::default(),
+                game: PostFlopGame::default(),
                 err_string: game.err(),
             }
         }
@@ -49,16 +50,24 @@ impl GameManager {
         self.err_string.clone()
     }
 
-    pub fn solve_step(&self, current_iteration: i32) {
-        solve_step(&self.game, current_iteration);
+    pub fn memory_usage(&self) -> u64 {
+        self.game.memory_usage()
+    }
+
+    pub fn allocate_memory(&mut self) {
+        self.game.allocate_memory();
+    }
+
+    pub fn solve_step(&mut self, current_iteration: i32) {
+        solve_step(&mut self.game, current_iteration);
     }
 
     pub fn exploitability(&self) -> f32 {
         compute_exploitability(&self.game, false)
     }
 
-    pub fn normalize(&self) {
-        normalize_strategy(&self.game);
+    pub fn normalize(&mut self) {
+        normalize_strategy(&mut self.game);
     }
 
     pub fn ev(&self, player: usize) -> f32 {

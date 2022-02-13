@@ -22,6 +22,12 @@ async function init() {
     get_err_string() {
       return this.game.get_err_string();
     },
+    memory_usage() {
+      return this.game.memory_usage();
+    },
+    allocate_memory() {
+      this.game.allocate_memory();
+    },
     iterate(iteration) {
       this.game.solve_step(iteration);
     },

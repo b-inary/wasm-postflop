@@ -8,6 +8,11 @@ const pInit = document.getElementById("init-status");
 /**
  * @type {HTMLParagraphElement}
  */
+const pMem = document.getElementById("mem-status");
+
+/**
+ * @type {HTMLParagraphElement}
+ */
 const pIter = document.getElementById("iter-status");
 
 /**
@@ -46,13 +51,25 @@ stopButton.addEventListener("click", () => {
 
   pInit.innerText = "Initializing...";
   await worker.init();
-  pInit.innerText = "Initialization successful!";
 
   const err_string = await worker.get_err_string();
   if (err_string != null) {
-    pIter.innerText = err_string;
+    pInit.innerText = err_string;
     return;
   }
+
+  pInit.innerText = "Initialization successful!";
+
+  const mem_usage = Number(await worker.memory_usage());
+  const mem_usage_gb = mem_usage / (1024 * 1024 * 1024);
+  pMem.innerText = `Estimated memory usage: ${mem_usage_gb.toFixed(2)}GB`;
+
+  if (mem_usage_gb > 3.9) {
+    pIter.innerText = "Memory usage exceeds the limit of 3.9GB";
+    return;
+  }
+
+  await worker.allocate_memory();
 
   const initialPot = 60;
   const maxIter = 1000;
