@@ -1,5 +1,5 @@
-/dist
-/node_modules
-/pkg
-/pkg-simd
-/target
+/dist/
+/node_modules/
+/pkg/
+/pkg-simd/
+/target/

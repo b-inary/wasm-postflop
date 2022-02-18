@@ -8,6 +8,7 @@ repository = "https://github.com/b-inary/wasm-postflop"
 license = "AGPL-3.0-or-later"
 
 [lib]
+path = "rust/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]

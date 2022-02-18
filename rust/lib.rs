@@ -6,12 +6,17 @@ pub use wasm_bindgen_rayon::init_thread_pool;
 #[wasm_bindgen]
 pub struct GameManager {
     game: PostFlopGame,
-    err_string: Option<String>,
 }
 
 #[wasm_bindgen]
 impl GameManager {
     pub fn new() -> Self {
+        Self {
+            game: PostFlopGame::default(),
+        }
+    }
+
+    pub fn init(&mut self) -> Option<String> {
         // top-40% range
         let oop_range =
             "22+,A2s+,A8o+,K7s+,K9o+,Q8s+,Q9o+,J8s+,J9o+,T8+,97+,86+,75+,64s+,65o,54,43s";
@@ -28,34 +33,22 @@ impl GameManager {
             turn_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
             river_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
             max_num_bet: 5,
-            enable_compression: false,
         };
 
-        let game = PostFlopGame::new(&config);
+        let result = self.game.update_config(&config);
+        result.err()
+    }
 
-        if game.is_ok() {
-            Self {
-                game: game.unwrap(),
-                err_string: None,
-            }
+    pub fn memory_usage(&self, enable_compression: bool) -> u64 {
+        if !enable_compression {
+            self.game.memory_usage().0
         } else {
-            Self {
-                game: PostFlopGame::default(),
-                err_string: game.err(),
-            }
+            self.game.memory_usage().1
         }
     }
 
-    pub fn get_err_string(&self) -> Option<String> {
-        self.err_string.clone()
-    }
-
-    pub fn memory_usage(&self) -> u64 {
-        self.game.memory_usage()
-    }
-
-    pub fn allocate_memory(&mut self) {
-        self.game.allocate_memory();
+    pub fn allocate_memory(&mut self, enable_compression: bool) {
+        self.game.allocate_memory(enable_compression);
     }
 
     pub fn solve_step(&mut self, current_iteration: i32) {
