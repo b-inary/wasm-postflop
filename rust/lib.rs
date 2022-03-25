@@ -32,7 +32,9 @@ impl GameManager {
             flop_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
             turn_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
             river_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
-            max_num_bet: 5,
+            add_all_in_threshold: 0.0,
+            replace_all_in_threshold: 0.0,
+            adjust_last_two_bet_sizes: false,
         };
 
         let result = self.game.update_config(&config);
