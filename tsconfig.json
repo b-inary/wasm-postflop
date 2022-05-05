@@ -4,7 +4,8 @@
     "module": "esnext",
     "strict": true,
     "moduleResolution": "node",
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "preserve"
   },
   "include": ["src/**/*.ts", "src/**/*.vue"]
 }

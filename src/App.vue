@@ -1,75 +1,142 @@
 <template>
-  <p>
-    <label>
-      Number of threads:
-      <input v-model="numThreads" type="number" min="1" max="64" />
-    </label>
-    {{ " " }}
-    <button :disabled="isSolverRunning" @click="buildTree">Build tree</button>
-    <br />
-    Status: {{ treeStatus }}
-  </p>
+  <nav
+    class="sticky top-0 z-30 w-full h-14 shadow-lg px-6 items-center bg-slate-800 flex text-gray-200"
+  >
+    <div class="flex items-center">
+      <a href="#" class="text-2xl font-semibold">WASM Post-flop</a>
+    </div>
 
-  <div v-if="isTreeBuilt">
+    <div class="flex flex-grow"></div>
+
+    <div class="flex items-center">
+      <a
+        href="https://github.com/b-inary/wasm-postflop"
+        class="inline-block px-4 py-2 rounded-md font-semibold hover:bg-slate-700"
+      >
+        GitHub
+      </a>
+    </div>
+  </nav>
+
+  <div class="container mx-auto mt-4 px-6 max-w-screen-xl">
     <p>
       <label>
+        Number of threads:
         <input
-          v-model="enableCompression"
-          type="radio"
-          name="compression"
-          :value="false"
-          :disabled="hasSolverRun || memUsage > maxMemUsage"
+          v-model="numThreads"
+          class="w-20 ml-3 px-2 py-1.5"
+          type="number"
+          min="1"
+          max="64"
         />
-        No compression: needs
-        {{ (memUsage / (1024 * 1024 * 1024)).toFixed(2) }} GB of RAM
-        {{ memUsage <= maxMemUsage ? "(fast)" : "(limit exceeded)" }}
       </label>
+      {{ " " }}
+      <button
+        :class="
+          'rounded-md shadow-sm ml-3 px-4 py-1.5 bg-blue-600 text-white hover:bg-blue-700 ' +
+          'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ' +
+          'disabled:opacity-40 disabled:bg-blue-600 disabled:cursor-not-allowed'
+        "
+        :disabled="isSolverRunning"
+        @click="buildTree"
+      >
+        Build tree
+      </button>
       <br />
-      <label>
-        <input
-          v-model="enableCompression"
-          type="radio"
-          name="compression"
-          :value="true"
+      Status: {{ treeStatus }}
+    </p>
+
+    <div v-if="isTreeBuilt" class="mt-4">
+      <p>
+        <label>
+          <input
+            v-model="enableCompression"
+            class="mr-2"
+            type="radio"
+            name="compression"
+            :value="false"
+            :disabled="hasSolverRun || memUsage > maxMemUsage"
+          />
+          No compression: needs
+          {{ (memUsage / (1024 * 1024 * 1024)).toFixed(2) }} GB of RAM
+          {{ memUsage <= maxMemUsage ? "(fast)" : "(limit exceeded)" }}
+        </label>
+        <br />
+        <label>
+          <input
+            v-model="enableCompression"
+            class="mr-2"
+            type="radio"
+            name="compression"
+            :value="true"
+            :disabled="hasSolverRun || memUsageCompressed > maxMemUsage"
+          />
+          Use compression: needs
+          {{ (memUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) }} GB of RAM
+          {{ memUsageCompressed <= maxMemUsage ? "" : "(limit exceeded)" }}
+        </label>
+      </p>
+
+      <p class="mt-4">
+        <button
+          :class="
+            'rounded-md shadow-sm px-4 py-1.5 bg-blue-600 text-white hover:bg-blue-700 ' +
+            'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ' +
+            'disabled:opacity-40 disabled:bg-blue-600 disabled:cursor-not-allowed'
+          "
           :disabled="hasSolverRun || memUsageCompressed > maxMemUsage"
-        />
-        Use compression: needs
-        {{ (memUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) }} GB of RAM
-        {{ memUsageCompressed <= maxMemUsage ? "" : "(limit exceeded)" }}
-      </label>
-    </p>
+          @click="runSolver"
+        >
+          Run solver
+        </button>
+        {{ " " }}
+        <button
+          :class="
+            'rounded-md shadow-sm ml-3 px-4 py-1.5 bg-red-600 text-white hover:bg-red-700 ' +
+            'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ' +
+            'disabled:opacity-40 disabled:bg-red-600 disabled:cursor-not-allowed'
+          "
+          :disabled="!isSolverRunning"
+          @click="() => (terminate = true)"
+        >
+          Stop
+        </button>
+        {{ " " }}
+        <button
+          v-if="!(hasSolverRun && !hasSolverFinished && !isSolverRunning)"
+          :class="
+            'rounded-md shadow-sm ml-3 px-4 py-1.5 bg-green-600 text-white hover:bg-green-700 ' +
+            'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ' +
+            'disabled:opacity-40 disabled:bg-green-600 disabled:cursor-not-allowed'
+          "
+          :disabled="!isSolverRunning"
+          @click="() => (pause = true)"
+        >
+          Pause
+        </button>
+        <button
+          v-else
+          :class="
+            'rounded-md shadow-sm ml-3 px-4 py-1.5 bg-green-600 text-white hover:bg-green-700 ' +
+            'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ' +
+            'disabled:opacity-40 disabled:bg-green-600 disabled:cursor-not-allowed'
+          "
+          @click="resumeSolver"
+        >
+          Resume
+        </button>
+      </p>
 
-    <p>
-      <button
-        :disabled="hasSolverRun || memUsageCompressed > maxMemUsage"
-        @click="runSolver"
-      >
-        Run solver
-      </button>
-      {{ " " }}
-      <button :disabled="!isSolverRunning" @click="() => (terminate = true)">
-        Stop
-      </button>
-      {{ " " }}
-      <button
-        v-if="!(hasSolverRun && !hasSolverFinished && !isSolverRunning)"
-        :disabled="!isSolverRunning"
-        @click="() => (pause = true)"
-      >
-        Pause
-      </button>
-      <button v-else @click="resumeSolver">Resume</button>
-    </p>
-
-    <p v-if="hasSolverRun">
-      {{ iterText }}
-      <br />
-      {{ exploitText }}
-      <br />
-      {{ evText }}
-      <br />
-      {{ timeText }}
-    </p>
+      <p v-if="hasSolverRun" class="mt-4">
+        {{ iterText }}
+        <br />
+        {{ exploitText }}
+        <br />
+        {{ evText }}
+        <br />
+        {{ timeText }}
+      </p>
+    </div>
   </div>
 </template>
 
@@ -265,3 +332,9 @@ export default defineComponent({
   },
 });
 </script>
+
+<style>
+* {
+  line-height: 1.6;
+}
+</style>

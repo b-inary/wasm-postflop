@@ -2,6 +2,8 @@
 
 Post-flop solver powered by WebAssembly (work in progress)
 
+Solver core: https://github.com/b-inary/postflop-solver
+
 ## Build
 
 ```sh

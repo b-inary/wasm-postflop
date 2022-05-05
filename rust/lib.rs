@@ -12,7 +12,7 @@ pub struct GameManager {
 impl GameManager {
     pub fn new() -> Self {
         Self {
-            game: PostFlopGame::default(),
+            game: PostFlopGame::new(),
         }
     }
 

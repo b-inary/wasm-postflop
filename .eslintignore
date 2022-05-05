@@ -2,4 +2,4 @@ dist/
 node_modules/
 .eslintrc.cjs
 server.js
-webpack.config.js
+*.config.js
