@@ -10,14 +10,13 @@
         max="64"
       />
     </label>
-    {{ " " }}
     <button
       :class="
         'rounded-lg shadow-sm ml-3 px-3.5 py-1.5 text-white text-sm font-medium ' +
         'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
         'disabled:opacity-40 disabled:bg-blue-600 disabled:cursor-not-allowed'
       "
-      :disabled="store.isSolverRunning"
+      :disabled="isTreeBuilding || store.isSolverRunning"
       @click="buildTree"
     >
       Build tree
@@ -37,7 +36,7 @@
           :value="false"
           :disabled="store.hasSolverRun || store.memoryUsage > maxMemoryUsage"
         />
-        No compression: needs
+        No compression: requires
         {{ (store.memoryUsage / (1024 * 1024 * 1024)).toFixed(2) }}
         GB of RAM
         {{
@@ -56,7 +55,7 @@
             store.hasSolverRun || store.memoryUsageCompressed > maxMemoryUsage
           "
         />
-        Use compression: needs
+        Use compression: requires
         {{ (store.memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) }}
         GB of RAM
         {{
@@ -81,7 +80,6 @@
       >
         Run solver
       </button>
-      {{ " " }}
       <button
         :class="
           'rounded-lg shadow-sm ml-3 px-3.5 py-1.5 text-white text-sm font-medium ' +
@@ -93,7 +91,6 @@
       >
         Stop
       </button>
-      {{ " " }}
       <button
         v-if="!store.isSolverPaused"
         :class="
@@ -143,6 +140,7 @@ export default defineComponent({
     const store = useStore();
 
     let startTime = 0;
+    const isTreeBuilding = ref(false);
     const treeStatus = ref("Module not loaded");
 
     const iterationText = computed(() => {
@@ -194,14 +192,21 @@ export default defineComponent({
         return;
       }
 
+      if (store.board.length !== 3) {
+        treeStatus.value = "Error: Board must consist of 3 cards";
+        return;
+      }
+
+      isTreeBuilding.value = true;
       treeStatus.value = "Building tree...";
 
       await GlobalWorker.init(numThreadsInt);
       const handler = await GlobalWorker.getHandler();
 
-      const errorString = await handler.init();
+      const errorString = await handler.init(new Uint8Array(store.board));
 
       if (errorString) {
+        isTreeBuilding.value = false;
         treeStatus.value = "Build tree error: " + errorString;
         return;
       }
@@ -224,6 +229,7 @@ export default defineComponent({
         numThreadsInt === 1 ? "" : "s"
       }`;
 
+      isTreeBuilding.value = false;
       treeStatus.value = `Successfully built tree (${threadText})`;
     };
 
@@ -299,6 +305,7 @@ export default defineComponent({
 
     return {
       store,
+      isTreeBuilding,
       treeStatus,
       maxMemoryUsage,
       iterationText,

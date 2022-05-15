@@ -9,8 +9,8 @@ function createHandler(mod: Mod) {
   return {
     game: mod.GameManager.new(),
 
-    init() {
-      return this.game.init();
+    init(flop: Uint8Array) {
+      return this.game.init(flop);
     },
 
     memoryUsage(enable_compression: boolean) {

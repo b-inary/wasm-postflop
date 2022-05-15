@@ -16,7 +16,7 @@ impl GameManager {
         }
     }
 
-    pub fn init(&mut self) -> Option<String> {
+    pub fn init(&mut self, flop: Box<[u8]>) -> Option<String> {
         // top-40% range
         let oop_range =
             "22+,A2s+,A8o+,K7s+,K9o+,Q8s+,Q9o+,J8s+,J9o+,T8+,97+,86+,75+,64s+,65o,54,43s";
@@ -25,7 +25,7 @@ impl GameManager {
 
         let bet_sizes = bet_sizes_from_str("50%", "50%").unwrap();
         let config = GameConfig {
-            flop: flop_from_str("Td9d6h").unwrap(),
+            flop: (*flop).try_into().unwrap(),
             initial_pot: 60,
             initial_stack: 770,
             range: [oop_range.parse().unwrap(), ip_range.parse().unwrap()],

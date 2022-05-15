@@ -9,25 +9,24 @@ export type MainView =
   | "Result";
 
 export const useStore = defineStore("app", {
-  state: () => {
-    return {
-      mainView: "RunSolver" as MainView,
-      numThreads: navigator.hardwareConcurrency || 1,
-      isTreeBuilt: false,
-      isCompressionEnabled: false,
-      memoryUsage: 0,
-      memoryUsageCompressed: 0,
-      terminateFlag: false,
-      pauseFlag: false,
-      isSolverRunning: false,
-      isSolverPaused: false,
-      isSolverTerminated: false,
-      currentIteration: 0,
-      exploitability: 0,
-      expectedValue: [0, 0],
-      elapsedTimeMs: 0,
-    };
-  },
+  state: () => ({
+    mainView: "RunSolver" as MainView,
+    board: [33, 29, 18],
+    numThreads: navigator.hardwareConcurrency || 1,
+    isTreeBuilt: false,
+    isCompressionEnabled: false,
+    memoryUsage: 0,
+    memoryUsageCompressed: 0,
+    terminateFlag: false,
+    pauseFlag: false,
+    isSolverRunning: false,
+    isSolverPaused: false,
+    isSolverTerminated: false,
+    currentIteration: 0,
+    exploitability: 0,
+    expectedValue: [0, 0],
+    elapsedTimeMs: 0,
+  }),
 
   getters: {
     hasSolverRun: (state) => {
