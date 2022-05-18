@@ -11,6 +11,9 @@
       <div v-show="store.mainView === 'Board'">
         <board-selector />
       </div>
+      <div v-show="store.mainView === 'TreeConfig'">
+        <tree-config />
+      </div>
       <div v-show="store.mainView === 'RunSolver'">
         <run-solver />
       </div>
@@ -26,6 +29,7 @@ import BoardSelector from "./BoardSelector.vue";
 import NavBar from "./NavBar.vue";
 import RunSolver from "./RunSolver.vue";
 import SideBar from "./SideBar.vue";
+import TreeConfig from "./TreeConfig.vue";
 
 export default defineComponent({
   components: {
@@ -33,6 +37,7 @@ export default defineComponent({
     NavBar,
     RunSolver,
     SideBar,
+    TreeConfig,
   },
 
   setup() {

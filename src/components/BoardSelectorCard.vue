@@ -2,10 +2,9 @@
   <div
     :class="
       'relative w-10 h-14 rounded-lg border shadow cursor-pointer ' +
-      '' +
       (store.board.includes(cardId)
-        ? 'bg-yellow-200 border-red-600'
-        : 'border-black')
+        ? 'bg-yellow-200 ring-1 ring-red-600 border-red-600'
+        : 'bg-white border-black')
     "
     @click="toggleCard"
   >

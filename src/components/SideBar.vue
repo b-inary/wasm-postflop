@@ -116,12 +116,6 @@ export default defineComponent({
 
 <style scoped>
 .side-bar-item {
-  @apply mx-2;
-  @apply my-1;
-  @apply px-2;
-  @apply py-1;
-  @apply border-2;
-  @apply rounded-md;
-  @apply cursor-pointer;
+  @apply mx-2 my-1 px-2 py-1 border-2 rounded-md cursor-pointer;
 }
 </style>

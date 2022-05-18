@@ -16,29 +16,65 @@ impl GameManager {
         }
     }
 
-    pub fn init(&mut self, flop: Box<[u8]>) -> Option<String> {
-        // top-40% range
+    pub fn init(
+        &mut self,
+        flop: &[u8],
+        initial_pot: i32,
+        initial_stack: i32,
+        oop_flop_bet_sizes: &[f32],
+        oop_flop_raise_sizes: &[f32],
+        oop_turn_bet_sizes: &[f32],
+        oop_turn_raise_sizes: &[f32],
+        oop_river_bet_sizes: &[f32],
+        oop_river_raise_sizes: &[f32],
+        ip_flop_bet_sizes: &[f32],
+        ip_flop_raise_sizes: &[f32],
+        ip_turn_bet_sizes: &[f32],
+        ip_turn_raise_sizes: &[f32],
+        ip_river_bet_sizes: &[f32],
+        ip_river_raise_sizes: &[f32],
+        add_all_in_threshold: f32,
+        replace_all_in_threshold: f32,
+        adjust_last_two_bet_sizes: bool,
+    ) -> Option<String> {
         let oop_range =
             "22+,A2s+,A8o+,K7s+,K9o+,Q8s+,Q9o+,J8s+,J9o+,T8+,97+,86+,75+,64s+,65o,54,43s";
-        // top-25% range
         let ip_range = "22+,A4s+,A9o+,K9s+,KTo+,Q9s+,QTo+,J9+,T9,98s,87s,76s,65s";
 
-        let bet_sizes = bet_sizes_from_str("50%", "50%").unwrap();
-        let config = GameConfig {
-            flop: (*flop).try_into().unwrap(),
-            initial_pot: 60,
-            initial_stack: 770,
-            range: [oop_range.parse().unwrap(), ip_range.parse().unwrap()],
-            flop_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
-            turn_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
-            river_bet_sizes: [bet_sizes.clone(), bet_sizes.clone()],
-            add_all_in_threshold: 0.0,
-            replace_all_in_threshold: 0.0,
-            adjust_last_two_bet_sizes: false,
+        let bet_sizes = |bet: &[f32], raise: &[f32]| BetSizeCandidates {
+            bet: bet
+                .iter()
+                .map(|&x| BetSize::PotRelative(x))
+                .collect::<Vec<_>>(),
+            raise: raise
+                .iter()
+                .map(|&x| BetSize::PotRelative(x))
+                .collect::<Vec<_>>(),
         };
 
-        let result = self.game.update_config(&config);
-        result.err()
+        let config = GameConfig {
+            flop: flop.try_into().unwrap(),
+            initial_pot,
+            initial_stack,
+            range: [oop_range.parse().unwrap(), ip_range.parse().unwrap()],
+            flop_bet_sizes: [
+                bet_sizes(oop_flop_bet_sizes, oop_flop_raise_sizes),
+                bet_sizes(ip_flop_bet_sizes, ip_flop_raise_sizes),
+            ],
+            turn_bet_sizes: [
+                bet_sizes(oop_turn_bet_sizes, oop_turn_raise_sizes),
+                bet_sizes(ip_turn_bet_sizes, ip_turn_raise_sizes),
+            ],
+            river_bet_sizes: [
+                bet_sizes(oop_river_bet_sizes, oop_river_raise_sizes),
+                bet_sizes(ip_river_bet_sizes, ip_river_raise_sizes),
+            ],
+            add_all_in_threshold,
+            replace_all_in_threshold,
+            adjust_last_two_bet_sizes,
+        };
+
+        self.game.update_config(&config).err()
     }
 
     pub fn memory_usage(&self, enable_compression: bool) -> u64 {

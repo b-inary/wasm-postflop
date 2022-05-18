@@ -9,8 +9,46 @@ function createHandler(mod: Mod) {
   return {
     game: mod.GameManager.new(),
 
-    init(flop: Uint8Array) {
-      return this.game.init(flop);
+    init(
+      flop: Uint8Array,
+      startingPot: number,
+      effectiveStack: number,
+      oopFlopBetSizes: Float32Array,
+      oopFlopRaiseSizes: Float32Array,
+      oopTurnBetSizes: Float32Array,
+      oopTurnRaiseSizes: Float32Array,
+      oopRiverBetSizes: Float32Array,
+      oopRiverRaiseSizes: Float32Array,
+      ipFlopBetSizes: Float32Array,
+      ipFlopRaiseSizes: Float32Array,
+      ipTurnBetSizes: Float32Array,
+      ipTurnRaiseSizes: Float32Array,
+      ipRiverBetSizes: Float32Array,
+      ipRiverRaiseSizes: Float32Array,
+      addAllInThreshold: number,
+      forceAllInThreshold: number,
+      adjustLastTwoBetSizes: boolean
+    ) {
+      return this.game.init(
+        flop,
+        startingPot,
+        effectiveStack,
+        oopFlopBetSizes,
+        oopFlopRaiseSizes,
+        oopTurnBetSizes,
+        oopTurnRaiseSizes,
+        oopRiverBetSizes,
+        oopRiverRaiseSizes,
+        ipFlopBetSizes,
+        ipFlopRaiseSizes,
+        ipTurnBetSizes,
+        ipTurnRaiseSizes,
+        ipRiverBetSizes,
+        ipRiverRaiseSizes,
+        addAllInThreshold,
+        forceAllInThreshold,
+        adjustLastTwoBetSizes
+      );
     },
 
     memoryUsage(enable_compression: boolean) {
