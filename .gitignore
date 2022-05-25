@@ -1,5 +1,5 @@
 /dist/
 /node_modules/
 /pkg/
-/pkg-simd/
-/target/
+/rust-range/target/
+/rust-solver/target/

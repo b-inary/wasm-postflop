@@ -1,21 +1,16 @@
 [package]
-name = "wasm-postflop"
+name = "range"
 version = "0.0.1"
 authors = ["Wataru Inariba"]
 edition = "2021"
-description = "Post-flop solver powered by WebAssembly"
-repository = "https://github.com/b-inary/wasm-postflop"
 license = "AGPL-3.0-or-later"
 
 [lib]
-path = "rust/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
 postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features = ["custom_alloc"] }
-rayon = "1.5"
 wasm-bindgen = "0.2"
-wasm-bindgen-rayon = "1.0"
 
 [profile.release]
 lto = "thin"

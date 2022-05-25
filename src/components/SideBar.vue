@@ -5,10 +5,16 @@
   >
     <div :class="itemStyle('OOPRange')" @click="store.mainView = 'OOPRange'">
       Range 1 (OOP)
+      <div class="flex my-2 justify-center">
+        <range-mini-viewer :player="0" />
+      </div>
     </div>
 
     <div :class="itemStyle('IPRange')" @click="store.mainView = 'IPRange'">
       Range 2 (IP)
+      <div class="flex my-2 justify-center">
+        <range-mini-viewer :player="1" />
+      </div>
     </div>
 
     <div :class="itemStyle('Board')" @click="store.mainView = 'Board'">
@@ -45,6 +51,8 @@
 import { computed, defineComponent } from "vue";
 import { useStore, MainView } from "../store";
 
+import RangeMiniViewer from "./RangeMiniViewer.vue";
+
 const ranks = [
   "2",
   "3",
@@ -64,6 +72,10 @@ const ranks = [
 const suits = ["♣", "♦", "♥", "♠"];
 
 export default defineComponent({
+  components: {
+    RangeMiniViewer,
+  },
+
   setup() {
     const store = useStore();
 
@@ -116,6 +128,6 @@ export default defineComponent({
 
 <style scoped>
 .side-bar-item {
-  @apply mx-2 my-1 px-2 py-1 border-2 rounded-md cursor-pointer;
+  @apply mx-2 my-1 px-2 py-1 border-[3px] rounded-md cursor-pointer select-none;
 }
 </style>

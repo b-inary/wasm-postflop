@@ -18,6 +18,8 @@ impl GameManager {
 
     pub fn init(
         &mut self,
+        oop_range: &[f32],
+        ip_range: &[f32],
         flop: &[u8],
         initial_pot: i32,
         initial_stack: i32,
@@ -37,10 +39,6 @@ impl GameManager {
         replace_all_in_threshold: f32,
         adjust_last_two_bet_sizes: bool,
     ) -> Option<String> {
-        let oop_range =
-            "22+,A2s+,A8o+,K7s+,K9o+,Q8s+,Q9o+,J8s+,J9o+,T8+,97+,86+,75+,64s+,65o,54,43s";
-        let ip_range = "22+,A4s+,A9o+,K9s+,KTo+,Q9s+,QTo+,J9+,T9,98s,87s,76s,65s";
-
         let bet_sizes = |bet: &[f32], raise: &[f32]| BetSizeCandidates {
             bet: bet
                 .iter()
@@ -56,7 +54,10 @@ impl GameManager {
             flop: flop.try_into().unwrap(),
             initial_pot,
             initial_stack,
-            range: [oop_range.parse().unwrap(), ip_range.parse().unwrap()],
+            range: [
+                Range::from_raw_data(oop_range),
+                Range::from_raw_data(ip_range),
+            ],
             flop_bet_sizes: [
                 bet_sizes(oop_flop_bet_sizes, oop_flop_raise_sizes),
                 bet_sizes(ip_flop_bet_sizes, ip_flop_raise_sizes),

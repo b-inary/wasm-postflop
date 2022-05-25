@@ -2,14 +2,16 @@ import * as Comlink from "comlink";
 import { simd } from "wasm-feature-detect";
 
 type Mod =
-  | typeof import("../pkg-simd/wasm_postflop.js")
-  | typeof import("../pkg/wasm_postflop.js");
+  | typeof import("../pkg/solver/solver.js")
+  | typeof import("../pkg/solver-simd/solver.js");
 
 function createHandler(mod: Mod) {
   return {
     game: mod.GameManager.new(),
 
     init(
+      oopRange: Float32Array,
+      ipRange: Float32Array,
       flop: Uint8Array,
       startingPot: number,
       effectiveStack: number,
@@ -30,6 +32,8 @@ function createHandler(mod: Mod) {
       adjustLastTwoBetSizes: boolean
     ) {
       return this.game.init(
+        oopRange,
+        ipRange,
         flop,
         startingPot,
         effectiveStack,
@@ -85,9 +89,9 @@ async function init(num_threads: number) {
   let mod: Mod;
 
   if (await simd()) {
-    mod = await import("../pkg-simd/wasm_postflop.js");
+    mod = await import("../pkg/solver-simd/solver.js");
   } else {
-    mod = await import("../pkg/wasm_postflop.js");
+    mod = await import("../pkg/solver/solver.js");
   }
 
   await mod.default();

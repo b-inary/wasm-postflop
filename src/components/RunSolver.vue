@@ -1,5 +1,5 @@
 <template>
-  <p class="flex items-center">
+  <p class="flex my-1 items-center">
     <label>
       Number of threads:
       <input
@@ -30,7 +30,7 @@
     </button>
   </p>
 
-  <p>Status: {{ treeStatus }}</p>
+  <p class="my-1">Status: {{ treeStatus }}</p>
 
   <div v-if="store.isTreeBuilt" class="mt-4">
     <p>
@@ -337,6 +337,8 @@ export default defineComponent({
       const handler = await GlobalWorker.getHandler();
 
       const errorString = await handler.init(
+        store.rangeRaw[0],
+        store.rangeRaw[1],
         new Uint8Array(store.board),
         store.startingPot,
         store.effectiveStack,
@@ -359,7 +361,7 @@ export default defineComponent({
 
       if (errorString) {
         isTreeBuilding.value = false;
-        treeStatus.value = "Build tree error: " + errorString;
+        treeStatus.value = "Error: " + errorString;
         return;
       }
 

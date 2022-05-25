@@ -32,7 +32,15 @@ function parseBetSizes(sizesStr: string): number[] | null {
 
 export const useStore = defineStore("app", {
   state: () => ({
-    mainView: "Board" as MainView,
+    mainView: "OOPRange" as MainView,
+    range: [
+      Array.from({ length: 13 * 13 }, () => 0),
+      Array.from({ length: 13 * 13 }, () => 0),
+    ],
+    rangeRaw: [
+      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
+      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
+    ],
     board: [] as number[],
     startingPot: 180,
     effectiveStack: 710,

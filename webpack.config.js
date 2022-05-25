@@ -42,6 +42,9 @@ const config = {
     new MiniCSSExtractPlugin({ filename: "[contenthash].css" }),
     new VueLoaderPlugin(),
   ],
+  experiments: {
+    asyncWebAssembly: true,
+  },
 };
 
 module.exports = config;
