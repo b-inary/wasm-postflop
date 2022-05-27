@@ -16,7 +16,9 @@
           "
         >
           {{
-            store.mainView === "OOPRange"
+            store.mainView === "About"
+              ? "About"
+              : store.mainView === "OOPRange"
               ? "Range 1 (OOP)"
               : store.mainView === "IPRange"
               ? "Range 2 (IP)"
@@ -31,6 +33,9 @@
         </div>
       </div>
 
+      <div v-if="store.mainView === 'About'">
+        <about-page />
+      </div>
       <div v-show="store.mainView === 'OOPRange'">
         <range-editor :player="0" />
       </div>
@@ -54,6 +59,7 @@
 import { defineComponent } from "vue";
 import { useStore } from "../store";
 
+import AboutPage from "./AboutPage.vue";
 import BoardSelector from "./BoardSelector.vue";
 import NavBar from "./NavBar.vue";
 import RangeEditor from "./RangeEditor.vue";
@@ -63,6 +69,7 @@ import TreeConfig from "./TreeConfig.vue";
 
 export default defineComponent({
   components: {
+    AboutPage,
     BoardSelector,
     NavBar,
     RangeEditor,

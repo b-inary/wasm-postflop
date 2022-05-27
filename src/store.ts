@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 
 export type MainView =
+  | "About"
   | "OOPRange"
   | "IPRange"
   | "Board"
@@ -32,7 +33,7 @@ function parseBetSizes(sizesStr: string): number[] | null {
 
 export const useStore = defineStore("app", {
   state: () => ({
-    mainView: "OOPRange" as MainView,
+    mainView: "About" as MainView,
     range: [
       Array.from({ length: 13 * 13 }, () => 0),
       Array.from({ length: 13 * 13 }, () => 0),
@@ -71,7 +72,7 @@ export const useStore = defineStore("app", {
     isSolverTerminated: false,
     currentIteration: 0,
     exploitability: 0,
-    expectedValue: [0, 0],
+    expectedValue: [-1, -1],
     elapsedTimeMs: 0,
   }),
 

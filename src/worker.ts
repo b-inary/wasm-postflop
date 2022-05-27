@@ -71,12 +71,12 @@ function createHandler(mod: Mod) {
       return this.game.exploitability();
     },
 
-    normalize() {
-      this.game.normalize();
+    finalize() {
+      this.game.finalize();
     },
 
-    ev(player: number) {
-      return this.game.ev(player);
+    ev() {
+      return this.game.ev();
     },
   };
 }

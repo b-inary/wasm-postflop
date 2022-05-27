@@ -3,6 +3,10 @@
     class="flex flex-col w-52 my-4 overflow-y-auto border-r-2"
     style="height: calc(100vh - 88px)"
   >
+    <div :class="itemStyle('About')" @click="store.mainView = 'About'">
+      About
+    </div>
+
     <div :class="itemStyle('OOPRange')" @click="store.mainView = 'OOPRange'">
       Range 1 (OOP)
       <div class="flex my-2 justify-center">

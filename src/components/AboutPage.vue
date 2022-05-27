@@ -1,0 +1,40 @@
+<template>
+  <div class="text-xl font-bold">Welcome to WASM Postflop!</div>
+
+  <div class="mt-4">
+    <span class="font-bold">WASM Postflop</span> is a free and open source
+    <span class="font-bold">GTO solver</span> that works on web browsers.<br />
+    <span class="font-bold">WASM</span> stands for
+    <a href="https://webassembly.org/" class="font-bold link">WebAssembly</a>.
+    It is a relatively new technology that allows us to distribute a fast,
+    portable, and secure program across the web.
+  </div>
+
+  <ul class="mt-4 ml-8 list-disc">
+    <li>free to use</li>
+    <li>open source: you can inspect the whole program</li>
+    <li>no need to install anything</li>
+    <li>works inside your browser</li>
+    <li>suffiently fast (supports multithreading)</li>
+  </ul>
+
+  <div class="mt-4 underline">Limitations:</div>
+
+  <ul class="mt-4 ml-8 list-disc">
+    <li>
+      <span class="font-bold">available memory is limited to 4GB</span> due to
+      the technical limitations of WebAssembly
+    </li>
+    <li>mobile use is not considered</li>
+    <li>
+      this project is work in progress; currently provides only minimal
+      functionality
+    </li>
+  </ul>
+</template>
+
+<style scoped>
+.link {
+  @apply text-blue-500 hover:underline;
+}
+</style>

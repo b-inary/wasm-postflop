@@ -4,7 +4,7 @@
   >
     <div class="flex w-full max-w-screen-xl">
       <div class="flex items-center">
-        <a href="#" class="px-4 text-2xl font-semibold">WASM Postflop</a>
+        <a href="#" class="px-4 text-2xl font-semibold">WASM Postflop (α)</a>
       </div>
 
       <div class="flex flex-grow"></div>

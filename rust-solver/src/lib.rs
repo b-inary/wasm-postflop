@@ -90,19 +90,20 @@ impl GameManager {
         self.game.allocate_memory(enable_compression);
     }
 
-    pub fn solve_step(&mut self, current_iteration: i32) {
-        solve_step(&mut self.game, current_iteration);
+    pub fn solve_step(&self, current_iteration: i32) {
+        solve_step(&self.game, current_iteration);
     }
 
     pub fn exploitability(&self) -> f32 {
         compute_exploitability(&self.game, false)
     }
 
-    pub fn normalize(&mut self) {
-        normalize_strategy(&mut self.game);
+    pub fn finalize(&self) {
+        normalize_strategy(&self.game);
+        compute_ev(&self.game);
     }
 
-    pub fn ev(&self, player: usize) -> f32 {
-        compute_ev(&self.game, player)
+    pub fn ev(&self) -> f32 {
+        compute_ev_scalar(&self.game, &self.game.root())
     }
 }

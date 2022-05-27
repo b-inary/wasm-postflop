@@ -1,22 +1,20 @@
 <template>
   <p class="flex my-1 items-center">
-    <label>
-      Number of threads:
-      <input
-        v-model="store.numThreads"
-        type="number"
-        :class="
-          'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (store.numThreads < 1 ||
-          store.numThreads > 64 ||
-          store.numThreads % 1 !== 0
-            ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
-            : '')
-        "
-        min="1"
-        max="64"
-      />
-    </label>
+    Number of threads:
+    <input
+      v-model="store.numThreads"
+      type="number"
+      :class="
+        'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+        (store.numThreads < 1 ||
+        store.numThreads > 64 ||
+        store.numThreads % 1 !== 0
+          ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+          : '')
+      "
+      min="1"
+      max="64"
+    />
     <button
       :class="
         'rounded-lg shadow-sm ml-3 px-3.5 py-1.5 text-white text-sm font-medium ' +
@@ -36,9 +34,11 @@
     <p>
       <label
         :class="
-          store.hasSolverRun || store.memoryUsage > maxMemoryUsage
+          store.memoryUsage > maxMemoryUsage
             ? 'text-gray-500'
-            : 'cursor-pointer'
+            : !store.hasSolverRun
+            ? 'cursor-pointer'
+            : ''
         "
       >
         <input
@@ -60,9 +60,11 @@
     <p>
       <label
         :class="
-          store.hasSolverRun || store.memoryUsageCompressed > maxMemoryUsage
+          store.memoryUsageCompressed > maxMemoryUsage
             ? 'text-gray-500'
-            : 'cursor-pointer'
+            : !store.hasSolverRun
+            ? 'cursor-pointer'
+            : ''
         "
       >
         <input
@@ -87,6 +89,41 @@
     </p>
 
     <p class="mt-4">
+      Target exploitability:
+      <input
+        v-model="targetExploitability"
+        type="number"
+        :class="
+          'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+          (targetExploitability < 0
+            ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+            : '')
+        "
+        :disabled="store.hasSolverRun"
+        min="0"
+        step="0.05"
+      />
+      %
+    </p>
+
+    <p class="mt-1">
+      Maximum number of iterations:
+      <input
+        v-model="maxIterations"
+        type="number"
+        :class="
+          'w-[5.5rem] ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+          (maxIterations < 1 || maxIterations % 1 !== 0
+            ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+            : '')
+        "
+        :disabled="store.hasSolverRun"
+        min="1"
+        max="100000"
+      />
+    </p>
+
+    <p class="mt-6">
       <button
         :class="
           'rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium ' +
@@ -94,7 +131,11 @@
           'disabled:opacity-40 disabled:bg-blue-600'
         "
         :disabled="
-          store.hasSolverRun || store.memoryUsageCompressed > maxMemoryUsage
+          store.hasSolverRun ||
+          store.memoryUsageCompressed > maxMemoryUsage ||
+          targetExploitability < 0 ||
+          maxIterations < 1 ||
+          maxIterations % 1 !== 0
         "
         @click="runSolver"
       >
@@ -136,7 +177,13 @@
       </button>
     </p>
 
-    <p v-if="store.hasSolverRun" class="mt-4">
+    <div v-if="store.hasSolverRun" class="mt-6">
+      <div v-if="store.isSolverRunning" class="flex items-center">
+        <span class="spinner inline-block mr-3"></span>
+        Solver running...
+      </div>
+      <div v-else-if="store.isSolverPaused">Solver paused.</div>
+      <div v-else>Solver finished.</div>
       {{ iterationText }}
       <br />
       {{ exploitabilityText }}
@@ -144,7 +191,7 @@
       {{ expectedValueText }}
       <br />
       {{ timeText }}
-    </p>
+    </div>
   </div>
 </template>
 
@@ -266,6 +313,8 @@ export default defineComponent({
     let startTime = 0;
     const isTreeBuilding = ref(false);
     const treeStatus = ref("Module not loaded");
+    const targetExploitability = ref(0.5);
+    const maxIterations = ref(1000);
 
     const iterationText = computed(() => {
       if (store.currentIteration === -1) {
@@ -282,7 +331,7 @@ export default defineComponent({
       } else {
         const percent = (exploitability * 100) / store.startingPot;
         const percentText = `${percent.toFixed(2)}%`;
-        return `Exploitability: ${exploitability.toFixed(3)} (${percentText})`;
+        return `Exploitability: ${exploitability.toFixed(2)} (${percentText})`;
       }
     });
 
@@ -291,12 +340,14 @@ export default defineComponent({
       if (ev[0] === -1 && ev[1] === -1) {
         return "";
       } else {
-        return `EV: ${ev[0].toFixed(3)} vs ${ev[1].toFixed(3)}`;
+        return `EV: ${ev[0].toFixed(2)} vs ${ev[1].toFixed(2)}`;
       }
     });
 
     const timeText = computed(() => {
-      if (store.elapsedTimeMs === 0 || !store.isSolverTerminated) {
+      if (store.elapsedTimeMs === -1) {
+        return "Finalizing...";
+      } else if (store.elapsedTimeMs === 0 || !store.isSolverTerminated) {
         return "";
       } else {
         return `Time: ${(store.elapsedTimeMs / 1000).toFixed(2)}s`;
@@ -418,10 +469,9 @@ export default defineComponent({
         startTime = performance.now();
       }
 
-      const maxIter = 1000;
-      const target = store.startingPot * 0.005;
+      const target = (store.startingPot * targetExploitability.value) / 100;
 
-      while (store.currentIteration < maxIter) {
+      while (store.currentIteration < maxIterations.value) {
         if (store.pauseFlag) {
           const end = performance.now();
           store.elapsedTimeMs += end - startTime;
@@ -443,11 +493,11 @@ export default defineComponent({
         }
       }
 
-      await handler.normalize();
-      store.expectedValue = [
-        (await handler.ev(0)) + store.startingPot / 2,
-        (await handler.ev(1)) + store.startingPot / 2,
-      ];
+      store.elapsedTimeMs = -1;
+      await handler.finalize();
+
+      const oopEv = (await handler.ev()) + store.startingPot / 2;
+      store.expectedValue = [oopEv, store.startingPot - oopEv];
 
       const end = performance.now();
       store.elapsedTimeMs += end - startTime;
@@ -461,6 +511,8 @@ export default defineComponent({
       isTreeBuilding,
       treeStatus,
       maxMemoryUsage,
+      targetExploitability,
+      maxIterations,
       iterationText,
       exploitabilityText,
       expectedValueText,
@@ -472,3 +524,75 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.spinner {
+  text-indent: -9999em;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  background: #404040;
+  background: -moz-linear-gradient(left, #404040 10%, rgba(64, 64, 64, 0) 42%);
+  background: -webkit-linear-gradient(
+    left,
+    #404040 10%,
+    rgba(64, 64, 64, 0) 42%
+  );
+  background: -o-linear-gradient(left, #404040 10%, rgba(64, 64, 64, 0) 42%);
+  background: -ms-linear-gradient(left, #404040 10%, rgba(64, 64, 64, 0) 42%);
+  background: linear-gradient(to right, #404040 10%, rgba(64, 64, 64, 0) 42%);
+  position: relative;
+  -webkit-animation: spinner-animation 0.8s infinite linear;
+  animation: spinner-animation 0.8s infinite linear;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+.spinner:before {
+  width: 50%;
+  height: 50%;
+  background: #404040;
+  border-radius: 100% 0 0 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: "";
+}
+
+.spinner:after {
+  @apply bg-gray-100;
+  width: 75%;
+  height: 75%;
+  border-radius: 50%;
+  content: "";
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+@-webkit-keyframes spinner-animation {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinner-animation {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+</style>

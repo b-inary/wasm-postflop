@@ -20,8 +20,8 @@ impl RangeManager {
     }
 
     pub fn update(&mut self, row: u8, col: u8, weight: f32) {
-        let rank1 = 13 - row.min(col);
-        let rank2 = 13 - row.max(col);
+        let rank1 = 13 - row;
+        let rank2 = 13 - col;
         if row == col {
             self.range.set_weight_pair(rank1, weight).unwrap();
         } else if row < col {

@@ -36,9 +36,10 @@
         v-model="rangeText"
         type="text"
         :class="
-          'w-[480px] px-2 py-1 rounded-lg text-sm ' +
+          'w-[30rem] px-2 py-1 rounded-lg text-sm ' +
           (rangeTextError ? 'ring-1 ring-red-600 border-red-600 bg-red-50' : '')
         "
+        @focus="($event.target as HTMLInputElement).select()"
         @change="onRangeTextChange"
       />
       <div v-if="rangeTextError" class="mt-1 text-red-600">
