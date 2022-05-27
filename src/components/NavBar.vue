@@ -12,8 +12,12 @@
       <div class="flex items-center">
         <a
           href="https://github.com/b-inary/wasm-postflop"
-          class="inline-block px-4 py-2 rounded-md font-semibold hover:bg-slate-700"
+          class="flex px-4 py-2 rounded-md items-center font-semibold hover:bg-slate-700"
         >
+          <img
+            src="../../public/GitHub-Mark-Light-32px.png"
+            class="inline-block w-5 h-5 mr-2.5"
+          />
           GitHub
         </a>
       </div>

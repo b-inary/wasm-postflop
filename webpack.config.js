@@ -33,6 +33,10 @@ const config = {
           "postcss-loader",
         ],
       },
+      {
+        test: /\.png$/,
+        loader: "url-loader",
+      },
     ],
   },
   resolve: { extensions: [".js", ".ts", ".vue"] },
