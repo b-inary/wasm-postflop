@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="flex flex-col w-52 my-4 overflow-y-auto border-r-2"
+    class="flex flex-col shrink-0 w-52 my-4 overflow-y-auto border-r-2"
     style="height: calc(100vh - 88px)"
   >
     <div :class="itemStyle('About')" @click="store.mainView = 'About'">
@@ -26,10 +26,10 @@
       <p class="flex justify-center">
         <span
           v-for="item in boardTexts"
-          :key="item.text"
-          :class="'inline-block mx-px ' + item.class"
+          :key="item.rank + item.suit"
+          :class="'inline-block mx-px ' + item.colorClass"
         >
-          {{ item.text }}
+          {{ item.rank + item.suit }}
         </span>
       </p>
     </div>
@@ -53,27 +53,9 @@
 
 <script lang="ts">
 import { computed, defineComponent } from "vue";
-import { useStore, MainView } from "../store";
+import { MainView, cardText, useStore } from "../store";
 
 import RangeMiniViewer from "./RangeMiniViewer.vue";
-
-const ranks = [
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "J",
-  "Q",
-  "K",
-  "A",
-];
-
-const suits = ["♣", "♦", "♥", "♠"];
 
 export default defineComponent({
   components: {
@@ -84,36 +66,11 @@ export default defineComponent({
     const store = useStore();
 
     const boardTexts = computed(() => {
-      const texts = [];
-
-      for (let i = 0; i < store.board.length; i++) {
-        const rank = ranks[Math.floor(store.board[i] / 4)];
-        const suit = suits[store.board[i] % 4];
-
-        let colorClass;
-        switch (store.board[i] % 4) {
-          case 0:
-            colorClass = "text-green-600";
-            break;
-          case 1:
-            colorClass = "text-blue-600";
-            break;
-          case 2:
-            colorClass = "text-pink-600";
-            break;
-          case 3:
-            colorClass = "text-black";
-            break;
-        }
-
-        texts.push({ text: `${rank}${suit}`, class: colorClass });
+      if (store.board.length === 0) {
+        return [{ rank: "-", suit: "", colorClass: "text-black" }];
+      } else {
+        return store.board.map(cardText);
       }
-
-      if (texts.length === 0) {
-        texts.push({ text: "-", class: "text-black" });
-      }
-
-      return texts;
     });
 
     return {
@@ -132,6 +89,6 @@ export default defineComponent({
 
 <style scoped>
 .side-bar-item {
-  @apply mx-2 my-1 px-2 py-1 border-[3px] rounded-md cursor-pointer select-none;
+  @apply mx-2 my-1 px-2.5 py-1.5 border-[3px] rounded-xl cursor-pointer select-none;
 }
 </style>

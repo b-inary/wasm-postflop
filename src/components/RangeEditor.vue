@@ -1,53 +1,69 @@
 <template>
-  <div class="ml-2">
-    <div class="flex">
-      <table class="bg-white" @mouseleave="mouseLeave">
-        <tr v-for="row in 13" :key="row" class="h-9">
-          <td
-            v-for="col in 13"
-            :key="col"
-            :class="
-              'relative w-10 text-center align-middle border-black cursor-default select-none ' +
-              (row === col ? 'border-2' : 'border')
-            "
-            @mousedown="dragStart(row, col)"
-            @mouseup="dragEnd"
-            @mouseover="mouseOver(row, col)"
-          >
-            <div
-              class="absolute top-0 left-0 h-full bg-yellow-300"
-              :style="'width: ' + weightWidth(row, col)"
-            ></div>
-            <div class="relative z-10">
-              {{ cellText(row, col) }}
-            </div>
-          </td>
-        </tr>
-      </table>
-
-      <div class="ml-6 pt-12">
-        <span class="inline-block w-9">{{ hoveringCellText }}</span>
-        {{ hoveringCellWeight }}
-      </div>
-    </div>
+  <div class="mt-2 ml-1">
+    <table class="bg-gray-200 shadow" @mouseleave="dragEnd">
+      <tr v-for="row in 13" :key="row" class="h-9">
+        <td
+          v-for="col in 13"
+          :key="col"
+          :class="
+            'relative w-10 border-black select-none ' +
+            (row === col ? 'border-2' : 'border')
+          "
+          @mousedown="dragStart(row, col)"
+          @mouseup="dragEnd"
+          @mouseover="mouseOver(row, col)"
+        >
+          <div
+            class="absolute bottom-0 left-0 w-full bg-yellow-300"
+            :style="{ height: weightPercent(row, col) }"
+          ></div>
+          <div class="absolute -top-px left-px z-10 text-sm">
+            {{ cellText(row, col) }}
+          </div>
+          <div class="absolute -bottom-px right-px z-10 text-sm">
+            {{
+              weightPercent(row, col) === "0%" ||
+              weightPercent(row, col) === "100%"
+                ? ""
+                : weightPercent(row, col)
+            }}
+          </div>
+        </td>
+      </tr>
+    </table>
 
     <div class="mt-5">
-      <input
-        v-model="rangeText"
-        type="text"
-        :class="
-          'w-[30rem] px-2 py-1 rounded-lg text-sm ' +
-          (rangeTextError ? 'ring-1 ring-red-600 border-red-600 bg-red-50' : '')
-        "
-        @focus="($event.target as HTMLInputElement).select()"
-        @change="onRangeTextChange"
-      />
+      <div class="flex items-center">
+        <input
+          v-model="rangeText"
+          type="text"
+          :class="
+            'w-[27rem] px-2 py-1 rounded-lg text-sm ' +
+            (rangeTextError
+              ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+              : '')
+          "
+          @focus="($event.target as HTMLInputElement).select()"
+          @change="onRangeTextChange"
+        />
+
+        <button
+          :class="
+            'rounded-lg shadow-sm ml-6 px-3.5 py-1.5 text-white text-sm font-medium ' +
+            'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
+          "
+          @click="clearRange"
+        >
+          Clear
+        </button>
+      </div>
+
       <div v-if="rangeTextError" class="mt-1 text-red-600">
         Error: {{ rangeTextError }}
       </div>
     </div>
 
-    <div class="mt-5">
+    <div class="mt-3">
       Weight:
       <input
         v-model="weight"
@@ -56,6 +72,7 @@
         min="0"
         max="100"
         step="5"
+        @change="onWeightChange"
       />
       <input
         v-model="weight"
@@ -73,28 +90,17 @@
       />
       %
 
-      <button
-        :class="
-          'rounded-lg shadow-sm ml-16 px-3.5 py-1.5 text-white text-sm font-medium ' +
-          'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
-          'disabled:opacity-40 disabled:bg-blue-600 disabled:cursor-not-allowed'
-        "
-        @click="clearRange"
-      >
-        Clear
-      </button>
-    </div>
-
-    <div class="mt-3">
-      {{ numCombos.toFixed(1) }} combos ({{
-        ((numCombos * 100) / ((52 * 51) / 2)).toFixed(1)
-      }}%)
+      <span class="inline-block ml-8">
+        {{ numCombos.toFixed(1) }} combos ({{
+          ((numCombos * 100) / ((52 * 51) / 2)).toFixed(1)
+        }}%)
+      </span>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import { defineComponent, ref } from "vue";
 import { useStore } from "../store";
 import { RangeManager } from "../../pkg/range/range";
 
@@ -126,30 +132,23 @@ export default defineComponent({
     const rangeText = ref("");
     const rangeTextError = ref("");
     const weight = ref(100);
-    const hoveringCellText = ref("");
-    const hoveringCellWeight = ref("");
+    const numCombos = ref(0);
 
     let draggingMode = "none" as DraggingMode;
+
+    const onUpdate = () => {
+      rangeStoreRaw.set(range.raw_data());
+      rangeText.value = range.to_string();
+      rangeTextError.value = "";
+      numCombos.value = rangeStoreRaw.reduce((acc, cur) => acc + cur, 0);
+    };
 
     const update = (row: number, col: number, weight: number) => {
       const idx = 13 * (row - 1) + col - 1;
       range.update(row, col, weight / 100);
       rangeStore[idx] = weight;
-      rangeStoreRaw.set(range.raw_data());
-      rangeText.value = range.to_string();
-      rangeTextError.value = "";
+      onUpdate();
     };
-
-    const numCombos = computed(() => {
-      let combos = 0;
-      for (let row = 0; row < 13; row++) {
-        for (let col = 0; col < 13; col++) {
-          const dup = [4, 6, 12][Math.sign(row - col) + 1];
-          combos += (dup * rangeStore[13 * row + col]) / 100;
-        }
-      }
-      return combos;
-    });
 
     const cellText = (row: number, col: number) => {
       const r1 = 13 - Math.min(row, col);
@@ -183,9 +182,7 @@ export default defineComponent({
         for (let i = 0; i < 13 * 13; ++i) {
           rangeStore[i] = weights[i] * 100;
         }
-        rangeStoreRaw.set(range.raw_data());
-        rangeText.value = range.to_string();
-        rangeTextError.value = "";
+        onUpdate();
       }
     };
 
@@ -199,9 +196,6 @@ export default defineComponent({
         draggingMode = "disabling";
         update(row, col, 0);
       }
-
-      hoveringCellText.value = cellText(row, col) + ":";
-      hoveringCellWeight.value = rangeStore[idx].toFixed(1) + "%";
     };
 
     const dragEnd = () => {
@@ -209,32 +203,19 @@ export default defineComponent({
     };
 
     const mouseOver = (row: number, col: number) => {
-      const idx = 13 * (row - 1) + col - 1;
-
-      if (draggingMode !== "none") {
-        if (draggingMode === "enabling") {
-          update(row, col, weight.value);
-        } else {
-          update(row, col, 0);
-        }
+      if (draggingMode === "enabling") {
+        update(row, col, weight.value);
+      } else if (draggingMode === "disabling") {
+        update(row, col, 0);
       }
-
-      hoveringCellText.value = cellText(row, col) + ":";
-      hoveringCellWeight.value = rangeStore[idx].toFixed(1) + "%";
     };
 
-    const mouseLeave = () => {
-      dragEnd();
-      hoveringCellText.value = "";
-      hoveringCellWeight.value = "";
-    };
-
-    const weightWidth = (row: number, col: number) => {
-      return rangeStore[13 * (row - 1) + col - 1] + "%";
+    const weightPercent = (row: number, col: number) => {
+      return rangeStore[13 * (row - 1) + col - 1].toFixed(0) + "%";
     };
 
     const onWeightChange = () => {
-      weight.value = Math.max(0, Math.min(100, weight.value));
+      weight.value = Math.round(Math.max(0, Math.min(100, weight.value)));
     };
 
     const clearRange = () => {
@@ -244,6 +225,7 @@ export default defineComponent({
       rangeText.value = "";
       rangeTextError.value = "";
       weight.value = 100;
+      numCombos.value = 0;
     };
 
     return {
@@ -251,15 +233,12 @@ export default defineComponent({
       rangeTextError,
       weight,
       numCombos,
-      hoveringCellText,
-      hoveringCellWeight,
       cellText,
       onRangeTextChange,
       dragStart,
       dragEnd,
       mouseOver,
-      mouseLeave,
-      weightWidth,
+      weightPercent,
       onWeightChange,
       clearRange,
     };

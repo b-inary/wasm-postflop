@@ -39,8 +39,7 @@
     <button
       :class="
         'rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium ' +
-        'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
-        'disabled:opacity-40 disabled:bg-blue-600 disabled:cursor-not-allowed'
+        'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
       "
       @click="store.board = []"
     >
@@ -50,8 +49,7 @@
     <button
       :class="
         'rounded-lg shadow-sm ml-3 px-3.5 py-1.5 text-white text-sm font-medium ' +
-        'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
-        'disabled:opacity-40 disabled:bg-blue-600 disabled:cursor-not-allowed'
+        'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
       "
       @click="generateRandomBoard"
     >

@@ -19,25 +19,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { useStore } from "../store";
-
-const ranks = [
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "J",
-  "Q",
-  "K",
-  "A",
-];
-
-const suits = ["♣", "♦", "♥", "♠"];
+import { cardText, useStore } from "../store";
 
 export default defineComponent({
   props: {
@@ -49,24 +31,8 @@ export default defineComponent({
 
   setup(props) {
     const store = useStore();
-    const rank = ranks[Math.floor(props.cardId / 4)];
-    const suit = suits[props.cardId % 4];
 
-    let colorClass;
-    switch (props.cardId % 4) {
-      case 0:
-        colorClass = "text-green-600";
-        break;
-      case 1:
-        colorClass = "text-blue-600";
-        break;
-      case 2:
-        colorClass = "text-pink-600";
-        break;
-      case 3:
-        colorClass = "text-black";
-        break;
-    }
+    const { rank, suit, colorClass } = cardText(props.cardId);
 
     const toggleCard = () => {
       if (store.board.includes(props.cardId)) {

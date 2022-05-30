@@ -2,13 +2,11 @@
   <p class="flex my-1 items-center">
     Number of threads:
     <input
-      v-model="store.numThreads"
+      v-model="numThreads"
       type="number"
       :class="
         'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-        (store.numThreads < 1 ||
-        store.numThreads > 64 ||
-        store.numThreads % 1 !== 0
+        (numThreads < 1 || numThreads > 64 || numThreads % 1 !== 0
           ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
           : '')
       "
@@ -30,61 +28,55 @@
 
   <p class="my-1">Status: {{ treeStatus }}</p>
 
-  <div v-if="store.isTreeBuilt" class="mt-4">
+  <div v-if="isTreeBuilt" class="mt-4">
     <p>
       <label
         :class="
-          store.memoryUsage > maxMemoryUsage
-            ? 'text-gray-500'
+          memoryUsage > maxMemoryUsage
+            ? 'text-gray-400'
             : !store.hasSolverRun
             ? 'cursor-pointer'
             : ''
         "
       >
         <input
-          v-model="store.isCompressionEnabled"
+          v-model="isCompressionEnabled"
           class="mr-2 cursor-pointer disabled:opacity-40 disabled:cursor-default"
           type="radio"
           name="compression"
           :value="false"
-          :disabled="store.hasSolverRun || store.memoryUsage > maxMemoryUsage"
+          :disabled="store.hasSolverRun || memoryUsage > maxMemoryUsage"
         />
         No compression: requires
-        {{ (store.memoryUsage / (1024 * 1024 * 1024)).toFixed(2) }}
+        {{ (memoryUsage / (1024 * 1024 * 1024)).toFixed(2) }}
         GB of RAM
-        {{
-          store.memoryUsage <= maxMemoryUsage ? "(fast)" : "(limit exceeded)"
-        }}
+        {{ memoryUsage <= maxMemoryUsage ? "(fast)" : "(limit exceeded)" }}
       </label>
     </p>
     <p>
       <label
         :class="
-          store.memoryUsageCompressed > maxMemoryUsage
-            ? 'text-gray-500'
+          memoryUsageCompressed > maxMemoryUsage
+            ? 'text-gray-400'
             : !store.hasSolverRun
             ? 'cursor-pointer'
             : ''
         "
       >
         <input
-          v-model="store.isCompressionEnabled"
+          v-model="isCompressionEnabled"
           class="mr-2 cursor-pointer disabled:opacity-40 disabled:cursor-default"
           type="radio"
           name="compression"
           :value="true"
           :disabled="
-            store.hasSolverRun || store.memoryUsageCompressed > maxMemoryUsage
+            store.hasSolverRun || memoryUsageCompressed > maxMemoryUsage
           "
         />
         Use compression: requires
-        {{ (store.memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) }}
+        {{ (memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) }}
         GB of RAM
-        {{
-          store.memoryUsageCompressed <= maxMemoryUsage
-            ? ""
-            : "(limit exceeded)"
-        }}
+        {{ memoryUsageCompressed <= maxMemoryUsage ? "" : "(limit exceeded)" }}
       </label>
     </p>
 
@@ -132,7 +124,7 @@
         "
         :disabled="
           store.hasSolverRun ||
-          store.memoryUsageCompressed > maxMemoryUsage ||
+          memoryUsageCompressed > maxMemoryUsage ||
           targetExploitability < 0 ||
           maxIterations < 1 ||
           maxIterations % 1 !== 0
@@ -148,7 +140,7 @@
           'disabled:opacity-40 disabled:bg-red-600'
         "
         :disabled="!store.isSolverRunning"
-        @click="() => (store.terminateFlag = true)"
+        @click="() => (terminateFlag = true)"
       >
         Stop
       </button>
@@ -160,7 +152,7 @@
           'disabled:opacity-40 disabled:bg-green-600'
         "
         :disabled="!store.isSolverRunning"
-        @click="() => (store.pauseFlag = true)"
+        @click="() => (pauseFlag = true)"
       >
         Pause
       </button>
@@ -178,17 +170,24 @@
     </p>
 
     <div v-if="store.hasSolverRun" class="mt-6">
-      <div v-if="store.isSolverRunning" class="flex items-center">
-        <span class="spinner inline-block mr-3"></span>
-        Solver running...
+      <div class="flex items-center">
+        <span
+          v-if="store.isSolverRunning || store.isFinalizing"
+          class="spinner inline-block mr-3"
+        ></span>
+        {{
+          store.isSolverRunning
+            ? "Solver running..."
+            : store.isFinalizing
+            ? "Finalizing..."
+            : store.isSolverPaused
+            ? "Solver paused."
+            : "Solver finished."
+        }}
       </div>
-      <div v-else-if="store.isSolverPaused">Solver paused.</div>
-      <div v-else>Solver finished.</div>
       {{ iterationText }}
       <br />
       {{ exploitabilityText }}
-      <br />
-      {{ expectedValueText }}
       <br />
       {{ timeText }}
     </div>
@@ -203,16 +202,8 @@ import { useStore } from "../store";
 const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024;
 
 function checkConfig(store: ReturnType<typeof useStore>): string | null {
-  if (store.numThreads < 1 || store.numThreads % 1 !== 0) {
-    return "Invalid number of threads";
-  }
-
-  if (store.numThreads > 64) {
-    return "Too many threads";
-  }
-
   if (store.board.length !== 3) {
-    return "Board must consist of 3 cards";
+    return "Board must consist of exactly three cards";
   }
 
   if (store.startingPot <= 0) {
@@ -310,52 +301,61 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    let startTime = 0;
-    const isTreeBuilding = ref(false);
-    const treeStatus = ref("Module not loaded");
+    const numThreads = ref(navigator.hardwareConcurrency || 1);
     const targetExploitability = ref(0.5);
     const maxIterations = ref(1000);
 
+    const isTreeBuilding = ref(false);
+    const isTreeBuilt = ref(false);
+    const treeStatus = ref("Module not loaded");
+    const memoryUsage = ref(0);
+    const memoryUsageCompressed = ref(0);
+    const isCompressionEnabled = ref(false);
+    const terminateFlag = ref(false);
+    const pauseFlag = ref(false);
+    const currentIteration = ref(-1);
+    const exploitability = ref(-1);
+    const elapsedTimeMs = ref(-1);
+
+    let startTime = 0;
+
     const iterationText = computed(() => {
-      if (store.currentIteration === -1) {
+      if (currentIteration.value === -1) {
         return "Allocating memory...";
       } else {
-        return `Iteration: ${store.currentIteration}`;
+        return `Iteration: ${currentIteration.value}`;
       }
     });
 
     const exploitabilityText = computed(() => {
-      const exploitability = store.exploitability;
-      if (exploitability === -1) {
+      if (exploitability.value === -1) {
         return "";
       } else {
-        const percent = (exploitability * 100) / store.startingPot;
+        const valueText = exploitability.value.toFixed(2);
+        const percent = (exploitability.value * 100) / store.startingPot;
         const percentText = `${percent.toFixed(2)}%`;
-        return `Exploitability: ${exploitability.toFixed(2)} (${percentText})`;
-      }
-    });
-
-    const expectedValueText = computed(() => {
-      const ev = store.expectedValue;
-      if (ev[0] === -1 && ev[1] === -1) {
-        return "";
-      } else {
-        return `EV: ${ev[0].toFixed(2)} vs ${ev[1].toFixed(2)}`;
+        return `Exploitability: ${valueText} (${percentText})`;
       }
     });
 
     const timeText = computed(() => {
-      if (store.elapsedTimeMs === -1) {
-        return "Finalizing...";
-      } else if (store.elapsedTimeMs === 0 || !store.isSolverTerminated) {
+      if (elapsedTimeMs.value === -1 || !store.isSolverFinished) {
         return "";
       } else {
-        return `Time: ${(store.elapsedTimeMs / 1000).toFixed(2)}s`;
+        return `Time: ${(elapsedTimeMs.value / 1000).toFixed(2)}s`;
       }
     });
 
     const buildTree = async () => {
-      store.isTreeBuilt = false;
+      isTreeBuilt.value = false;
+
+      if (numThreads.value < 1 || numThreads.value % 1 !== 0) {
+        return "Invalid number of threads";
+      }
+
+      if (numThreads.value > 64) {
+        return "Too many threads";
+      }
 
       const configError = checkConfig(store);
       if (configError !== null) {
@@ -384,7 +384,7 @@ export default defineComponent({
       isTreeBuilding.value = true;
       treeStatus.value = "Building tree...";
 
-      await GlobalWorker.init(store.numThreads);
+      await GlobalWorker.init(numThreads.value);
       const handler = await GlobalWorker.getHandler();
 
       const errorString = await handler.init(
@@ -416,46 +416,45 @@ export default defineComponent({
         return;
       }
 
-      store.memoryUsage = await handler.memoryUsage(false);
-      store.memoryUsageCompressed = await handler.memoryUsage(true);
+      memoryUsage.value = await handler.memoryUsage(false);
+      memoryUsageCompressed.value = await handler.memoryUsage(true);
 
-      if (store.memoryUsage <= maxMemoryUsage) {
-        store.isCompressionEnabled = false;
-      } else if (store.memoryUsageCompressed <= maxMemoryUsage) {
-        store.isCompressionEnabled = true;
+      if (memoryUsage.value <= maxMemoryUsage) {
+        isCompressionEnabled.value = false;
+      } else if (memoryUsageCompressed.value <= maxMemoryUsage) {
+        isCompressionEnabled.value = true;
       }
 
-      store.isTreeBuilt = true;
-      store.isSolverRunning = false;
-      store.isSolverPaused = false;
-      store.isSolverTerminated = false;
-
-      const threadText = `${store.numThreads} thread${
-        store.numThreads === 1 ? "" : "s"
+      const threadText = `${numThreads.value} thread${
+        numThreads.value === 1 ? "" : "s"
       }`;
 
       isTreeBuilding.value = false;
+      isTreeBuilt.value = true;
       treeStatus.value = `Successfully built tree (${threadText})`;
+
+      store.isSolverRunning = false;
+      store.isSolverPaused = false;
+      store.isSolverFinished = false;
+      store.initResults();
     };
 
     const runSolver = async () => {
       const handler = await GlobalWorker.getHandler();
 
-      store.terminateFlag = false;
-      store.pauseFlag = false;
+      terminateFlag.value = false;
+      pauseFlag.value = false;
+      currentIteration.value = -1;
+      exploitability.value = -1;
+      elapsedTimeMs.value = -1;
 
       store.isSolverRunning = true;
 
-      store.currentIteration = -1;
-      store.exploitability = -1;
-      store.expectedValue = [-1, -1];
-      store.elapsedTimeMs = 0;
-
       startTime = performance.now();
 
-      await handler.allocateMemory(store.isCompressionEnabled);
+      await handler.allocateMemory(isCompressionEnabled.value);
 
-      store.currentIteration = 0;
+      currentIteration.value = 0;
       await resumeSolver();
     };
 
@@ -471,51 +470,57 @@ export default defineComponent({
 
       const target = (store.startingPot * targetExploitability.value) / 100;
 
-      while (store.currentIteration < maxIterations.value) {
-        if (store.pauseFlag) {
+      while (currentIteration.value < maxIterations.value) {
+        if (pauseFlag.value) {
           const end = performance.now();
-          store.elapsedTimeMs += end - startTime;
+          elapsedTimeMs.value += end - startTime;
           startTime = 0;
-          store.pauseFlag = false;
+          pauseFlag.value = false;
           store.isSolverRunning = false;
           store.isSolverPaused = true;
           return;
         }
 
-        await handler.iterate(store.currentIteration);
-        ++store.currentIteration;
+        await handler.iterate(currentIteration.value);
+        ++currentIteration.value;
 
-        if (store.currentIteration % 10 === 0 || store.terminateFlag) {
-          store.exploitability = await handler.exploitability();
-          if (store.exploitability <= target || store.terminateFlag) {
+        if (currentIteration.value % 10 === 0 || terminateFlag.value) {
+          exploitability.value = await handler.exploitability();
+          if (exploitability.value <= target || terminateFlag.value) {
             break;
           }
         }
       }
 
-      store.elapsedTimeMs = -1;
-      await handler.finalize();
+      store.isSolverRunning = false;
+      store.isFinalizing = true;
 
-      const oopEv = (await handler.ev()) + store.startingPot / 2;
-      store.expectedValue = [oopEv, store.startingPot - oopEv];
+      await handler.finalize();
+      await store.onSolverFinished();
+
+      store.isFinalizing = false;
+      store.isSolverFinished = true;
 
       const end = performance.now();
-      store.elapsedTimeMs += end - startTime;
-
-      store.isSolverRunning = false;
-      store.isSolverTerminated = true;
+      elapsedTimeMs.value += end - startTime;
     };
 
     return {
       store,
-      isTreeBuilding,
-      treeStatus,
-      maxMemoryUsage,
+      numThreads,
       targetExploitability,
       maxIterations,
+      isTreeBuilding,
+      isTreeBuilt,
+      treeStatus,
+      maxMemoryUsage,
+      memoryUsage,
+      memoryUsageCompressed,
+      isCompressionEnabled,
+      terminateFlag,
+      pauseFlag,
       iterationText,
       exploitabilityText,
-      expectedValueText,
       timeText,
       buildTree,
       runSolver,
@@ -524,75 +529,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped>
-.spinner {
-  text-indent: -9999em;
-  width: 1em;
-  height: 1em;
-  border-radius: 50%;
-  background: #404040;
-  background: -moz-linear-gradient(left, #404040 10%, rgba(64, 64, 64, 0) 42%);
-  background: -webkit-linear-gradient(
-    left,
-    #404040 10%,
-    rgba(64, 64, 64, 0) 42%
-  );
-  background: -o-linear-gradient(left, #404040 10%, rgba(64, 64, 64, 0) 42%);
-  background: -ms-linear-gradient(left, #404040 10%, rgba(64, 64, 64, 0) 42%);
-  background: linear-gradient(to right, #404040 10%, rgba(64, 64, 64, 0) 42%);
-  position: relative;
-  -webkit-animation: spinner-animation 0.8s infinite linear;
-  animation: spinner-animation 0.8s infinite linear;
-  -webkit-transform: translateZ(0);
-  -ms-transform: translateZ(0);
-  transform: translateZ(0);
-}
-
-.spinner:before {
-  width: 50%;
-  height: 50%;
-  background: #404040;
-  border-radius: 100% 0 0 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  content: "";
-}
-
-.spinner:after {
-  @apply bg-gray-100;
-  width: 75%;
-  height: 75%;
-  border-radius: 50%;
-  content: "";
-  margin: auto;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-}
-
-@-webkit-keyframes spinner-animation {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes spinner-animation {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-</style>

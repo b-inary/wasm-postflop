@@ -1,8 +1,10 @@
 # wasm-postflop
 
-Post-flop solver powered by WebAssembly (work in progress)
+A free and open-source GTO solver that works on web browsers
 
-Solver core: https://github.com/b-inary/postflop-solver
+Web site: (to be released soon)
+
+Core solver repository: https://github.com/b-inary/postflop-solver
 
 ## Build
 

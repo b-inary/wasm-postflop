@@ -1,14 +1,14 @@
 <template>
-  <table class="bg-white">
+  <table class="bg-gray-200 shadow">
     <tr v-for="row in 13" :key="row" class="h-2.5">
       <td
         v-for="col in 13"
         :key="col"
-        class="relative w-2.5 border border-black"
+        class="relative w-2.5 border border-gray-400"
       >
         <div
-          class="absolute top-0 left-0 h-full bg-yellow-300"
-          :style="'width: ' + weightWidth(row, col)"
+          class="absolute bottom-0 left-0 w-full bg-yellow-300"
+          :style="{ height: weightWidth(row, col) }"
         ></div>
       </td>
     </tr>

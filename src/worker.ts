@@ -55,6 +55,10 @@ function createHandler(mod: Mod) {
       );
     },
 
+    privateHandCards(player: number) {
+      return this.game.private_hand_cards(player);
+    },
+
     memoryUsage(enable_compression: boolean) {
       return Number(this.game.memory_usage(enable_compression));
     },
@@ -75,8 +79,32 @@ function createHandler(mod: Mod) {
       this.game.finalize();
     },
 
-    ev() {
-      return this.game.ev();
+    getActions() {
+      return this.game.get_actions();
+    },
+
+    isTerminal() {
+      return this.game.is_terminal();
+    },
+
+    currentPlayer() {
+      return this.game.current_player();
+    },
+
+    getWeights() {
+      return this.game.get_weights();
+    },
+
+    getNormalizedWeights() {
+      return this.game.get_normalized_weights();
+    },
+
+    getExpectedValues() {
+      return this.game.get_expected_values();
+    },
+
+    getStrategy() {
+      return this.game.get_strategy();
     },
   };
 }

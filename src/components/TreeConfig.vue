@@ -255,7 +255,7 @@
         <input
           v-model="store.adjustLastTwoBetSizes"
           type="checkbox"
-          class="mr-2 rounded cursor-pointer"
+          class="mr-1 align-middle rounded cursor-pointer"
         />
         Adjust last two bet sizes
       </label>

@@ -23,12 +23,12 @@
   <ul class="mt-4 ml-8 list-disc">
     <li>
       <span class="font-bold">available memory is limited to 4GB</span> due to
-      the technical limitations of WebAssembly
+      technical limitation of WebAssembly
     </li>
     <li>mobile use is not considered</li>
     <li>
-      this project is work in progress; currently provides only minimal
-      functionality
+      this is a hobby project in the alpha stage; there are no guarantees, and
+      only minimal functionality is provided
     </li>
   </ul>
 </template>
