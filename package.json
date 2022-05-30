@@ -29,6 +29,7 @@
     "@vue/eslint-config-typescript": "^10.0.0",
     "autoprefixer": "^10.4.7",
     "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.7.1",
     "cssnano": "^5.1.10",
     "eslint": "^8.16.0",

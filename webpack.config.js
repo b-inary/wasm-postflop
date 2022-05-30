@@ -1,5 +1,6 @@
 const path = require("path");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HTMLWebpackPlugin = require("html-webpack-plugin");
 const MiniCSSExtractPlugin = require("mini-css-extract-plugin");
 const { VueLoaderPlugin } = require("vue-loader");
@@ -42,6 +43,7 @@ const config = {
   resolve: { extensions: [".js", ".ts", ".vue"] },
   plugins: [
     new CleanWebpackPlugin(),
+    new CopyWebpackPlugin({ patterns: [{ from: "public/_headers" }] }),
     new HTMLWebpackPlugin({ template: "public/index.html" }),
     new MiniCSSExtractPlugin({ filename: "[contenthash].css" }),
     new VueLoaderPlugin(),

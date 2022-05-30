@@ -2,7 +2,7 @@
 
 A free and open-source GTO solver that works on web browsers
 
-Web site: (to be released soon)
+Website: https://wasm-postflop.pages.dev/
 
 Core solver repository: https://github.com/b-inary/postflop-solver
 
