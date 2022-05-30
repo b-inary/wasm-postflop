@@ -1,5 +1,5 @@
 [package]
-name = "range"
+name = "solver"
 version = "0.0.1"
 authors = ["Wataru Inariba"]
 edition = "2021"
@@ -7,9 +7,10 @@ license = "AGPL-3.0-or-later"
 
 [lib]
 crate-type = ["cdylib"]
+path = "../solver-src/lib.rs"
 
 [dependencies]
-postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features = ["custom_alloc"] }
+postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features = ["custom_alloc"], default-features = false }
 wasm-bindgen = "0.2"
 
 [profile.release]

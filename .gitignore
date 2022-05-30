@@ -1,5 +1,4 @@
 /dist/
 /node_modules/
 /pkg/
-/rust-range/target/
-/rust-solver/target/
+/rust/**/target/

@@ -1,9 +1,9 @@
 import * as Comlink from "comlink";
-import { simd } from "wasm-feature-detect";
+import { detect } from "detect-browser";
 
-type Mod =
-  | typeof import("../pkg/solver/solver.js")
-  | typeof import("../pkg/solver-simd/solver.js");
+type ModST = typeof import("../pkg/solver-st/solver.js");
+type ModMT = typeof import("../pkg/solver-mt/solver.js");
+type Mod = ModST | ModMT;
 
 function createHandler(mod: Mod) {
   return {
@@ -116,14 +116,15 @@ let handler: Handler;
 async function init(num_threads: number) {
   let mod: Mod;
 
-  if (await simd()) {
-    mod = await import("../pkg/solver-simd/solver.js");
+  const browser = detect();
+  if (browser && (browser.name === "safari" || browser.os === "iOS")) {
+    mod = await import("../pkg/solver-st/solver.js");
+    await mod.default();
   } else {
-    mod = await import("../pkg/solver/solver.js");
+    mod = await import("../pkg/solver-mt/solver.js");
+    await mod.default();
+    await (mod as ModMT).initThreadPool(num_threads);
   }
-
-  await mod.default();
-  await mod.initThreadPool(num_threads);
 
   handler = createHandler(mod);
 }

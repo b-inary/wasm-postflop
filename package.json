@@ -9,17 +9,17 @@
     "serve": "node server.js",
     "lint": "eslint src/**/*.{ts,vue}",
     "format": "prettier --write src/**/*.{ts,vue}",
-    "wasm": "run-s range solver-no-simd solver-simd solver-patch",
-    "range": "rustup run nightly wasm-pack build --out-dir ../pkg/range rust-range",
-    "solver-no-simd": "RUSTFLAGS=\"-C target-feature=+atomics,+bulk-memory,+mutable-globals -C link-arg=--max-memory=4294967296\" rustup run nightly wasm-pack build --target web --out-dir ../pkg/solver rust-solver",
-    "solver-simd": "RUSTFLAGS=\"-C target-feature=+atomics,+bulk-memory,+mutable-globals,+simd128 -C link-arg=--max-memory=4294967296\" rustup run nightly wasm-pack build --target web --out-dir ../pkg/solver-simd rust-solver",
-    "solver-patch": "sed -i \"s/cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer)/cachegetInt32Memory0 = new Uint32Array(wasm.memory.buffer)/\" ./pkg/solver/solver.js ./pkg/solver-simd/solver.js"
+    "wasm": "run-s range solver-st solver-mt solver-patch",
+    "range": "rustup run nightly wasm-pack build --out-dir ../../pkg/range rust/range",
+    "solver-st": "rustup run nightly wasm-pack build --target web --out-dir ../../pkg/solver-st rust/solver-st",
+    "solver-mt": "rustup run nightly wasm-pack build --target web --out-dir ../../pkg/solver-mt rust/solver-mt",
+    "solver-patch": "sed -i \"s/cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer)/cachegetInt32Memory0 = new Uint32Array(wasm.memory.buffer)/\" ./pkg/solver-mt/solver.js ./pkg/solver-st/solver.js"
   },
   "dependencies": {
     "comlink": "^4.3.1",
+    "detect-browser": "^5.3.0",
     "pinia": "^2.0.14",
-    "vue": "^3.2.36",
-    "wasm-feature-detect": "^1.2.11"
+    "vue": "^3.2.36"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.3",

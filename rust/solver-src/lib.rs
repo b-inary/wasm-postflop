@@ -1,6 +1,8 @@
 extern crate wasm_bindgen;
 use postflop_solver::*;
 use wasm_bindgen::prelude::*;
+
+#[cfg(feature = "wasm-bindgen-rayon")]
 pub use wasm_bindgen_rayon::init_thread_pool;
 
 struct HistoryNode {
@@ -64,8 +66,8 @@ impl GameManager {
         oop_range: &[f32],
         ip_range: &[f32],
         flop: &[u8],
-        initial_pot: i32,
-        initial_stack: i32,
+        starting_pot: i32,
+        effective_stack: i32,
         oop_flop_bet_sizes: &[f32],
         oop_flop_raise_sizes: &[f32],
         oop_turn_bet_sizes: &[f32],
@@ -95,8 +97,8 @@ impl GameManager {
 
         let config = GameConfig {
             flop: flop.try_into().unwrap(),
-            initial_pot,
-            initial_stack,
+            starting_pot,
+            effective_stack,
             range: [
                 Range::from_raw_data(oop_range),
                 Range::from_raw_data(ip_range),

@@ -22,8 +22,25 @@
 
   <ul class="mt-4 ml-8 list-disc">
     <li>
-      <span class="font-bold">available memory is limited to 4GB</span> due to
-      technical limitation of WebAssembly
+      <span class="font-bold underline">
+        multithreading is not supported in iOS and Safari</span
+      >
+      because nested workers are
+      <a href="https://bugs.webkit.org/show_bug.cgi?id=22723" class="link">
+        not implemented
+      </a>
+      <ul class="ml-8" style="list-style-type: circle">
+        <li>
+          if you are using macOS, please use other browsers such as Google
+          Chrome instead
+        </li>
+      </ul>
+    </li>
+    <li>
+      <span class="font-bold underline">
+        available memory is limited to 4GB</span
+      >
+      due to the technical limitation of WebAssembly
     </li>
     <li>mobile use is not considered</li>
     <li>

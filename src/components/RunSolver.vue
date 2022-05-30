@@ -6,7 +6,9 @@
       type="number"
       :class="
         'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-        (numThreads < 1 || numThreads > 64 || numThreads % 1 !== 0
+        (numThreads < 1 ||
+        numThreads > (canMultiThread ? 64 : 1) ||
+        numThreads % 1 !== 0
           ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
           : '')
       "
@@ -198,8 +200,14 @@
 import { computed, defineComponent, ref } from "vue";
 import * as GlobalWorker from "../global-worker";
 import { useStore } from "../store";
+import { detect } from "detect-browser";
 
 const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024;
+const browser = detect();
+const canMultiThread = !(
+  browser &&
+  (browser.name === "safari" || browser.os === "iOS")
+);
 
 function checkConfig(store: ReturnType<typeof useStore>): string | null {
   if (store.board.length !== 3) {
@@ -301,7 +309,9 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    const numThreads = ref(navigator.hardwareConcurrency || 1);
+    const numThreads = ref(
+      canMultiThread ? navigator.hardwareConcurrency || 1 : 1
+    );
     const targetExploitability = ref(0.5);
     const maxIterations = ref(1000);
 
@@ -350,11 +360,19 @@ export default defineComponent({
       isTreeBuilt.value = false;
 
       if (numThreads.value < 1 || numThreads.value % 1 !== 0) {
-        return "Invalid number of threads";
+        treeStatus.value = "Error: Invalid number of threads";
+        return;
       }
 
       if (numThreads.value > 64) {
-        return "Too many threads";
+        treeStatus.value = "Error: Too many threads";
+        return;
+      }
+
+      if (!canMultiThread && numThreads.value > 1) {
+        treeStatus.value =
+          "Error: Multithreading is not supported in iOS and Safari";
+        return;
       }
 
       const configError = checkConfig(store);
@@ -508,6 +526,7 @@ export default defineComponent({
     return {
       store,
       numThreads,
+      canMultiThread,
       targetExploitability,
       maxIterations,
       isTreeBuilding,
