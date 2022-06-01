@@ -6,6 +6,8 @@ Website: https://wasm-postflop.pages.dev/
 
 Core solver repository: https://github.com/b-inary/postflop-solver
 
+![Image](image.png)
+
 ## Build
 
 ```sh
