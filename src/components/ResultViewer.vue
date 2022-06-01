@@ -118,14 +118,14 @@
                 <div
                   v-for="item in cellItems(row, col)"
                   :key="item.key"
-                  :class="'absolute top-0 h-full ' + item.class"
+                  :class="'absolute top-0 right-0 h-full ' + item.class"
                   :style="item.style"
                 ></div>
               </div>
-              <div class="absolute -top-px left-px z-10 text-sm">
+              <div class="absolute -top-px left-px z-50 text-sm">
                 {{ cellText(row, col) }}
               </div>
-              <div class="absolute -bottom-px right-px z-10 text-sm">
+              <div class="absolute -bottom-px right-px z-50 text-sm">
                 {{ cellAuxText(row, col) }}
               </div>
             </td>
@@ -624,15 +624,13 @@ export default defineComponent({
       const idx = (row - 1) * 13 + col - 1;
       const strategy = resultCell.value[idx].strategy;
       return strategy.map((_, i) => {
+        const left = strategy.slice(0, i).reduce((a, b) => a + b, 0);
         return {
           key: i,
           class: actionColor.value[i],
           style: {
-            width: (100 * strategy[i]).toFixed(1) + "%",
-            left:
-              (100 * strategy.slice(0, i).reduce((a, b) => a + b, 0)).toFixed(
-                1
-              ) + "%",
+            width: (100 * (1 - left)).toFixed(1) + "%",
+            zIndex: i,
           },
         };
       });
