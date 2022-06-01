@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import * as GlobalWorker from "./global-worker";
 
 export type MainView =
   | "About"
@@ -98,25 +97,7 @@ export const useStore = defineStore("app", {
     isSolverPaused: false,
     isSolverFinished: false,
     isFinalizing: false,
-    privateHandCards: [] as number[][][],
-    actions: [] as {
-      type: "Player" | "Turn" | "River";
-      candidates: { str: string; isSelected: boolean; isTerminal: boolean }[];
-    }[],
-    result: [] as {
-      card1: number;
-      card2: number;
-      weight: number;
-      weightNormalized: number;
-      expectedValue: number;
-      strategy: number[];
-    }[],
-    resultSummary: [] as {
-      enabled: boolean;
-      weight: number;
-      expectedValue: number;
-      strategy: number[];
-    }[],
+    normalizer: [0, 0],
   }),
 
   getters: {
@@ -141,129 +122,5 @@ export const useStore = defineStore("app", {
     ipTurnRaiseSizes: (state) => parseBetSizes(state.ipTurnRaiseSizesStr),
     ipRiverBetSizes: (state) => parseBetSizes(state.ipRiverBetSizesStr),
     ipRiverRaiseSizes: (state) => parseBetSizes(state.ipRiverRaiseSizesStr),
-
-    currentRound: (state): "Flop" | "Turn" | "River" => {
-      if (state.actions.findIndex((a) => a.type === "River") >= 0) {
-        return "River";
-      } else if (state.actions.findIndex((a) => a.type === "Turn") >= 0) {
-        return "Turn";
-      } else {
-        return "Flop";
-      }
-    },
-  },
-
-  actions: {
-    async initResults() {
-      const handler = await GlobalWorker.getHandler();
-
-      for (let player = 0; player < 2; ++player) {
-        const result = await handler.privateHandCards(player);
-        this.privateHandCards[player] = [];
-        for (let i = 0; i < result.length; i += 2) {
-          this.privateHandCards[player].push([result[i + 1], result[i]]);
-        }
-      }
-
-      this.actions = [];
-      this.result = [];
-    },
-
-    async onSolverFinished() {
-      const handler = await GlobalWorker.getHandler();
-
-      const actions = (await handler.getActions()).split("/");
-      const isTerminal = await handler.isTerminal();
-      const isChance = "0" <= actions[0][0] && actions[0][0] <= "9";
-      this.actions.push({
-        type: !isChance
-          ? "Player"
-          : this.currentRound === "Flop"
-          ? "Turn"
-          : "River",
-        candidates: [...Array(actions.length)]
-          .map((_, i) => {
-            return {
-              str: actions[i],
-              isSelected: false,
-              isTerminal: Boolean(isTerminal[i]),
-            };
-          })
-          .reverse(),
-      });
-
-      const player = await handler.currentPlayer();
-      const cards = this.privateHandCards[player];
-
-      const weights = await handler.getWeights();
-      const weightsNormalized = await handler.getNormalizedWeights();
-      const expectedValues = await handler.getExpectedValues();
-      const strategy = await handler.getStrategy();
-      const numActions = strategy.length / cards.length;
-
-      this.result = [];
-      for (let i = 0; i < cards.length; ++i) {
-        this.result.push({
-          card1: cards[i][0],
-          card2: cards[i][1],
-          weight: weights[i],
-          weightNormalized: weightsNormalized[i],
-          expectedValue: expectedValues[i],
-          strategy: [...Array(numActions)]
-            .map((_, j) => strategy[j * cards.length + i])
-            .reverse(),
-        });
-      }
-
-      const weightSum = Array.from({ length: 13 * 13 }, () => 0);
-      this.resultSummary = Array.from({ length: 13 * 13 }, () => {
-        return {
-          enabled: false,
-          weight: 0,
-          expectedValue: 0,
-          strategy: Array.from({ length: numActions }, () => 0),
-        };
-      });
-
-      for (let i = 0; i < cards.length; ++i) {
-        const rank1 = Math.floor(cards[i][0] / 4);
-        const suit1 = cards[i][0] % 4;
-        const rank2 = Math.floor(cards[i][1] / 4);
-        const suit2 = cards[i][1] % 4;
-
-        let row, col;
-        if (rank1 === rank2) {
-          row = 12 - rank1;
-          col = 12 - rank1;
-        } else if (suit1 === suit2) {
-          row = 12 - rank1;
-          col = 12 - rank2;
-        } else {
-          row = 12 - rank2;
-          col = 12 - rank1;
-        }
-
-        const idx = row * 13 + col;
-        const weight = weightsNormalized[i];
-        weightSum[idx] += weight;
-        this.resultSummary[idx].enabled ||= weights[i] >= 0.5 / 100;
-        this.resultSummary[idx].weight += weight * weights[i];
-        this.resultSummary[idx].expectedValue += expectedValues[i];
-        for (let j = 0; j < numActions; ++j) {
-          this.resultSummary[idx].strategy[j] +=
-            weight * this.result[i].strategy[j];
-        }
-      }
-
-      for (let i = 0; i < 13 * 13; ++i) {
-        if (weightSum[i] > 0) {
-          this.resultSummary[i].weight /= weightSum[i];
-          this.resultSummary[i].expectedValue /= weightSum[i];
-          for (let j = 0; j < numActions; ++j) {
-            this.resultSummary[i].strategy[j] /= weightSum[i];
-          }
-        }
-      }
-    },
   },
 });

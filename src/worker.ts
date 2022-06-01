@@ -76,7 +76,11 @@ function createHandler(mod: Mod) {
     },
 
     finalize() {
-      this.game.finalize();
+      return this.game.finalize();
+    },
+
+    applyHistory(history: Int32Array) {
+      this.game.apply_history(history);
     },
 
     getActions() {
@@ -85,6 +89,10 @@ function createHandler(mod: Mod) {
 
     isTerminal() {
       return this.game.is_terminal();
+    },
+
+    isPossible() {
+      return this.game.is_possible();
     },
 
     currentPlayer() {

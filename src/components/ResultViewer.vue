@@ -16,19 +16,20 @@
   </div>
 
   <div v-else>
-    <div class="flex pl-0.5 overflow-x-auto">
+    <div ref="resultNav" class="flex pl-0.5 overflow-x-auto">
       <div class="flex flex-col items-start">
         <div
           :class="
-            'my-[3px] px-2 py-px border bg-white rounded-lg shadow select-none ' +
-            (store.actions.length === 1
+            'my-[3px] px-2 py-px whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
+            (actionList.length === 1
               ? 'ring-1 ring-red-600 border-red-600'
               : 'border-black cursor-pointer')
           "
+          @click="moveResult(0, 0)"
         >
           <span class="inline-block mr-2 underline">Flop</span>
           <span
-            v-for="item in boardTexts"
+            v-for="item in store.board.map(cardText)"
             :key="item.rank + item.suit"
             :class="item.colorClass"
           >
@@ -38,29 +39,53 @@
       </div>
 
       <div
-        v-for="i in store.actions.length"
-        :key="i"
+        v-for="item in actionList"
+        :key="item.depth"
         class="flex flex-col ml-2 items-start"
       >
-        <template v-if="store.actions[i - 1].type !== 'Player'">
-          <!-- Turn and River -->
+        <template v-if="item.type !== 'Player'">
+          <div
+            :class="
+              'my-[3px] px-2 py-px whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
+              (item.depth === actionList.length - 1
+                ? 'ring-1 ring-red-600 border-red-600 '
+                : 'border-black ') +
+              (item.depth >= actionList.length - 1 ? '' : 'cursor-pointer')
+            "
+            @click="moveResult(item.depth, item.selectedIndex)"
+          >
+            <span class="inline-block mr-2 underline">
+              {{ item.type }}
+            </span>
+            <span
+              v-for="tmp in item.depth === actionList.length
+                ? [{ rank: '?', suit: '', colorClass: 'text-black' }]
+                : [cardText(item.selectedIndex)]"
+              :key="tmp.rank + tmp.suit"
+              :class="tmp.colorClass"
+            >
+              {{ tmp.rank + tmp.suit }}
+            </span>
+          </div>
         </template>
         <template v-else>
           <div
-            v-for="action in store.actions[i - 1].candidates"
+            v-for="action in item.actions"
             :key="action.str"
             :class="
-              'w-full my-[3px] px-2 py-px border rounded-lg shadow text-center select-none ' +
-              (!action.isSelected && i < store.actions.length
+              'w-full my-[3px] px-2 py-px whitespace-nowrap border rounded-lg shadow text-center select-none ' +
+              (!action.isSelected && item.depth < actionList.length
                 ? 'opacity-40 '
                 : '') +
-              (action.isSelected && i === store.actions.length - 1
+              (action.isSelected && item.depth === actionList.length - 1
                 ? 'ring-1 ring-red-600 border-red-600 '
-                : 'border-black cursor-pointer ') +
-              (i === store.actions.length
+                : 'border-black ' +
+                  (action.isTerminal ? '' : 'cursor-pointer ')) +
+              (item.depth === actionList.length
                 ? actionColorByStr[action.str]
                 : 'bg-white')
             "
+            @click="moveResult(item.depth, action.index)"
           >
             {{ action.str }}
           </div>
@@ -68,7 +93,12 @@
       </div>
     </div>
 
-    <div class="flex mt-5 items-start">
+    <div
+      v-if="
+        actionList.length === 0 || actionList.slice(-1)[0].type === 'Player'
+      "
+      class="flex mt-5 items-start"
+    >
       <div class="shrink-0">
         <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
           <tr v-for="row in 13" :key="row" class="h-9">
@@ -155,12 +185,7 @@
                 {{ (100 * item.weight).toFixed(1) }}%
               </td>
               <td class="px-3 py-[5px]">
-                {{
-                  (
-                    item.expectedValue / item.weightNormalized +
-                    store.startingPot / 2
-                  ).toFixed(1)
-                }}
+                {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
               </td>
               <td
                 v-for="i in item.strategy.length"
@@ -196,42 +221,342 @@
         </table>
       </div>
     </div>
+
+    <div v-else class="mt-5">
+      <div v-for="suit in 4" :key="suit" class="flex">
+        <board-selector-card
+          v-for="rank in 13"
+          :key="rank"
+          :class="
+            'm-1 ' +
+            (actionList.slice(-1)[0].actions[56 - 4 * rank - suit].isTerminal
+              ? 'opacity-40 cursor-default'
+              : '')
+          "
+          :card-id="56 - 4 * rank - suit"
+          @click="moveResult(actionList.length, 56 - 4 * rank - suit)"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { cardText, useStore } from "../store";
+import * as GlobalWorker from "../global-worker";
+
+import BoardSelectorCard from "./BoardSelectorCard.vue";
 
 const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
 
 export default defineComponent({
+  components: {
+    BoardSelectorCard,
+  },
+
   setup() {
     const store = useStore();
+    const resultNav = ref(null as HTMLDivElement | null);
+
+    const isSolverFinished = ref(false);
+    const handCards = ref([[], []] as number[][][]);
+
+    const actionList = ref(
+      [] as {
+        type: "Player" | "Turn" | "River";
+        depth: number;
+        selectedIndex: number;
+        actions: {
+          index: number;
+          str: string;
+          isSelected: boolean;
+          isTerminal: boolean;
+        }[];
+      }[]
+    );
+
+    const result = ref(
+      [] as {
+        card1: number;
+        card2: number;
+        weight: number;
+        weightNormalized: number;
+        expectedValue: number;
+        strategy: number[];
+      }[]
+    );
+
+    const resultCell = ref(
+      [] as {
+        count: number;
+        weight: number;
+        expectedValue: number;
+        strategy: number[];
+      }[]
+    );
 
     const hoveredCell = ref({ row: 0, col: 0 });
 
     type Order = "asc" | "desc";
     const sortKey = ref({ key: "Hand", order: "desc" as Order });
 
-    const boardTexts = computed(() => store.board.map(cardText));
+    store.$subscribe(async (_, store) => {
+      if (store.isSolverFinished !== isSolverFinished.value) {
+        if ((isSolverFinished.value = store.isSolverFinished)) {
+          await updateResult(0, true);
+        } else {
+          await clearResult();
+        }
+      }
+    });
+
+    const turn = computed(() => {
+      const item = actionList.value.find((item) => item.type === "Turn");
+      return item ? item.selectedIndex : -1;
+    });
+
+    const river = computed(() => {
+      const item = actionList.value.find((item) => item.type === "River");
+      return item ? item.selectedIndex : -1;
+    });
+
+    const trimMinusZero = (str: string) => {
+      if (Number(str) === 0 && str[0] === "-") {
+        return str.slice(1);
+      } else {
+        return str;
+      }
+    };
+
+    const sortBy = (key: string) => {
+      if (sortKey.value.key === key) {
+        sortKey.value.order = sortKey.value.order === "asc" ? "desc" : "asc";
+      } else {
+        sortKey.value.key = key;
+        sortKey.value.order = "desc";
+      }
+    };
+
+    const clearResult = async () => {
+      handCards.value = [[], []];
+      actionList.value = [];
+      result.value = [];
+      resultCell.value = [];
+    };
+
+    const updateResult = async (depth: number, isFirstCall: boolean) => {
+      const handler = await GlobalWorker.getHandler();
+
+      if (isFirstCall) {
+        for (let player = 0; player < 2; ++player) {
+          const cards = await handler.privateHandCards(player);
+          handCards.value[player] = Array.from(
+            { length: cards.length / 2 },
+            (_, i) => [cards[2 * i + 1], cards[2 * i]]
+          );
+        }
+      }
+
+      const nextActions = (await handler.getActions()).split("/");
+      const numActions = nextActions.length;
+      const isChance = nextActions[0] === "Chance";
+
+      if (isChance) {
+        const isPossible = await handler.isPossible();
+
+        actionList.value.splice(depth, actionList.value.length, {
+          type: "River",
+          selectedIndex: -1,
+          depth: depth + 1,
+          actions: Array.from({ length: 52 }, (_, i) => {
+            return {
+              index: i,
+              str: i.toString(),
+              isSelected: false,
+              isTerminal: !isPossible[i],
+            };
+          }),
+        });
+
+        if (turn.value === -1) {
+          actionList.value.slice(-1)[0].type = "Turn";
+        }
+
+        return;
+      }
+
+      const isTerminal = await handler.isTerminal();
+      actionList.value.splice(depth, actionList.value.length, {
+        type: "Player",
+        selectedIndex: -1,
+        depth: depth + 1,
+        actions: Array.from({ length: numActions }, (_, i) => {
+          return {
+            index: i,
+            str: nextActions[i],
+            isSelected: false,
+            isTerminal: !!isTerminal[i],
+          };
+        }).reverse(),
+      });
+
+      const player = await handler.currentPlayer();
+      const cards = handCards.value[player];
+
+      const weights = await handler.getWeights();
+      const weightsNormalized = await handler.getNormalizedWeights();
+      const expectedValues = await handler.getExpectedValues();
+      const strategy = await handler.getStrategy();
+
+      if (resultNav.value) {
+        const div = resultNav.value;
+        div.scrollLeft = div.scrollWidth - div.clientWidth;
+      }
+
+      let factor = store.normalizer[player];
+      if (turn.value !== -1) factor *= 45;
+      if (river.value !== -1) factor *= 44;
+
+      result.value = cards.map((_, i) => {
+        return {
+          card1: cards[i][0],
+          card2: cards[i][1],
+          weight: weights[i],
+          weightNormalized: weightsNormalized[i],
+          expectedValue:
+            (expectedValues[i] / weightsNormalized[i]) * factor +
+            store.startingPot / 2,
+          strategy: Array.from(
+            { length: numActions },
+            (_, j) => strategy[j * cards.length + i]
+          ).reverse(),
+        };
+      });
+
+      for (let i = 0; i < numActions; ++i) {
+        const action = actionList.value.slice(-1)[0].actions[i];
+        if (action.isTerminal) continue;
+        let invalid = true;
+        for (let j = 0; j < cards.length; ++j) {
+          if (
+            weightsNormalized[j] > 0 &&
+            weights[j] * result.value[j].strategy[i] >= 0.05 / 100
+          ) {
+            invalid = false;
+            break;
+          }
+        }
+        action.isTerminal = invalid;
+      }
+
+      const weightSumCell = Array.from({ length: 13 * 13 }, () => 0);
+      const weightNormalizedSumCell = Array.from({ length: 13 * 13 }, () => 0);
+      const countCell = Array.from({ length: 13 * 13 }, () => 0);
+      const expectedValueSumCell = Array.from({ length: 13 * 13 }, () => 0);
+      const strategySumCell = Array.from({ length: 13 * 13 }, () =>
+        Array.from({ length: numActions }, () => 0)
+      );
+
+      const strategySum = Array.from({ length: numActions }, () => 0);
+
+      for (let i = 0; i < cards.length; ++i) {
+        const rank1 = Math.floor(cards[i][0] / 4);
+        const suit1 = cards[i][0] % 4;
+        const rank2 = Math.floor(cards[i][1] / 4);
+        const suit2 = cards[i][1] % 4;
+
+        let row, col;
+        if (rank1 === rank2) {
+          row = 12 - rank1;
+          col = 12 - rank1;
+        } else if (suit1 === suit2) {
+          row = 12 - rank1;
+          col = 12 - rank2;
+        } else {
+          row = 12 - rank2;
+          col = 12 - rank1;
+        }
+
+        const idx = row * 13 + col;
+
+        if (weightsNormalized[i] > 0 && weights[i] >= 0.05 / 100) {
+          weightSumCell[idx] += weights[i];
+          weightNormalizedSumCell[idx] += weightsNormalized[i];
+          countCell[idx] += 1;
+          expectedValueSumCell[idx] += expectedValues[i] * factor;
+          for (let j = 0; j < numActions; ++j) {
+            const s = weightsNormalized[i] * result.value[i].strategy[j];
+            strategySumCell[idx][j] += s;
+            strategySum[j] += s;
+          }
+        }
+      }
+
+      resultCell.value = Array.from({ length: 13 * 13 }, (_, i) => {
+        return {
+          weight: weightSumCell[i],
+          count: countCell[i],
+          expectedValue:
+            expectedValueSumCell[i] / weightNormalizedSumCell[i] +
+            store.startingPot / 2,
+          strategy: Array.from(
+            { length: numActions },
+            (_, j) => strategySumCell[i][j] / weightNormalizedSumCell[i]
+          ),
+        };
+      });
+    };
+
+    const moveResult = async (depth: number, index: number) => {
+      if (depth === 0) {
+        if (actionList.value.length === 1) return;
+      } else if (index === -1) {
+        return;
+      } else {
+        const item = actionList.value[depth - 1];
+        const selectedIndex = item.actions.findIndex((a) => a.index === index);
+        if (
+          item.actions[selectedIndex].isTerminal ||
+          (item.selectedIndex === selectedIndex &&
+            depth === actionList.value.length - 1)
+        ) {
+          return;
+        }
+        item.selectedIndex = selectedIndex;
+        item.actions.forEach((a) => (a.isSelected = a.index === index));
+      }
+
+      const history = new Int32Array(
+        actionList.value
+          .slice(0, depth)
+          .map((item) => item.actions[item.selectedIndex].index)
+      );
+
+      if (!["Hand", "Weight", "EV"].includes(sortKey.value.key)) {
+        sortKey.value = { key: "Hand", order: "desc" };
+      }
+
+      const handler = await GlobalWorker.getHandler();
+      await handler.applyHistory(history);
+      await updateResult(depth, false);
+    };
 
     const nextActionsStr = computed(() => {
-      const actions = store.actions.slice(-1)[0];
-      if (actions.type === "Player") {
-        return actions.candidates.map((c) => c.str);
+      if (actionList.value.length === 0) return [];
+      const lastItem = actionList.value.slice(-1)[0];
+      if (lastItem.type === "Player") {
+        return lastItem.actions.map((a) => a.str);
       } else {
         return [];
       }
     });
 
     const actionColor = computed(() => {
-      if (store.actions.slice(-1)[0].type !== "Player") {
-        return [];
-      }
+      const actions = nextActionsStr.value;
+      if (actions.length === 0) return [];
 
       const ret = [];
-      const actions = nextActionsStr.value;
       const subtract = actions.slice(-1)[0] === "Check" ? 1 : 2;
 
       for (let i = 0; i < actions.length; ++i) {
@@ -254,23 +579,51 @@ export default defineComponent({
     const actionColorByStr = computed(() => {
       const ret = {} as { [key: string]: string };
       const actions = nextActionsStr.value;
-      for (let i = 0; i < actionColor.value.length; ++i) {
+      for (let i = 0; i < actions.length; ++i) {
         ret[actions[i]] = actionColor.value[i];
       }
       return ret;
     });
 
     const weightPercent = (row: number, col: number) => {
+      if (resultCell.value.length === 0) return "0%";
+
+      const r1 = 13 - row;
+      const r2 = 13 - col;
+
+      let denom = 0;
+      for (let s1 = 0; s1 < 4; ++s1) {
+        for (let s2 = 0; s2 < 4; ++s2) {
+          if (
+            (row === col && s1 < s2) ||
+            (row !== col && row < col === (s1 === s2))
+          ) {
+            const c1 = r1 * 4 + s1;
+            const c2 = r2 * 4 + s2;
+            if (
+              store.board.indexOf(c1) === -1 &&
+              turn.value !== c1 &&
+              river.value !== c1 &&
+              store.board.indexOf(c2) === -1 &&
+              turn.value !== c2 &&
+              river.value !== c2
+            ) {
+              denom += 1;
+            }
+          }
+        }
+      }
+
       const idx = (row - 1) * 13 + col - 1;
-      return (100 * store.resultSummary[idx].weight).toFixed(1) + "%";
+      return ((100 * resultCell.value[idx].weight) / denom).toFixed(1) + "%";
     };
 
     const cellItems = (row: number, col: number) => {
+      if (resultCell.value.length === 0) return [];
       const idx = (row - 1) * 13 + col - 1;
-      const strategy = store.resultSummary[idx].strategy;
-      const ret = [];
-      for (let i = 0; i < strategy.length; ++i) {
-        ret.push({
+      const strategy = resultCell.value[idx].strategy;
+      return strategy.map((_, i) => {
+        return {
           key: i,
           class: actionColor.value[i],
           style: {
@@ -280,9 +633,8 @@ export default defineComponent({
                 1
               ) + "%",
           },
-        });
-      }
-      return ret;
+        };
+      });
     };
 
     const cellText = (row: number, col: number) => {
@@ -293,15 +645,18 @@ export default defineComponent({
 
     const cellAuxText = (row: number, col: number) => {
       const idx = (row - 1) * 13 + col - 1;
-      if (!store.resultSummary[idx].enabled) return "";
+      if (resultCell.value.length === 0 || resultCell.value[idx].count === 0) {
+        return "";
+      }
       if (sortKey.value.key === "EV") {
-        const ev =
-          store.resultSummary[idx].expectedValue + store.startingPot / 2;
-        return (ev >= 0 ? "+" : "") + ev.toFixed(0);
+        const ev = resultCell.value[idx].expectedValue;
+        return -0.5 <= ev && ev < 0.5
+          ? "0"
+          : (ev >= 0 ? "+" : "") + ev.toFixed(0);
       } else {
         const i = nextActionsStr.value.indexOf(sortKey.value.key);
         if (i !== -1) {
-          return (100 * store.resultSummary[idx].strategy[i]).toFixed(0) + "%";
+          return (100 * resultCell.value[idx].strategy[i]).toFixed(0) + "%";
         }
       }
       return "";
@@ -318,7 +673,7 @@ export default defineComponent({
     const hoveredCellText = computed(() => {
       const { row, col } = hoveredCell.value;
       const idx = (row - 1) * 13 + col - 1;
-      if (idx < 0 || !store.resultSummary[idx].enabled) return "All";
+      if (idx < 0 || resultCell.value[idx].count === 0) return "All";
       return cellText(row, col);
     });
 
@@ -329,30 +684,24 @@ export default defineComponent({
     const resultFiltered = computed(() => {
       const { row, col } = hoveredCell.value;
       const idx = (row - 1) * 13 + col - 1;
-      if (idx < 0 || !store.resultSummary[idx].enabled) {
-        return store.result.filter((r) => r.weight >= 0.5 / 100);
+      if (idx < 0 || resultCell.value[idx].count === 0) {
+        return result.value.filter(
+          (r) => r.weightNormalized > 0 && r.weight >= 0.05 / 100
+        );
       }
       const r1 = 13 - Math.min(row, col);
       const r2 = 13 - Math.max(row, col);
       const isSuited = row < col;
-      return store.result.filter((r) => {
+      return result.value.filter((r) => {
         return (
-          r.weight >= 0.5 / 100 &&
+          r.weightNormalized > 0 &&
+          r.weight >= 0.05 / 100 &&
           Math.floor(r.card1 / 4) === r1 &&
           Math.floor(r.card2 / 4) === r2 &&
           (r.card1 % 4 === r.card2 % 4) === isSuited
         );
       });
     });
-
-    const sortBy = (key: string) => {
-      if (sortKey.value.key === key) {
-        sortKey.value.order = sortKey.value.order === "asc" ? "desc" : "asc";
-      } else {
-        sortKey.value.key = key;
-        sortKey.value.order = "desc";
-      }
-    };
 
     const resultSorted = computed(() => {
       const rankComparator = (
@@ -406,9 +755,8 @@ export default defineComponent({
             );
           } else if (sortKey.value.key === "EV") {
             return (
-              coef *
-                (round(a.expectedValue / a.weightNormalized) -
-                  round(b.expectedValue / b.weightNormalized)) || fallback
+              coef * (round(a.expectedValue) - round(b.expectedValue)) ||
+              fallback
             );
           } else {
             const idx = nextActionsStr.value.indexOf(sortKey.value.key);
@@ -438,17 +786,14 @@ export default defineComponent({
       for (const r of result) {
         weightSum += r.weightNormalized;
         combos += r.weight;
-        expectedValue += r.expectedValue;
+        expectedValue += r.expectedValue * r.weightNormalized;
         for (let i = 0; i < nextActionsStr.value.length; i++) {
           strategy[i] += r.strategy[i] * r.weightNormalized;
         }
       }
       return {
         combos: combos.toFixed(1),
-        expectedValue: (
-          expectedValue / weightSum +
-          store.startingPot / 2
-        ).toFixed(1),
+        expectedValue: trimMinusZero((expectedValue / weightSum).toFixed(1)),
         strategy: strategy.map((x) => ((100 * x) / weightSum).toFixed(1) + "%"),
       };
     });
@@ -456,7 +801,12 @@ export default defineComponent({
     return {
       store,
       cardText,
-      boardTexts,
+      resultNav,
+      actionList,
+      sortKey,
+      sortBy,
+      trimMinusZero,
+      moveResult,
       actionColorByStr,
       weightPercent,
       cellItems,
@@ -466,8 +816,6 @@ export default defineComponent({
       onMouseLeave,
       hoveredCellText,
       headers,
-      sortBy,
-      sortKey,
       resultSorted,
       resultAverage,
     };

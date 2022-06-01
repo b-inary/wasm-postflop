@@ -2,18 +2,18 @@
   "private": true,
   "name": "wasm-postflop",
   "version": "0.0.1",
-  "description": "Post-flop solver powered by WebAssembly",
+  "description": "Postflop solver powered by WebAssembly",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "build": "webpack",
     "serve": "node server.js",
     "lint": "eslint src/**/*.{ts,vue}",
     "format": "prettier --write src/**/*.{ts,vue}",
-    "wasm": "run-s range solver-st solver-mt solver-patch",
-    "range": "rustup run nightly wasm-pack build --out-dir ../../pkg/range rust/range",
-    "solver-st": "rustup run nightly wasm-pack build --target web --out-dir ../../pkg/solver-st rust/solver-st",
-    "solver-mt": "rustup run nightly wasm-pack build --target web --out-dir ../../pkg/solver-mt rust/solver-mt",
-    "solver-patch": "sed -i \"s/cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer)/cachegetInt32Memory0 = new Uint32Array(wasm.memory.buffer)/\" ./pkg/solver-mt/solver.js ./pkg/solver-st/solver.js"
+    "wasm": "run-s wasm:range wasm:solver-st wasm:solver-mt wasm:solver-patch",
+    "wasm:range": "rustup run nightly wasm-pack build --out-dir ../../pkg/range rust/range",
+    "wasm:solver-st": "rustup run nightly wasm-pack build --target web --out-dir ../../pkg/solver-st rust/solver-st",
+    "wasm:solver-mt": "rustup run nightly wasm-pack build --target web --out-dir ../../pkg/solver-mt rust/solver-mt",
+    "wasm:solver-patch": "sed -i \"s/cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer)/cachegetInt32Memory0 = new Uint32Array(wasm.memory.buffer)/\" ./pkg/solver-mt/solver.js ./pkg/solver-st/solver.js"
   },
   "dependencies": {
     "comlink": "^4.3.1",

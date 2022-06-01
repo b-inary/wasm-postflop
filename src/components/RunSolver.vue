@@ -454,7 +454,6 @@ export default defineComponent({
       store.isSolverRunning = false;
       store.isSolverPaused = false;
       store.isSolverFinished = false;
-      store.initResults();
     };
 
     const runSolver = async () => {
@@ -513,8 +512,8 @@ export default defineComponent({
       store.isSolverRunning = false;
       store.isFinalizing = true;
 
-      await handler.finalize();
-      await store.onSolverFinished();
+      const normalizer = await handler.finalize();
+      store.normalizer = [normalizer[0], normalizer[1]];
 
       store.isFinalizing = false;
       store.isSolverFinished = true;

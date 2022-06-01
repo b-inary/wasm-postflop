@@ -1,37 +1,12 @@
 <template>
-  <div class="flex">
+  <div v-for="suit in 4" :key="suit" class="flex">
     <board-selector-card
       v-for="rank in 13"
-      :key="4 * rank - 4"
+      :key="rank"
       class="m-1"
-      :card-id="55 - 4 * rank"
-    />
-  </div>
-
-  <div class="flex">
-    <board-selector-card
-      v-for="rank in 13"
-      :key="4 * rank - 3"
-      class="m-1"
-      :card-id="54 - 4 * rank"
-    />
-  </div>
-
-  <div class="flex">
-    <board-selector-card
-      v-for="rank in 13"
-      :key="4 * rank - 2"
-      class="m-1"
-      :card-id="53 - 4 * rank"
-    />
-  </div>
-
-  <div class="flex">
-    <board-selector-card
-      v-for="rank in 13"
-      :key="4 * rank - 1"
-      class="m-1"
-      :card-id="52 - 4 * rank"
+      :card-id="56 - 4 * rank - suit"
+      :is-selected="store.board.includes(56 - 4 * rank - suit)"
+      @click="toggleCard(56 - 4 * rank - suit)"
     />
   </div>
 
@@ -72,6 +47,15 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
+    const toggleCard = (cardId: number) => {
+      if (store.board.includes(cardId)) {
+        store.board = store.board.filter((card) => card !== cardId);
+      } else if (store.board.length < 5) {
+        store.board.push(cardId);
+        store.board.sort((a, b) => b - a);
+      }
+    };
+
     const generateRandomBoard = () => {
       store.board = [];
 
@@ -87,6 +71,7 @@ export default defineComponent({
 
     return {
       store,
+      toggleCard,
       generateRandomBoard,
     };
   },
