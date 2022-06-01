@@ -23,7 +23,7 @@
   <ul class="mt-4 ml-8 list-disc">
     <li>
       <span class="font-bold underline">
-        multithreading is not supported in iOS and Safari</span
+        multithreading is not supported on iOS and Safari</span
       >
       because nested workers are
       <a href="https://bugs.webkit.org/show_bug.cgi?id=22723" class="link">

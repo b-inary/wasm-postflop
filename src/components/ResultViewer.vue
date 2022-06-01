@@ -29,7 +29,7 @@
         >
           <span class="inline-block mr-2 underline">Flop</span>
           <span
-            v-for="item in store.board.map(cardText)"
+            v-for="item in flop.map(cardText)"
             :key="item.rank + item.suit"
             :class="item.colorClass"
           >
@@ -260,6 +260,7 @@ export default defineComponent({
     const resultNav = ref(null as HTMLDivElement | null);
 
     const isSolverFinished = ref(false);
+    const flop = ref([] as number[]);
     const handCards = ref([[], []] as number[][][]);
 
     const actionList = ref(
@@ -333,8 +334,7 @@ export default defineComponent({
       if (sortKey.value.key === key) {
         sortKey.value.order = sortKey.value.order === "asc" ? "desc" : "asc";
       } else {
-        sortKey.value.key = key;
-        sortKey.value.order = "desc";
+        sortKey.value = { key, order: "desc" };
       }
     };
 
@@ -349,6 +349,7 @@ export default defineComponent({
       const handler = await GlobalWorker.getHandler();
 
       if (isFirstCall) {
+        flop.value = [...store.board];
         for (let player = 0; player < 2; ++player) {
           const cards = await handler.privateHandCards(player);
           handCards.value[player] = Array.from(
@@ -601,10 +602,10 @@ export default defineComponent({
             const c1 = r1 * 4 + s1;
             const c2 = r2 * 4 + s2;
             if (
-              store.board.indexOf(c1) === -1 &&
+              flop.value.indexOf(c1) === -1 &&
               turn.value !== c1 &&
               river.value !== c1 &&
-              store.board.indexOf(c2) === -1 &&
+              flop.value.indexOf(c2) === -1 &&
               turn.value !== c2 &&
               river.value !== c2
             ) {
@@ -802,6 +803,7 @@ export default defineComponent({
       store,
       cardText,
       resultNav,
+      flop,
       actionList,
       sortKey,
       sortBy,

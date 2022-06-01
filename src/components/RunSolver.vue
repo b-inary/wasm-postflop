@@ -384,7 +384,7 @@ export default defineComponent({
       // needed for type inference
       if (
         store.oopFlopBetSizes === null ||
-        store.oopFlopRaiseSizes == null ||
+        store.oopFlopRaiseSizes === null ||
         store.oopTurnBetSizes === null ||
         store.oopTurnRaiseSizes === null ||
         store.oopRiverBetSizes === null ||
