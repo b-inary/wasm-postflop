@@ -1,12 +1,12 @@
 <template>
   <div>
     <p class="my-1">
-      <span class="inline-block w-28">Starting pot:</span>
+      <span class="inline-block w-[7.5rem]">Starting pot:</span>
       <input
         v-model="store.startingPot"
         type="number"
         :class="
-          'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+          'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
           (store.startingPot <= 0 ||
           store.startingPot > 100000 ||
           store.startingPot % 1 !== 0
@@ -19,12 +19,12 @@
     </p>
 
     <p class="my-1">
-      <span class="inline-block w-28">Effective stack:</span>
+      <span class="inline-block w-[7.5rem]">Effective stack:</span>
       <input
         v-model="store.effectiveStack"
         type="number"
         :class="
-          'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+          'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
           (store.effectiveStack <= 0 ||
           store.effectiveStack > 100000 ||
           store.effectiveStack % 1 !== 0
@@ -43,24 +43,24 @@
       <div>
         <p class="my-1 underline">Flop</p>
         <p class="my-1">
-          <span class="inline-block w-20">Bet sizes:</span>
+          <span class="inline-block w-24">Bet sizes:</span>
           <input
             v-model="store.oopFlopBetSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.oopFlopBetSizes === null ? 'input-error' : '')
             "
           />
           %
         </p>
         <p class="my-1">
-          <span class="inline-block w-20">Raise sizes:</span>
+          <span class="inline-block w-24">Raise sizes:</span>
           <input
             v-model="store.oopFlopRaiseSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.oopFlopRaiseSizes === null ? 'input-error' : '')
             "
           />
@@ -71,24 +71,24 @@
       <div class="ml-6">
         <p class="my-1 underline">Turn</p>
         <p class="my-1">
-          <span class="inline-block w-20">Bet sizes:</span>
+          <span class="inline-block w-24">Bet sizes:</span>
           <input
             v-model="store.oopTurnBetSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.oopTurnBetSizes === null ? 'input-error' : '')
             "
           />
           %
         </p>
         <p class="my-1">
-          <span class="inline-block w-20">Raise sizes:</span>
+          <span class="inline-block w-24">Raise sizes:</span>
           <input
             v-model="store.oopTurnRaiseSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.oopTurnRaiseSizes === null ? 'input-error' : '')
             "
           />
@@ -99,24 +99,24 @@
       <div class="ml-6">
         <p class="my-1 underline">River</p>
         <p class="my-1">
-          <span class="inline-block w-20">Bet sizes:</span>
+          <span class="inline-block w-24">Bet sizes:</span>
           <input
             v-model="store.oopRiverBetSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.oopRiverBetSizes === null ? 'input-error' : '')
             "
           />
           %
         </p>
         <p class="my-1">
-          <span class="inline-block w-20">Raise sizes:</span>
+          <span class="inline-block w-24">Raise sizes:</span>
           <input
             v-model="store.oopRiverRaiseSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.oopRiverRaiseSizes === null ? 'input-error' : '')
             "
           />
@@ -132,24 +132,24 @@
       <div>
         <p class="my-1 underline">Flop</p>
         <p class="my-1">
-          <span class="inline-block w-20">Bet sizes:</span>
+          <span class="inline-block w-24">Bet sizes:</span>
           <input
             v-model="store.ipFlopBetSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.ipFlopBetSizes === null ? 'input-error' : '')
             "
           />
           %
         </p>
         <p class="my-1">
-          <span class="inline-block w-20">Raise sizes:</span>
+          <span class="inline-block w-24">Raise sizes:</span>
           <input
             v-model="store.ipFlopRaiseSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.ipFlopRaiseSizes === null ? 'input-error' : '')
             "
           />
@@ -160,24 +160,24 @@
       <div class="ml-6">
         <p class="my-1 underline">Turn</p>
         <p class="my-1">
-          <span class="inline-block w-20">Bet sizes:</span>
+          <span class="inline-block w-24">Bet sizes:</span>
           <input
             v-model="store.ipTurnBetSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.ipTurnBetSizes === null ? 'input-error' : '')
             "
           />
           %
         </p>
         <p class="my-1">
-          <span class="inline-block w-20">Raise sizes:</span>
+          <span class="inline-block w-24">Raise sizes:</span>
           <input
             v-model="store.ipTurnRaiseSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.ipTurnRaiseSizes === null ? 'input-error' : '')
             "
           />
@@ -188,24 +188,24 @@
       <div class="ml-6">
         <p class="my-1 underline">River</p>
         <p class="my-1">
-          <span class="inline-block w-20">Bet sizes:</span>
+          <span class="inline-block w-24">Bet sizes:</span>
           <input
             v-model="store.ipRiverBetSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.ipRiverBetSizes === null ? 'input-error' : '')
             "
           />
           %
         </p>
         <p class="my-1">
-          <span class="inline-block w-20">Raise sizes:</span>
+          <span class="inline-block w-24">Raise sizes:</span>
           <input
             v-model="store.ipRiverRaiseSizesStr"
             type="text"
             :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm ' +
+              'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
               (store.ipRiverRaiseSizes === null ? 'input-error' : '')
             "
           />

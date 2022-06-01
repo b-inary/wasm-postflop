@@ -371,7 +371,7 @@ export default defineComponent({
 
       if (!canMultiThread && numThreads.value > 1) {
         treeStatus.value =
-          "Error: Multithreading is not supported in iOS and Safari";
+          "Error: Multithreading is not supported on iOS and Safari";
         return;
       }
 
