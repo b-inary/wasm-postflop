@@ -11,11 +11,11 @@
   </div>
 
   <ul class="mt-4 ml-8 list-disc">
-    <li>free to use</li>
-    <li>open-source: you can inspect the whole program</li>
-    <li>no need to install anything</li>
-    <li>works inside your browser</li>
-    <li>sufficiently fast (supports multithreading)</li>
+    <li>Free to use</li>
+    <li>Open-source: you can inspect the whole program</li>
+    <li>No need to install anything</li>
+    <li>Works inside your browser</li>
+    <li>Sufficiently fast (supports multithreading)</li>
   </ul>
 
   <div class="mt-4 underline">Limitations:</div>
@@ -23,7 +23,7 @@
   <ul class="mt-4 ml-8 list-disc">
     <li>
       <span class="font-bold underline">
-        multithreading is not supported on iOS and Safari</span
+        Multithreading is not supported on iOS and Safari</span
       >
       because nested workers are
       <a href="https://bugs.webkit.org/show_bug.cgi?id=22723" class="link">
@@ -31,20 +31,20 @@
       </a>
       <ul class="ml-8" style="list-style-type: circle">
         <li>
-          if you are using macOS, please use other browsers such as Google
+          If you are using macOS, please use other browsers such as Google
           Chrome instead
         </li>
       </ul>
     </li>
     <li>
       <span class="font-bold underline">
-        available memory is limited to 4GB</span
+        Available memory is limited to 4GB</span
       >
       due to the technical limitation of WebAssembly
     </li>
-    <li>mobile use is not considered</li>
+    <li>Mobile use is not considered</li>
     <li>
-      this is a hobby project in the alpha stage; there are no guarantees, and
+      This is a hobby project in the alpha stage; there are no guarantees, and
       only minimal functionality is provided
     </li>
   </ul>

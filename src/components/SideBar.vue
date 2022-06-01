@@ -1,7 +1,7 @@
 <template>
   <aside
     class="flex flex-col shrink-0 w-52 my-4 overflow-y-auto border-r-2"
-    style="height: calc(100vh - 88px)"
+    style="height: calc(100vh - 5.5rem)"
   >
     <div :class="itemStyle('About')" @click="store.mainView = 'About'">
       About
