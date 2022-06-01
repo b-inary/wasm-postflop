@@ -43,7 +43,12 @@ const config = {
   resolve: { extensions: [".js", ".ts", ".vue"] },
   plugins: [
     new CleanWebpackPlugin(),
-    new CopyWebpackPlugin({ patterns: [{ from: "public/_headers" }] }),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: "public/_headers" },
+        { from: "private", noErrorOnMissing: true },
+      ],
+    }),
     new HTMLWebpackPlugin({ template: "public/index.html" }),
     new MiniCSSExtractPlugin({ filename: "[contenthash].css" }),
     new VueLoaderPlugin(),
