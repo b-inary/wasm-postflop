@@ -364,7 +364,7 @@ export default defineComponent({
       const isChance = nextActions[0] === "Chance";
 
       if (isChance) {
-        const isPossible = await handler.isPossible();
+        const isPossibleChance = await handler.isPossibleChance();
 
         actionList.value.splice(depth, actionList.value.length, {
           type: "River",
@@ -375,7 +375,7 @@ export default defineComponent({
               index: i,
               str: i.toString(),
               isSelected: false,
-              isTerminal: !isPossible[i],
+              isTerminal: !isPossibleChance[i],
             };
           }),
         });
@@ -387,7 +387,7 @@ export default defineComponent({
         return;
       }
 
-      const isTerminal = await handler.isTerminal();
+      const isTerminalAction = await handler.isTerminalAction();
       actionList.value.splice(depth, actionList.value.length, {
         type: "Player",
         selectedIndex: -1,
@@ -397,7 +397,7 @@ export default defineComponent({
             index: i,
             str: nextActions[i],
             isSelected: false,
-            isTerminal: !!isTerminal[i],
+            isTerminal: !!isTerminalAction[i],
           };
         }).reverse(),
       });
@@ -528,7 +528,7 @@ export default defineComponent({
         item.actions.forEach((a) => (a.isSelected = a.index === index));
       }
 
-      const history = new Int32Array(
+      const history = new Uint32Array(
         actionList.value
           .slice(0, depth)
           .map((item) => item.actions[item.selectedIndex].index)

@@ -144,7 +144,7 @@ impl GameManager {
             .into_boxed_slice()
     }
 
-    pub fn apply_history(&mut self, history: &[i32]) {
+    pub fn apply_history(&mut self, history: &[u32]) {
         self.node = &*self.game.root();
         self.board = self.game.config().flop.to_vec();
         self.turn_swapped_suit = None;
@@ -160,7 +160,7 @@ impl GameManager {
         self.compute_normalized_weight();
     }
 
-    fn apply_history_recursive(&mut self, history: &[i32]) {
+    fn apply_history_recursive(&mut self, history: &[u32]) {
         if history.is_empty() {
             return;
         }
@@ -308,15 +308,15 @@ impl GameManager {
             .join("/")
     }
 
-    pub fn is_terminal(&self) -> Box<[i32]> {
+    pub fn is_terminal_action(&self) -> Box<[u8]> {
         let node = self.node();
         node.actions()
-            .map(|x| node.play(x).is_terminal() as i32)
+            .map(|x| node.play(x).is_terminal() as u8)
             .collect::<Vec<_>>()
             .into_boxed_slice()
     }
 
-    pub fn is_possible(&self) -> Box<[i32]> {
+    pub fn is_possible_chance(&self) -> Box<[u8]> {
         let mut mask: u64 = (1 << 52) - 1;
         let board_mask: u64 = self.board.iter().fold(0, |acc, &card| acc | 1 << card);
 
@@ -340,7 +340,7 @@ impl GameManager {
         }
 
         (0..52)
-            .map(|card| ((mask & (1 << card)) == 0) as i32)
+            .map(|card| ((mask & (1 << card)) == 0) as u8)
             .collect::<Vec<_>>()
             .into_boxed_slice()
     }
