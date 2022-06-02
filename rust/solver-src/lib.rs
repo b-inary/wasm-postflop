@@ -352,23 +352,25 @@ impl GameManager {
         self.node().player()
     }
 
-    pub fn get_weights(&self) -> Box<[f32]> {
-        self.weights[self.current_player()]
-            .clone()
+    pub fn get_results(&self) -> Box<[f32]> {
+        let player = self.current_player();
+        let expected_values = self.get_expected_values();
+        let strategy = self.get_strategy();
+        self.weights[player]
+            .iter()
+            .chain(self.weights_normalized[player].iter())
+            .cloned()
+            .chain(expected_values.into_iter())
+            .chain(strategy.into_iter())
+            .collect::<Vec<_>>()
             .into_boxed_slice()
     }
 
-    pub fn get_normalized_weights(&self) -> Box<[f32]> {
-        self.weights_normalized[self.current_player()]
-            .clone()
-            .into_boxed_slice()
-    }
-
-    pub fn get_expected_values(&self) -> Box<[f32]> {
+    fn get_expected_values(&self) -> Vec<f32> {
         let node = self.node();
         let player = node.player();
         let num_private_hands = self.game.num_private_hands(player);
-        let mut vec = if !self.game.is_compression_enabled() {
+        let mut ret = if !self.game.is_compression_enabled() {
             node.cum_regret()
                 .iter()
                 .take(num_private_hands)
@@ -385,19 +387,19 @@ impl GameManager {
         for swap in &[self.river_swap, self.turn_swap] {
             if !swap.is_null() {
                 for &(i, j) in unsafe { &(**swap)[player] } {
-                    vec.swap(i, j);
+                    ret.swap(i, j);
                 }
             }
         }
-        vec.into_boxed_slice()
+        ret
     }
 
-    pub fn get_strategy(&self) -> Box<[f32]> {
+    fn get_strategy(&self) -> Vec<f32> {
         let node = self.node();
         let player = node.player();
         let num_actions = node.num_actions();
         let num_private_hands = self.game.num_private_hands(player);
-        let mut vec = if !self.game.is_compression_enabled() {
+        let mut ret = if !self.game.is_compression_enabled() {
             node.strategy().to_vec()
         } else {
             let decoder = node.strategy_scale() / u16::MAX as f32;
@@ -410,7 +412,7 @@ impl GameManager {
             if !swap.is_null() {
                 for &(i, j) in unsafe { &(**swap)[player] } {
                     for action in 0..num_actions {
-                        vec.swap(
+                        ret.swap(
                             action * num_private_hands + i,
                             action * num_private_hands + j,
                         );
@@ -418,6 +420,6 @@ impl GameManager {
                 }
             }
         }
-        vec.into_boxed_slice()
+        ret
     }
 }

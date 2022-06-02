@@ -99,20 +99,8 @@ function createHandler(mod: Mod) {
       return this.game.current_player();
     },
 
-    getWeights() {
-      return this.game.get_weights();
-    },
-
-    getNormalizedWeights() {
-      return this.game.get_normalized_weights();
-    },
-
-    getExpectedValues() {
-      return this.game.get_expected_values();
-    },
-
-    getStrategy() {
-      return this.game.get_strategy();
+    getResults() {
+      return this.game.get_results();
     },
   };
 }

@@ -314,12 +314,12 @@ export default defineComponent({
 
     const turn = computed(() => {
       const item = actionList.value.find((item) => item.type === "Turn");
-      return item ? item.selectedIndex : -1;
+      return item?.selectedIndex ?? -1;
     });
 
     const river = computed(() => {
       const item = actionList.value.find((item) => item.type === "River");
-      return item ? item.selectedIndex : -1;
+      return item?.selectedIndex ?? -1;
     });
 
     const trimMinusZero = (str: string) => {
@@ -405,10 +405,17 @@ export default defineComponent({
       const player = await handler.currentPlayer();
       const cards = handCards.value[player];
 
-      const weights = await handler.getWeights();
-      const weightsNormalized = await handler.getNormalizedWeights();
-      const expectedValues = await handler.getExpectedValues();
-      const strategy = await handler.getStrategy();
+      const results = await handler.getResults();
+      const weights = results.subarray(0, cards.length);
+      const weightsNormalized = results.subarray(
+        cards.length,
+        2 * cards.length
+      );
+      const expectedValues = results.subarray(
+        2 * cards.length,
+        3 * cards.length
+      );
+      const strategy = results.subarray(3 * cards.length);
 
       if (resultNav.value) {
         const div = resultNav.value;

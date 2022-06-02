@@ -7,7 +7,7 @@
       :class="
         'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
         (numThreads < 1 ||
-        numThreads > (canMultiThread ? 64 : 1) ||
+        numThreads > (isSafari ? 1 : 64) ||
         numThreads % 1 !== 0
           ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
           : '')
@@ -204,10 +204,7 @@ import { detect } from "detect-browser";
 
 const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024;
 const browser = detect();
-const canMultiThread = !(
-  browser &&
-  (browser.name === "safari" || browser.os === "iOS")
-);
+const isSafari = browser && (browser.name === "safari" || browser.os === "iOS");
 
 function checkConfig(store: ReturnType<typeof useStore>): string | null {
   if (store.board.length !== 3) {
@@ -309,9 +306,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    const numThreads = ref(
-      canMultiThread ? navigator.hardwareConcurrency || 1 : 1
-    );
+    const numThreads = ref((!isSafari && navigator.hardwareConcurrency) || 1);
     const targetExploitability = ref(0.5);
     const maxIterations = ref(1000);
 
@@ -369,7 +364,7 @@ export default defineComponent({
         return;
       }
 
-      if (!canMultiThread && numThreads.value > 1) {
+      if (isSafari && numThreads.value > 1) {
         treeStatus.value =
           "Error: Multithreading is not supported on iOS and Safari";
         return;
@@ -525,7 +520,7 @@ export default defineComponent({
     return {
       store,
       numThreads,
-      canMultiThread,
+      isSafari,
       targetExploitability,
       maxIterations,
       isTreeBuilding,
