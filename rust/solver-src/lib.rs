@@ -115,7 +115,7 @@ impl GameManager {
         self.game.allocate_memory(enable_compression);
     }
 
-    pub fn solve_step(&self, current_iteration: i32) {
+    pub fn solve_step(&self, current_iteration: u32) {
         solve_step(&self.game, current_iteration);
     }
 
