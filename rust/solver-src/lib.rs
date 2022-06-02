@@ -311,7 +311,10 @@ impl GameManager {
     pub fn is_terminal_action(&self) -> Box<[u8]> {
         let node = self.node();
         node.actions()
-            .map(|x| node.play(x).is_terminal() as u8)
+            .map(|x| {
+                let child = node.play(x);
+                (child.is_terminal() || child.amount() == self.game.config().effective_stack) as u8
+            })
             .collect::<Vec<_>>()
             .into_boxed_slice()
     }
