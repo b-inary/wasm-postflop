@@ -441,6 +441,46 @@ export default defineComponent({
         }).reverse(),
       });
 
+      let player = 0;
+      let pot = [0, 0];
+      let lastBet = 0;
+
+      for (let i = 0; i < actionList.value.length - 1; ++i) {
+        const item = actionList.value[i];
+        if (item.type !== "Player") {
+          player = 0;
+          lastBet = 0;
+          continue;
+        }
+
+        const action = item.actions[item.selectedIndex];
+
+        if (action.str === "Call") {
+          pot[player] = pot[1 - player];
+        } else if (action.str.slice(0, 3) === "Bet") {
+          const bet = Number(action.str.slice(4));
+          pot[player] += bet;
+          lastBet = bet;
+        } else if (
+          action.str.slice(0, 5) === "Raise" ||
+          action.str.slice(0, 6) === "All-in"
+        ) {
+          const bet = Number(action.str.slice(6).trimStart());
+          const potDiff = pot[1 - player] - pot[player];
+          pot[player] += bet - lastBet + potDiff;
+          lastBet = bet;
+        }
+
+        player = 1 - player;
+      }
+
+      nodeInformation.value = {
+        player,
+        pot: startingPot.value + pot[0] + pot[1],
+        stack: effectiveStack.value - pot[player],
+        toCall: pot[1 - player] - pot[player],
+      };
+
       const currentPlayer = await handler.currentPlayer();
       const cards = handCards.value[currentPlayer];
 
@@ -475,7 +515,8 @@ export default defineComponent({
           equity: (equity[i] / weightsNormalized[i]) * factor + 0.5,
           expectedValue:
             (expectedValues[i] / weightsNormalized[i]) * factor +
-            startingPot.value / 2,
+            startingPot.value / 2 +
+            pot[currentPlayer],
           strategy: Array.from(
             { length: numActions },
             (_, j) => strategy[j * cards.length + i]
@@ -551,57 +592,14 @@ export default defineComponent({
           equity: equitySumCell[i] / weightNormalizedSumCell[i] + 0.5,
           expectedValue:
             expectedValueSumCell[i] / weightNormalizedSumCell[i] +
-            startingPot.value / 2,
+            startingPot.value / 2 +
+            pot[currentPlayer],
           strategy: Array.from(
             { length: numActions },
             (_, j) => strategySumCell[i][j] / weightNormalizedSumCell[i]
           ),
         };
       });
-
-      let player = 0;
-      let pot = startingPot.value;
-      let stack = [effectiveStack.value, effectiveStack.value];
-      let lastBet = 0;
-
-      for (let i = 0; i < actionList.value.length - 1; ++i) {
-        const item = actionList.value[i];
-        if (item.type !== "Player") {
-          player = 0;
-          lastBet = 0;
-          continue;
-        }
-
-        const action = item.actions[item.selectedIndex];
-
-        if (action.str === "Call") {
-          pot += stack[player] - stack[1 - player];
-          stack[player] = stack[1 - player];
-        } else if (action.str.slice(0, 3) === "Bet") {
-          const bet = Number(action.str.slice(4));
-          pot += bet;
-          stack[player] -= bet;
-          lastBet = bet;
-        } else if (
-          action.str.slice(0, 5) === "Raise" ||
-          action.str.slice(0, 6) === "All-in"
-        ) {
-          const bet = Number(action.str.slice(6).trimStart());
-          const stackDiff = stack[player] - stack[1 - player];
-          pot += bet - lastBet + stackDiff;
-          stack[player] -= bet - lastBet + stackDiff;
-          lastBet = bet;
-        }
-
-        player = 1 - player;
-      }
-
-      nodeInformation.value = {
-        player,
-        pot,
-        stack: stack[player],
-        toCall: stack[player] - stack[1 - player],
-      };
     };
 
     const moveResult = async (depth: number, index: number) => {
