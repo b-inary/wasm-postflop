@@ -123,9 +123,9 @@ impl GameManager {
         compute_exploitability(&self.game, false)
     }
 
-    pub fn finalize(&mut self) -> Box<[f32]> {
+    pub fn finalize(&mut self) -> f64 {
         normalize_strategy(&self.game);
-        compute_ev(&self.game);
+        compute_ev_and_equity(&self.game);
 
         self.node = &*self.game.root();
         self.board = self.game.config().flop.to_vec();
@@ -137,11 +137,9 @@ impl GameManager {
             self.game.initial_weight(1).to_vec(),
         ];
         self.compute_normalized_weight();
-        self.weights_normalized
+        self.weights_normalized[0]
             .iter()
-            .map(|w| w.iter().sum())
-            .collect::<Vec<_>>()
-            .into_boxed_slice()
+            .fold(0.0, |acc, &x| acc + x as f64)
     }
 
     pub fn apply_history(&mut self, history: &[u32]) {
@@ -232,26 +230,28 @@ impl GameManager {
             self.node = &*node.play(action);
             self.apply_history_recursive(&history[1..]);
 
-            let player = node.player();
-            if !self.game.is_compression_enabled() {
-                mul_slice(
-                    &mut self.weights[player],
-                    row(
-                        node.strategy(),
-                        action as usize,
-                        self.game.num_private_hands(player),
-                    ),
-                );
-            } else {
-                let decoder = node.strategy_scale() / u16::MAX as f32;
-                self.weights[player]
-                    .iter_mut()
-                    .zip(row(
-                        node.strategy_compressed(),
-                        action as usize,
-                        self.game.num_private_hands(player),
-                    ))
-                    .for_each(|(w, &s)| *w *= s as f32 * decoder);
+            if node.num_actions() > 1 {
+                let player = node.player();
+                if !self.game.is_compression_enabled() {
+                    mul_slice(
+                        &mut self.weights[player],
+                        row(
+                            node.strategy(),
+                            action as usize,
+                            self.game.num_private_hands(player),
+                        ),
+                    );
+                } else {
+                    let decoder = node.strategy_scale() / u16::MAX as f32;
+                    self.weights[player]
+                        .iter_mut()
+                        .zip(row(
+                            node.strategy_compressed(),
+                            action as usize,
+                            self.game.num_private_hands(player),
+                        ))
+                        .for_each(|(w, &s)| *w *= s as f32 * decoder);
+                }
             }
         }
     }
@@ -354,14 +354,13 @@ impl GameManager {
 
     pub fn get_results(&self) -> Box<[f32]> {
         let player = self.current_player();
-        let expected_values = self.get_expected_values();
-        let strategy = self.get_strategy();
         self.weights[player]
             .iter()
             .chain(self.weights_normalized[player].iter())
             .cloned()
-            .chain(expected_values.into_iter())
-            .chain(strategy.into_iter())
+            .chain(self.get_expected_values().into_iter())
+            .chain(self.get_equity().into_iter())
+            .chain(self.get_strategy().into_iter())
             .collect::<Vec<_>>()
             .into_boxed_slice()
     }
@@ -394,12 +393,41 @@ impl GameManager {
         ret
     }
 
+    fn get_equity(&self) -> Vec<f32> {
+        let node = self.node();
+        let player = node.player();
+        let num_actions = node.num_actions();
+        let num_private_hands = self.game.num_private_hands(player);
+        if !self.game.is_compression_enabled() {
+            if num_actions == 1 {
+                node.strategy().to_vec()
+            } else {
+                row(node.cum_regret(), 1, num_private_hands).to_vec()
+            }
+        } else {
+            let decoder = node.equity_scale() / i16::MAX as f32;
+            if num_actions == 1 {
+                node.strategy_compressed()
+                    .iter()
+                    .map(|&x| x as i16 as f32 * decoder)
+                    .collect()
+            } else {
+                row(node.cum_regret_compressed(), 1, num_private_hands)
+                    .iter()
+                    .map(|&x| x as f32 * decoder)
+                    .collect()
+            }
+        }
+    }
+
     fn get_strategy(&self) -> Vec<f32> {
         let node = self.node();
         let player = node.player();
         let num_actions = node.num_actions();
         let num_private_hands = self.game.num_private_hands(player);
-        let mut ret = if !self.game.is_compression_enabled() {
+        let mut ret = if num_actions == 1 {
+            vec![1.0; num_private_hands]
+        } else if !self.game.is_compression_enabled() {
             node.strategy().to_vec()
         } else {
             let decoder = node.strategy_scale() / u16::MAX as f32;

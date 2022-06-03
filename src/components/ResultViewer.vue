@@ -144,8 +144,9 @@
                 :key="text"
                 scope="col"
                 :class="
-                  'px-3 py-[5px] whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
-                  (text === 'Hand' ? 'text-center' : '')
+                  'py-[5px] whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                  (text === 'Hand' ? 'text-center ' : '') +
+                  (text === 'Weight' ? 'px-1.5' : 'px-2.5')
                 "
                 @click="sortBy(text)"
               >
@@ -171,7 +172,7 @@
               :key="item.card1 + '-' + item.card2"
               class="text-right text-sm"
             >
-              <td class="px-3 py-[5px] text-center">
+              <td class="px-2.5 py-[5px] text-center">
                 <template
                   v-for="card in [item.card1, item.card2].map(cardText)"
                   :key="card.rank + card.suit"
@@ -181,38 +182,44 @@
                   </span>
                 </template>
               </td>
-              <td class="px-3 py-[5px]">
-                {{ (100 * item.weight).toFixed(1) }}%
+              <td class="px-2.5 py-[5px]">
+                {{ percentStr(item.weight) }}
               </td>
-              <td class="px-3 py-[5px]">
+              <td class="px-2.5 py-[5px]">
+                {{ percentStr(item.equity) }}
+              </td>
+              <td class="px-2.5 py-[5px]">
                 {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
               </td>
               <td
                 v-for="i in item.strategy.length"
                 :key="i"
-                class="px-3 py-[5px]"
+                class="px-2.5 py-[5px]"
               >
-                {{ (100 * item.strategy[i - 1]).toFixed(1) }}%
+                {{ percentStr(item.strategy[i - 1]) }}
               </td>
             </tr>
           </tbody>
 
           <tfoot class="sticky bottom-0 font-bold bg-white shadow">
             <tr class="text-right text-sm">
-              <th scope="col" class="px-3 py-[5px] text-center underline">
+              <th scope="col" class="px-2.5 py-[5px] text-center underline">
                 {{ hoveredCellText }}
               </th>
-              <th scope="col" class="px-3 py-[5px]">
+              <th scope="col" class="px-2.5 py-[5px]">
                 {{ resultAverage.combos }}
               </th>
-              <th scope="col" class="px-3 py-[5px]">
+              <th scope="col" class="px-2.5 py-[5px]">
+                {{ resultAverage.equity }}
+              </th>
+              <th scope="col" class="px-2.5 py-[5px]">
                 {{ resultAverage.expectedValue }}
               </th>
               <th
                 v-for="i in resultAverage.strategy.length"
                 :key="i"
                 scope="col"
-                class="px-3 py-[5px]"
+                class="px-2.5 py-[5px]"
               >
                 {{ resultAverage.strategy[i - 1] }}
               </th>
@@ -283,6 +290,7 @@ export default defineComponent({
         card2: number;
         weight: number;
         weightNormalized: number;
+        equity: number;
         expectedValue: number;
         strategy: number[];
       }[]
@@ -292,6 +300,7 @@ export default defineComponent({
       [] as {
         count: number;
         weight: number;
+        equity: number;
         expectedValue: number;
         strategy: number[];
       }[]
@@ -321,6 +330,14 @@ export default defineComponent({
       const item = actionList.value.find((item) => item.type === "River");
       return item?.selectedIndex ?? -1;
     });
+
+    const percentStr = (num: number) => {
+      if (num >= 0.9995) {
+        return "100%";
+      } else {
+        return (100 * num).toFixed(1) + "%";
+      }
+    };
 
     const trimMinusZero = (str: string) => {
       if (Number(str) === 0 && str[0] === "-") {
@@ -415,14 +432,15 @@ export default defineComponent({
         2 * cards.length,
         3 * cards.length
       );
-      const strategy = results.subarray(3 * cards.length);
+      const equity = results.subarray(3 * cards.length, 4 * cards.length);
+      const strategy = results.subarray(4 * cards.length);
 
       if (resultNav.value) {
         const div = resultNav.value;
         div.scrollLeft = div.scrollWidth - div.clientWidth;
       }
 
-      let factor = store.normalizer[player];
+      let factor = store.normalizer;
       if (turn.value !== -1) factor *= 45;
       if (river.value !== -1) factor *= 44;
 
@@ -432,6 +450,7 @@ export default defineComponent({
           card2: cards[i][1],
           weight: weights[i],
           weightNormalized: weightsNormalized[i],
+          equity: (equity[i] / weightsNormalized[i]) * factor + 0.5,
           expectedValue:
             (expectedValues[i] / weightsNormalized[i]) * factor +
             store.startingPot / 2,
@@ -461,6 +480,7 @@ export default defineComponent({
       const weightSumCell = Array.from({ length: 13 * 13 }, () => 0);
       const weightNormalizedSumCell = Array.from({ length: 13 * 13 }, () => 0);
       const countCell = Array.from({ length: 13 * 13 }, () => 0);
+      const equitySumCell = Array.from({ length: 13 * 13 }, () => 0);
       const expectedValueSumCell = Array.from({ length: 13 * 13 }, () => 0);
       const strategySumCell = Array.from({ length: 13 * 13 }, () =>
         Array.from({ length: numActions }, () => 0)
@@ -492,6 +512,7 @@ export default defineComponent({
           weightSumCell[idx] += weights[i];
           weightNormalizedSumCell[idx] += weightsNormalized[i];
           countCell[idx] += 1;
+          equitySumCell[idx] += equity[i] * factor;
           expectedValueSumCell[idx] += expectedValues[i] * factor;
           for (let j = 0; j < numActions; ++j) {
             const s = weightsNormalized[i] * result.value[i].strategy[j];
@@ -505,6 +526,7 @@ export default defineComponent({
         return {
           weight: weightSumCell[i],
           count: countCell[i],
+          equity: equitySumCell[i] / weightNormalizedSumCell[i] + 0.5,
           expectedValue:
             expectedValueSumCell[i] / weightNormalizedSumCell[i] +
             store.startingPot / 2,
@@ -541,7 +563,7 @@ export default defineComponent({
           .map((item) => item.actions[item.selectedIndex].index)
       );
 
-      if (!["Hand", "Weight", "EV"].includes(sortKey.value.key)) {
+      if (!["Hand", "Weight", "EQ", "EV"].includes(sortKey.value.key)) {
         sortKey.value = { key: "Hand", order: "desc" };
       }
 
@@ -623,7 +645,7 @@ export default defineComponent({
       }
 
       const idx = (row - 1) * 13 + col - 1;
-      return ((100 * resultCell.value[idx].weight) / denom).toFixed(1) + "%";
+      return percentStr(resultCell.value[idx].weight / denom);
     };
 
     const cellItems = (row: number, col: number) => {
@@ -636,7 +658,7 @@ export default defineComponent({
           key: i,
           class: actionColor.value[i],
           style: {
-            width: (100 * (1 - left)).toFixed(1) + "%",
+            width: percentStr(1 - left),
             zIndex: i,
           },
         };
@@ -654,7 +676,9 @@ export default defineComponent({
       if (resultCell.value.length === 0 || resultCell.value[idx].count === 0) {
         return "";
       }
-      if (sortKey.value.key === "EV") {
+      if (sortKey.value.key === "EQ") {
+        return (100 * resultCell.value[idx].equity).toFixed(0) + "%";
+      } else if (sortKey.value.key === "EV") {
         const ev = resultCell.value[idx].expectedValue;
         return -0.5 <= ev && ev < 0.5
           ? "0"
@@ -684,7 +708,7 @@ export default defineComponent({
     });
 
     const headers = computed(() => {
-      return ["Hand", "Weight", "EV"].concat(nextActionsStr.value);
+      return ["Hand", "Weight", "EQ", "EV"].concat(nextActionsStr.value);
     });
 
     const resultFiltered = computed(() => {
@@ -759,6 +783,10 @@ export default defineComponent({
             return (
               coef * (round(100 * a.weight) - round(100 * b.weight)) || fallback
             );
+          } else if (sortKey.value.key === "EQ") {
+            return (
+              coef * (round(100 * a.equity) - round(100 * b.equity)) || fallback
+            );
           } else if (sortKey.value.key === "EV") {
             return (
               coef * (round(a.expectedValue) - round(b.expectedValue)) ||
@@ -781,17 +809,20 @@ export default defineComponent({
       if (result.length === 0) {
         return {
           combos: "-",
+          equity: "-",
           expectedValue: "-",
           strategy: nextActionsStr.value.map(() => "-"),
         };
       }
       let weightSum = 0;
       let combos = 0;
+      let equity = 0;
       let expectedValue = 0;
       let strategy = nextActionsStr.value.map(() => 0);
       for (const r of result) {
         weightSum += r.weightNormalized;
         combos += r.weight;
+        equity += r.equity * r.weightNormalized;
         expectedValue += r.expectedValue * r.weightNormalized;
         for (let i = 0; i < nextActionsStr.value.length; i++) {
           strategy[i] += r.strategy[i] * r.weightNormalized;
@@ -799,8 +830,9 @@ export default defineComponent({
       }
       return {
         combos: combos.toFixed(1),
+        equity: percentStr(equity / weightSum),
         expectedValue: trimMinusZero((expectedValue / weightSum).toFixed(1)),
-        strategy: strategy.map((x) => ((100 * x) / weightSum).toFixed(1) + "%"),
+        strategy: strategy.map((x) => percentStr(x / weightSum)),
       };
     });
 
@@ -812,6 +844,7 @@ export default defineComponent({
       actionList,
       sortKey,
       sortBy,
+      percentStr,
       trimMinusZero,
       moveResult,
       actionColorByStr,

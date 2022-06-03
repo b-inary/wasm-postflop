@@ -21,7 +21,7 @@
         'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
         'disabled:opacity-40 disabled:bg-blue-600'
       "
-      :disabled="isTreeBuilding || store.isSolverRunning"
+      :disabled="isTreeBuilding || store.isSolverRunning || store.isFinalizing"
       @click="buildTree"
     >
       Build tree
@@ -507,8 +507,7 @@ export default defineComponent({
       store.isSolverRunning = false;
       store.isFinalizing = true;
 
-      const normalizer = await handler.finalize();
-      store.normalizer = [normalizer[0], normalizer[1]];
+      store.normalizer = await handler.finalize();
 
       store.isFinalizing = false;
       store.isSolverFinished = true;
