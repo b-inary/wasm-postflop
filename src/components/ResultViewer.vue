@@ -97,135 +97,144 @@
       v-if="
         actionList.length === 0 || actionList.slice(-1)[0].type === 'Player'
       "
-      class="flex mt-5 items-start"
     >
-      <div class="shrink-0">
-        <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
-          <tr v-for="row in 13" :key="row" class="h-9">
-            <td
-              v-for="col in 13"
-              :key="col"
-              :class="
-                'relative w-10 border-black select-none ' +
-                (row === col ? 'border-2' : 'border')
-              "
-              @mouseover="onMouseOver(row, col)"
-            >
-              <div
-                class="absolute bottom-0 left-0 w-full"
-                :style="{ height: weightPercent(row, col) }"
+      <div class="flex mt-5 items-start">
+        <div class="shrink-0">
+          <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
+            <tr v-for="row in 13" :key="row" class="h-9">
+              <td
+                v-for="col in 13"
+                :key="col"
+                :class="
+                  'relative w-10 border-black select-none ' +
+                  (row === col ? 'border-2' : 'border')
+                "
+                @mouseover="onMouseOver(row, col)"
               >
                 <div
-                  v-for="item in cellItems(row, col)"
-                  :key="item.key"
-                  :class="'absolute top-0 right-0 h-full ' + item.class"
-                  :style="item.style"
-                ></div>
-              </div>
-              <div class="absolute -top-px left-px z-50 text-sm">
-                {{ cellText(row, col) }}
-              </div>
-              <div class="absolute -bottom-px right-px z-50 text-sm">
-                {{ cellAuxText(row, col) }}
-              </div>
-            </td>
-          </tr>
-        </table>
+                  class="absolute bottom-0 left-0 w-full"
+                  :style="{ height: weightPercent(row, col) }"
+                >
+                  <div
+                    v-for="item in cellItems(row, col)"
+                    :key="item.key"
+                    :class="'absolute top-0 right-0 h-full ' + item.class"
+                    :style="item.style"
+                  ></div>
+                </div>
+                <div class="absolute -top-px left-px z-50 text-sm">
+                  {{ cellText(row, col) }}
+                </div>
+                <div class="absolute -bottom-px right-px z-50 text-sm">
+                  {{ cellAuxText(row, col) }}
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div
+          class="ml-5 max-h-[470px] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll"
+        >
+          <table class="relative divide-y divide-gray-300">
+            <thead class="sticky top-0 bg-gray-100 shadow">
+              <tr>
+                <th
+                  v-for="text in headers"
+                  :key="text"
+                  scope="col"
+                  :class="
+                    'py-[5px] whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                    (text === 'Hand' ? 'text-center ' : '') +
+                    (text === 'Weight' ? 'px-1.5' : 'px-2.5')
+                  "
+                  @click="sortBy(text)"
+                >
+                  <span
+                    v-if="text === sortKey.key"
+                    class="inline-block mr-0.5 text-xs"
+                  >
+                    {{ sortKey.order === "asc" ? "▲" : "▼" }}
+                  </span>
+                  {{
+                    text
+                      .replace("Bet", "B")
+                      .replace("Raise", "R")
+                      .replace("All-in", "A")
+                  }}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody class="bg-white divide-y divide-gray-300">
+              <tr
+                v-for="item in resultSorted"
+                :key="item.card1 + '-' + item.card2"
+                class="text-right text-sm"
+              >
+                <td class="px-2.5 py-[5px] text-center">
+                  <template
+                    v-for="card in [item.card1, item.card2].map(cardText)"
+                    :key="card.rank + card.suit"
+                  >
+                    <span :class="card.colorClass">
+                      {{ card.rank + card.suit }}
+                    </span>
+                  </template>
+                </td>
+                <td class="px-2.5 py-[5px]">
+                  {{ percentStr(item.weight) }}
+                </td>
+                <td class="px-2.5 py-[5px]">
+                  {{ percentStr(item.equity) }}
+                </td>
+                <td class="px-2.5 py-[5px]">
+                  {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
+                </td>
+                <td
+                  v-for="i in item.strategy.length"
+                  :key="i"
+                  class="px-2.5 py-[5px]"
+                >
+                  {{ percentStr(item.strategy[i - 1]) }}
+                </td>
+              </tr>
+            </tbody>
+
+            <tfoot class="sticky bottom-0 font-bold bg-white shadow">
+              <tr class="text-right text-sm">
+                <th scope="col" class="px-2.5 py-[5px] text-center underline">
+                  {{ hoveredCellText }}
+                </th>
+                <th scope="col" class="px-2.5 py-[5px]">
+                  {{ resultAverage.combos }}
+                </th>
+                <th scope="col" class="px-2.5 py-[5px]">
+                  {{ resultAverage.equity }}
+                </th>
+                <th scope="col" class="px-2.5 py-[5px]">
+                  {{ resultAverage.expectedValue }}
+                </th>
+                <th
+                  v-for="i in resultAverage.strategy.length"
+                  :key="i"
+                  scope="col"
+                  class="px-2.5 py-[5px]"
+                >
+                  {{ resultAverage.strategy[i - 1] }}
+                </th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
 
-      <div
-        class="ml-5 max-h-[470px] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll"
-      >
-        <table class="relative divide-y divide-gray-300">
-          <thead class="sticky top-0 bg-gray-100 shadow">
-            <tr>
-              <th
-                v-for="text in headers"
-                :key="text"
-                scope="col"
-                :class="
-                  'py-[5px] whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
-                  (text === 'Hand' ? 'text-center ' : '') +
-                  (text === 'Weight' ? 'px-1.5' : 'px-2.5')
-                "
-                @click="sortBy(text)"
-              >
-                <span
-                  v-if="text === sortKey.key"
-                  class="inline-block mr-0.5 text-xs"
-                >
-                  {{ sortKey.order === "asc" ? "▲" : "▼" }}
-                </span>
-                {{
-                  text
-                    .replace("Bet", "B")
-                    .replace("Raise", "R")
-                    .replace("All-in", "A")
-                }}
-              </th>
-            </tr>
-          </thead>
-
-          <tbody class="bg-white divide-y divide-gray-300">
-            <tr
-              v-for="item in resultSorted"
-              :key="item.card1 + '-' + item.card2"
-              class="text-right text-sm"
-            >
-              <td class="px-2.5 py-[5px] text-center">
-                <template
-                  v-for="card in [item.card1, item.card2].map(cardText)"
-                  :key="card.rank + card.suit"
-                >
-                  <span :class="card.colorClass">
-                    {{ card.rank + card.suit }}
-                  </span>
-                </template>
-              </td>
-              <td class="px-2.5 py-[5px]">
-                {{ percentStr(item.weight) }}
-              </td>
-              <td class="px-2.5 py-[5px]">
-                {{ percentStr(item.equity) }}
-              </td>
-              <td class="px-2.5 py-[5px]">
-                {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
-              </td>
-              <td
-                v-for="i in item.strategy.length"
-                :key="i"
-                class="px-2.5 py-[5px]"
-              >
-                {{ percentStr(item.strategy[i - 1]) }}
-              </td>
-            </tr>
-          </tbody>
-
-          <tfoot class="sticky bottom-0 font-bold bg-white shadow">
-            <tr class="text-right text-sm">
-              <th scope="col" class="px-2.5 py-[5px] text-center underline">
-                {{ hoveredCellText }}
-              </th>
-              <th scope="col" class="px-2.5 py-[5px]">
-                {{ resultAverage.combos }}
-              </th>
-              <th scope="col" class="px-2.5 py-[5px]">
-                {{ resultAverage.equity }}
-              </th>
-              <th scope="col" class="px-2.5 py-[5px]">
-                {{ resultAverage.expectedValue }}
-              </th>
-              <th
-                v-for="i in resultAverage.strategy.length"
-                :key="i"
-                scope="col"
-                class="px-2.5 py-[5px]"
-              >
-                {{ resultAverage.strategy[i - 1] }}
-              </th>
-            </tr>
-          </tfoot>
-        </table>
+      <div class="mt-4">
+        Player: {{ nodeInformation.player === 0 ? "OOP" : "IP" }} / Pot:
+        {{ nodeInformation.pot }} / Stack: {{ nodeInformation.stack }}
+        {{
+          nodeInformation.toCall ? " / To Call: " + nodeInformation.toCall : ""
+        }}
       </div>
     </div>
 
@@ -268,6 +277,8 @@ export default defineComponent({
 
     const isSolverFinished = ref(false);
     const flop = ref([] as number[]);
+    const startingPot = ref(0);
+    const effectiveStack = ref(0);
     const handCards = ref([[], []] as number[][][]);
 
     const actionList = ref(
@@ -304,6 +315,15 @@ export default defineComponent({
         expectedValue: number;
         strategy: number[];
       }[]
+    );
+
+    const nodeInformation = ref(
+      {} as {
+        player: number;
+        pot: number;
+        stack: number;
+        toCall: number;
+      }
     );
 
     const hoveredCell = ref({ row: 0, col: 0 });
@@ -367,6 +387,8 @@ export default defineComponent({
 
       if (isFirstCall) {
         flop.value = [...store.board];
+        startingPot.value = store.startingPot;
+        effectiveStack.value = store.effectiveStack;
         for (let player = 0; player < 2; ++player) {
           const cards = await handler.privateHandCards(player);
           handCards.value[player] = Array.from(
@@ -419,8 +441,8 @@ export default defineComponent({
         }).reverse(),
       });
 
-      const player = await handler.currentPlayer();
-      const cards = handCards.value[player];
+      const currentPlayer = await handler.currentPlayer();
+      const cards = handCards.value[currentPlayer];
 
       const results = await handler.getResults();
       const weights = results.subarray(0, cards.length);
@@ -453,7 +475,7 @@ export default defineComponent({
           equity: (equity[i] / weightsNormalized[i]) * factor + 0.5,
           expectedValue:
             (expectedValues[i] / weightsNormalized[i]) * factor +
-            store.startingPot / 2,
+            startingPot.value / 2,
           strategy: Array.from(
             { length: numActions },
             (_, j) => strategy[j * cards.length + i]
@@ -529,13 +551,57 @@ export default defineComponent({
           equity: equitySumCell[i] / weightNormalizedSumCell[i] + 0.5,
           expectedValue:
             expectedValueSumCell[i] / weightNormalizedSumCell[i] +
-            store.startingPot / 2,
+            startingPot.value / 2,
           strategy: Array.from(
             { length: numActions },
             (_, j) => strategySumCell[i][j] / weightNormalizedSumCell[i]
           ),
         };
       });
+
+      let player = 0;
+      let pot = startingPot.value;
+      let stack = [effectiveStack.value, effectiveStack.value];
+      let lastBet = 0;
+
+      for (let i = 0; i < actionList.value.length - 1; ++i) {
+        const item = actionList.value[i];
+        if (item.type !== "Player") {
+          player = 0;
+          lastBet = 0;
+          continue;
+        }
+
+        const action = item.actions[item.selectedIndex];
+
+        if (action.str === "Call") {
+          pot += stack[player] - stack[1 - player];
+          stack[player] = stack[1 - player];
+        } else if (action.str.slice(0, 3) === "Bet") {
+          const bet = Number(action.str.slice(4));
+          pot += bet;
+          stack[player] -= bet;
+          lastBet = bet;
+        } else if (
+          action.str.slice(0, 5) === "Raise" ||
+          action.str.slice(0, 6) === "All-in"
+        ) {
+          const bet = Number(action.str.slice(6).trimStart());
+          const stackDiff = stack[player] - stack[1 - player];
+          pot += bet - lastBet + stackDiff;
+          stack[player] -= bet - lastBet + stackDiff;
+          lastBet = bet;
+        }
+
+        player = 1 - player;
+      }
+
+      nodeInformation.value = {
+        player,
+        pot,
+        stack: stack[player],
+        toCall: stack[player] - stack[1 - player],
+      };
     };
 
     const moveResult = async (depth: number, index: number) => {
@@ -858,6 +924,7 @@ export default defineComponent({
       headers,
       resultSorted,
       resultAverage,
+      nodeInformation,
     };
   },
 });
