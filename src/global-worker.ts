@@ -15,6 +15,14 @@ export async function init(numThreads: number) {
   await Comlink.wrap<WorkerApi>(worker).init(numThreads);
 }
 
+export async function getMemory() {
+  if (!worker) {
+    throw new Error("Worker not initialized");
+  }
+
+  return Comlink.wrap<WorkerApi>(worker).getMemory();
+}
+
 export async function getHandler() {
   if (!worker) {
     throw new Error("Worker not initialized");

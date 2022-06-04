@@ -386,11 +386,18 @@ export default defineComponent({
       const handler = await GlobalWorker.getHandler();
 
       if (isFirstCall) {
+        const memory = await GlobalWorker.getMemory();
+        const buffer = await memory.buffer;
         flop.value = [...store.board];
         startingPot.value = store.startingPot;
         effectiveStack.value = store.effectiveStack;
         for (let player = 0; player < 2; ++player) {
-          const cards = await handler.privateHandCards(player);
+          const cardsBuffer = await handler.privateHandCards(player);
+          const cards = new Uint8Array(
+            buffer,
+            cardsBuffer.ptr,
+            cardsBuffer.byteLength
+          );
           handCards.value[player] = Array.from(
             { length: cards.length / 2 },
             (_, i) => [cards[2 * i + 1], cards[2 * i]]

@@ -18,6 +18,12 @@ pub struct GameManager {
 }
 
 #[wasm_bindgen]
+pub struct ReadonlyBuffer {
+    pub pointer: *const u8,
+    pub byte_length: usize,
+}
+
+#[wasm_bindgen]
 impl GameManager {
     pub fn new() -> Self {
         Self {
@@ -94,13 +100,12 @@ impl GameManager {
         self.game.update_config(&config).err()
     }
 
-    pub fn private_hand_cards(&self, player: usize) -> Box<[u8]> {
-        self.game
-            .private_hand_cards(player)
-            .iter()
-            .flat_map(|&(c1, c2)| vec![c1, c2])
-            .collect::<Vec<_>>()
-            .into_boxed_slice()
+    pub fn private_hand_cards(&self, player: usize) -> ReadonlyBuffer {
+        let cards = self.game.private_hand_cards(player);
+        ReadonlyBuffer {
+            pointer: cards.as_ptr() as *const u8,
+            byte_length: cards.len() * 2,
+        }
     }
 
     pub fn memory_usage(&self, enable_compression: bool) -> u64 {

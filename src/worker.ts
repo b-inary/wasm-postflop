@@ -1,9 +1,16 @@
 import * as Comlink from "comlink";
 import { detect } from "detect-browser";
+import { InitOutput as InitOutputST } from "../pkg/solver-st/solver.js";
+import { InitOutput as InitOutputMT } from "../pkg/solver-mt/solver.js";
 
 type ModST = typeof import("../pkg/solver-st/solver.js");
 type ModMT = typeof import("../pkg/solver-mt/solver.js");
 type Mod = ModST | ModMT;
+
+type ReadonlyBuffer = {
+  ptr: number;
+  byteLength: number;
+};
 
 function createHandler(mod: Mod) {
   return {
@@ -56,7 +63,11 @@ function createHandler(mod: Mod) {
     },
 
     privateHandCards(player: number) {
-      return this.game.private_hand_cards(player);
+      const ret = this.game.private_hand_cards(player);
+      return {
+        ptr: ret.pointer,
+        byteLength: ret.byte_length,
+      } as ReadonlyBuffer;
     },
 
     memoryUsage(enable_compression: boolean) {
@@ -105,8 +116,10 @@ function createHandler(mod: Mod) {
   };
 }
 
+type InitOutput = InitOutputST | InitOutputMT;
 type Handler = ReturnType<typeof createHandler>;
 
+let wasm: InitOutput;
 let handler: Handler;
 
 async function init(num_threads: number) {
@@ -115,14 +128,18 @@ async function init(num_threads: number) {
   const browser = detect();
   if (browser && (browser.name === "safari" || browser.os === "iOS")) {
     mod = await import("../pkg/solver-st/solver.js");
-    await mod.default();
+    wasm = await mod.default();
   } else {
     mod = await import("../pkg/solver-mt/solver.js");
-    await mod.default();
+    wasm = await mod.default();
     await (mod as ModMT).initThreadPool(num_threads);
   }
 
   handler = createHandler(mod);
+}
+
+function getMemory() {
+  return Comlink.proxy(wasm.memory);
 }
 
 function getHandler() {
@@ -131,7 +148,8 @@ function getHandler() {
 
 export interface WorkerApi {
   init: typeof init;
+  getMemory: typeof getMemory;
   getHandler: typeof getHandler;
 }
 
-Comlink.expose({ init, getHandler });
+Comlink.expose({ init, getMemory, getHandler });
