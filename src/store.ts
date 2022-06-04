@@ -51,11 +51,11 @@ function parseNumber(s: string): number {
 }
 
 function parseBetSizes(sizesStr: string): number[] | null {
-  if (sizesStr === "") {
-    return [];
-  }
+  const trimmed = sizesStr.trim();
+  if (trimmed === "") return [];
 
-  const sizes = sizesStr.split(",").map((s) => parseNumber(s.trim()) / 100);
+  const split = trimmed.split(sizesStr.includes(",") ? "," : /\s+/);
+  const sizes = split.map((s) => parseNumber(s.trim()) / 100);
 
   if (sizes.some((s) => Number.isNaN(s) || s <= 0)) {
     return null;
