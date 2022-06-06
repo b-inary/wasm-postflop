@@ -1,24 +1,36 @@
 <template>
-  <div class="text-xl font-bold">Welcome to WASM Postflop!</div>
+  <p class="text-xl font-bold">Welcome to WASM Postflop!</p>
 
-  <div class="mt-4">
+  <p class="mt-4">
     <span class="font-bold">WASM Postflop</span> is a free and open-source
     <span class="font-bold">GTO solver</span> that works on web browsers.<br />
     <span class="font-bold">WASM</span> stands for
     <a href="https://webassembly.org/" class="font-bold link">WebAssembly</a>.
     It is relatively new technology that allows us to distribute a fast,
     portable, and secure program across the web.
-  </div>
+  </p>
 
   <ul class="mt-4 ml-8 list-disc">
-    <li>Free to use</li>
-    <li>Open-source: you can inspect the whole program</li>
-    <li>No need to install anything</li>
-    <li>Works inside your browser</li>
-    <li>Sufficiently fast (supports multithreading)</li>
+    <li><span class="font-bold">Free to use</span></li>
+    <li>
+      <span class="font-bold">Open source</span>: anyone can examine the whole
+      program
+    </li>
+    <li>
+      <span class="font-bold">Works inside your browser</span>: no need to
+      install anything
+    </li>
+    <li>
+      <span class="font-bold">Sufficiently fast</span>: supports multithreading
+    </li>
   </ul>
 
-  <div class="mt-4 underline">Limitations:</div>
+  <p class="mt-4">
+    For more detailed information about this project, please see
+    <a href="https://github.com/b-inary/wasm-postflop" class="link">GitHub</a>.
+  </p>
+
+  <p class="mt-4 underline">Limitations:</p>
 
   <ul class="mt-4 ml-8 list-disc">
     <li>
@@ -49,7 +61,7 @@
     </li>
   </ul>
 
-  <div class="mt-4 underline">Change log:</div>
+  <p class="mt-4 underline">Change log:</p>
 
   <ul class="mt-4 ml-8 list-disc">
     <li>
