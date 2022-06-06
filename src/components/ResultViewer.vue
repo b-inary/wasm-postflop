@@ -279,7 +279,8 @@ export default defineComponent({
     const flop = ref([] as number[]);
     const startingPot = ref(0);
     const effectiveStack = ref(0);
-    const handCards = ref([[], []] as number[][][]);
+
+    const handCards = ref([new Uint16Array(), new Uint16Array()]);
 
     const actionList = ref(
       [] as {
@@ -376,7 +377,7 @@ export default defineComponent({
     };
 
     const clearResult = async () => {
-      handCards.value = [[], []];
+      handCards.value = [new Uint16Array(), new Uint16Array()];
       actionList.value = [];
       result.value = [];
       resultCell.value = [];
@@ -393,14 +394,10 @@ export default defineComponent({
         effectiveStack.value = store.effectiveStack;
         for (let player = 0; player < 2; ++player) {
           const cardsBuffer = await handler.privateHandCards(player);
-          const cards = new Uint8Array(
+          handCards.value[player] = new Uint16Array(
             buffer,
             cardsBuffer.ptr,
-            cardsBuffer.byteLength
-          );
-          handCards.value[player] = Array.from(
-            { length: cards.length / 2 },
-            (_, i) => [cards[2 * i + 1], cards[2 * i]]
+            cardsBuffer.byteLength / 2
           );
         }
       }
@@ -513,10 +510,10 @@ export default defineComponent({
       if (turn.value !== -1) factor *= 45;
       if (river.value !== -1) factor *= 44;
 
-      result.value = cards.map((_, i) => {
+      result.value = Array.from({ length: cards.length }, (_, i) => {
         return {
-          card1: cards[i][0],
-          card2: cards[i][1],
+          card1: cards[i] >> 8,
+          card2: cards[i] & 0xff,
           weight: weights[i],
           weightNormalized: weightsNormalized[i],
           equity: (equity[i] / weightsNormalized[i]) * factor + 0.5,
@@ -559,10 +556,12 @@ export default defineComponent({
       const strategySum = Array.from({ length: numActions }, () => 0);
 
       for (let i = 0; i < cards.length; ++i) {
-        const rank1 = Math.floor(cards[i][0] / 4);
-        const suit1 = cards[i][0] % 4;
-        const rank2 = Math.floor(cards[i][1] / 4);
-        const suit2 = cards[i][1] % 4;
+        const card1 = cards[i] >> 8;
+        const card2 = cards[i] & 0xff;
+        const rank1 = Math.floor(card1 / 4);
+        const rank2 = Math.floor(card2 / 4);
+        const suit1 = card1 % 4;
+        const suit2 = card2 % 4;
 
         let row, col;
         if (rank1 === rank2) {
