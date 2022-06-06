@@ -3,27 +3,27 @@
     class="flex flex-col shrink-0 w-52 my-4 overflow-y-auto border-r-2"
     style="height: calc(100vh - 5.5rem)"
   >
-    <div :class="itemStyle('About')" @click="store.mainView = 'About'">
+    <button :class="itemStyle('About')" @click="store.mainView = 'About'">
       About
-    </div>
+    </button>
 
-    <div :class="itemStyle('OOPRange')" @click="store.mainView = 'OOPRange'">
+    <button :class="itemStyle('OOPRange')" @click="store.mainView = 'OOPRange'">
       Range 1 (OOP)
-      <div class="flex my-2 justify-center">
+      <span class="flex my-2 justify-center">
         <range-mini-viewer :player="0" />
-      </div>
-    </div>
+      </span>
+    </button>
 
-    <div :class="itemStyle('IPRange')" @click="store.mainView = 'IPRange'">
+    <button :class="itemStyle('IPRange')" @click="store.mainView = 'IPRange'">
       Range 2 (IP)
-      <div class="flex my-2 justify-center">
+      <span class="flex my-2 justify-center">
         <range-mini-viewer :player="1" />
-      </div>
-    </div>
+      </span>
+    </button>
 
-    <div :class="itemStyle('Board')" @click="store.mainView = 'Board'">
-      <p>Board</p>
-      <p class="flex justify-center">
+    <button :class="itemStyle('Board')" @click="store.mainView = 'Board'">
+      Board
+      <span class="flex justify-center">
         <span
           v-for="item in boardTexts"
           :key="item.rank + item.suit"
@@ -31,23 +31,26 @@
         >
           {{ item.rank + item.suit }}
         </span>
-      </p>
-    </div>
+      </span>
+    </button>
 
-    <div
+    <button
       :class="itemStyle('TreeConfig')"
       @click="store.mainView = 'TreeConfig'"
     >
       Tree Configuration
-    </div>
+    </button>
 
-    <div :class="itemStyle('RunSolver')" @click="store.mainView = 'RunSolver'">
+    <button
+      :class="itemStyle('RunSolver')"
+      @click="store.mainView = 'RunSolver'"
+    >
       Run Solver
-    </div>
+    </button>
 
-    <div :class="itemStyle('Result')" @click="store.mainView = 'Result'">
+    <button :class="itemStyle('Result')" @click="store.mainView = 'Result'">
       Result
-    </div>
+    </button>
   </aside>
 </template>
 
@@ -90,6 +93,6 @@ export default defineComponent({
 
 <style scoped>
 .side-bar-item {
-  @apply mx-2 my-1 px-2.5 py-1.5 border-[3px] rounded-xl cursor-pointer select-none;
+  @apply block mx-2 my-1 px-2.5 py-1.5 border-[3px] rounded-xl text-left cursor-pointer select-none;
 }
 </style>
