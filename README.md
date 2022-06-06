@@ -13,12 +13,13 @@ Core solver repository: https://github.com/b-inary/postflop-solver
 ```sh
 $ # prerequisites
 $ rustup install nightly
+$ rustup component add rust-src --toolchain nightly
 $ rustup target add wasm32-unknown-unknown
 $ cargo install wasm-pack
 $ npm install
 
 $ # build
-$ npm run wasm
+$ npm run wasm  # the latest version of binaryen (wasm-opt) may need to be installed
 $ npm run build
 
 $ # serve

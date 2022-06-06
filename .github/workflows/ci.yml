@@ -1,0 +1,25 @@
+name: CI
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Prepare Rust environment
+        run: |
+          rustup install nightly
+          rustup component add rust-src --toolchain nightly
+          rustup target add wasm32-unknown-unknown
+          cargo install wasm-pack
+          sudo apt install binaryen
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: |
+          npm run wasm
+          npm run build
+      - name: Lint
+        run: |
+          npm run lint
+          npx prettier --check src/**/*.{ts,vue}
