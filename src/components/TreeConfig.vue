@@ -45,11 +45,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="config.oopFlopBetSizesStr"
+            v-model="config.oopFlopBetStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.oopFlopBetSizes === null ? 'input-error' : '')
+              (config.oopFlopBet === null ? 'input-error' : '')
             "
           />
           %
@@ -57,11 +57,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="config.oopFlopRaiseSizesStr"
+            v-model="config.oopFlopRaiseStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.oopFlopRaiseSizes === null ? 'input-error' : '')
+              (config.oopFlopRaise === null ? 'input-error' : '')
             "
           />
           %
@@ -73,11 +73,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="config.oopTurnBetSizesStr"
+            v-model="config.oopTurnBetStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.oopTurnBetSizes === null ? 'input-error' : '')
+              (config.oopTurnBet === null ? 'input-error' : '')
             "
           />
           %
@@ -85,11 +85,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="config.oopTurnRaiseSizesStr"
+            v-model="config.oopTurnRaiseStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.oopTurnRaiseSizes === null ? 'input-error' : '')
+              (config.oopTurnRaise === null ? 'input-error' : '')
             "
           />
           %
@@ -101,11 +101,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="config.oopRiverBetSizesStr"
+            v-model="config.oopRiverBetStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.oopRiverBetSizes === null ? 'input-error' : '')
+              (config.oopRiverBet === null ? 'input-error' : '')
             "
           />
           %
@@ -113,11 +113,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="config.oopRiverRaiseSizesStr"
+            v-model="config.oopRiverRaiseStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.oopRiverRaiseSizes === null ? 'input-error' : '')
+              (config.oopRiverRaise === null ? 'input-error' : '')
             "
           />
           %
@@ -134,11 +134,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="config.ipFlopBetSizesStr"
+            v-model="config.ipFlopBetStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.ipFlopBetSizes === null ? 'input-error' : '')
+              (config.ipFlopBet === null ? 'input-error' : '')
             "
           />
           %
@@ -146,11 +146,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="config.ipFlopRaiseSizesStr"
+            v-model="config.ipFlopRaiseStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.ipFlopRaiseSizes === null ? 'input-error' : '')
+              (config.ipFlopRaise === null ? 'input-error' : '')
             "
           />
           %
@@ -162,11 +162,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="config.ipTurnBetSizesStr"
+            v-model="config.ipTurnBetStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.ipTurnBetSizes === null ? 'input-error' : '')
+              (config.ipTurnBet === null ? 'input-error' : '')
             "
           />
           %
@@ -174,11 +174,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="config.ipTurnRaiseSizesStr"
+            v-model="config.ipTurnRaiseStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.ipTurnRaiseSizes === null ? 'input-error' : '')
+              (config.ipTurnRaise === null ? 'input-error' : '')
             "
           />
           %
@@ -190,11 +190,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="config.ipRiverBetSizesStr"
+            v-model="config.ipRiverBetStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.ipRiverBetSizes === null ? 'input-error' : '')
+              (config.ipRiverBet === null ? 'input-error' : '')
             "
           />
           %
@@ -202,11 +202,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="config.ipRiverRaiseSizesStr"
+            v-model="config.ipRiverRaiseStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (config.ipRiverRaiseSizes === null ? 'input-error' : '')
+              (config.ipRiverRaise === null ? 'input-error' : '')
             "
           />
           %
@@ -223,7 +223,7 @@
         type="number"
         :class="
           'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (config.addAllInThreshold < 0 || config.addAllInThreshold > 1000
+          (config.addAllInThreshold < 0 || config.addAllInThreshold > 10000
             ? 'input-error'
             : '')
         "
@@ -240,7 +240,7 @@
         type="number"
         :class="
           'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (config.forceAllInThreshold < 0 || config.forceAllInThreshold > 100
+          (config.forceAllInThreshold < 0 || config.forceAllInThreshold > 10000
             ? 'input-error'
             : '')
         "

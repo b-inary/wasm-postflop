@@ -43,21 +43,41 @@ export function cardText(card: number) {
 }
 
 function parseNumber(s: string): number {
-  if (/^(\d+\.?\d*|\.\d+)$/.test(s)) {
-    return Number(s);
+  const numberRegex = /^(\d+\.?\d*|\.\d+)$/;
+  if (s.endsWith("x")) {
+    if (numberRegex.test(s.slice(0, -1))) {
+      return -Number(s.slice(0, -1));
+    } else {
+      return Number.NaN;
+    }
   } else {
-    return Number.NaN;
+    if (numberRegex.test(s)) {
+      return Number(s) / 100;
+    } else {
+      return Number.NaN;
+    }
   }
 }
 
-function parseBetSizes(sizesStr: string): number[] | null {
+function parseBetSizes(
+  sizesStr: string,
+  allowRelative: boolean
+): number[] | null {
   const trimmed = sizesStr.trim();
   if (trimmed === "") return [];
 
   const split = trimmed.split(sizesStr.includes(",") ? "," : /\s+/);
-  const sizes = split.map((s) => parseNumber(s.trim()) / 100);
+  const sizes = split.map((s) => parseNumber(s.trim()));
 
-  if (sizes.some((s) => Number.isNaN(s) || s <= 0)) {
+  if (
+    sizes.some(
+      (s) =>
+        Number.isNaN(s) ||
+        s > 100 ||
+        s < -100 ||
+        (s < 0 && (!allowRelative || -1 <= s))
+    )
+  ) {
     return null;
   } else {
     return sizes;
@@ -75,18 +95,18 @@ export function saveConfig() {
     board: [...config.board],
     startingPot: config.startingPot,
     effectiveStack: config.effectiveStack,
-    oopFlopBetSizes: config.oopFlopBetSizes ?? [],
-    oopFlopRaiseSizes: config.oopFlopRaiseSizes ?? [],
-    oopTurnBetSizes: config.oopTurnBetSizes ?? [],
-    oopTurnRaiseSizes: config.oopTurnRaiseSizes ?? [],
-    oopRiverBetSizes: config.oopRiverBetSizes ?? [],
-    oopRiverRaiseSizes: config.oopRiverRaiseSizes ?? [],
-    ipFlopBetSizes: config.ipFlopBetSizes ?? [],
-    ipFlopRaiseSizes: config.ipFlopRaiseSizes ?? [],
-    ipTurnBetSizes: config.ipTurnBetSizes ?? [],
-    ipTurnRaiseSizes: config.ipTurnRaiseSizes ?? [],
-    ipRiverBetSizes: config.ipRiverBetSizes ?? [],
-    ipRiverRaiseSizes: config.ipRiverRaiseSizes ?? [],
+    oopFlopBet: config.oopFlopBet ?? [],
+    oopFlopRaise: config.oopFlopRaise ?? [],
+    oopTurnBet: config.oopTurnBet ?? [],
+    oopTurnRaise: config.oopTurnRaise ?? [],
+    oopRiverBet: config.oopRiverBet ?? [],
+    oopRiverRaise: config.oopRiverRaise ?? [],
+    ipFlopBet: config.ipFlopBet ?? [],
+    ipFlopRaise: config.ipFlopRaise ?? [],
+    ipTurnBet: config.ipTurnBet ?? [],
+    ipTurnRaise: config.ipTurnRaise ?? [],
+    ipRiverBet: config.ipRiverBet ?? [],
+    ipRiverRaise: config.ipRiverRaise ?? [],
     addAllInThreshold: config.addAllInThreshold,
     forceAllInThreshold: config.forceAllInThreshold,
     adjustLastTwoBetSizes: config.adjustLastTwoBetSizes,
@@ -128,36 +148,36 @@ export const useConfigStore = defineStore("config", {
     board: [] as number[],
     startingPot: 180,
     effectiveStack: 910,
-    oopFlopBetSizesStr: "50",
-    oopFlopRaiseSizesStr: "60",
-    oopTurnBetSizesStr: "60",
-    oopTurnRaiseSizesStr: "60",
-    oopRiverBetSizesStr: "70",
-    oopRiverRaiseSizesStr: "60",
-    ipFlopBetSizesStr: "50",
-    ipFlopRaiseSizesStr: "60",
-    ipTurnBetSizesStr: "60",
-    ipTurnRaiseSizesStr: "60",
-    ipRiverBetSizesStr: "70",
-    ipRiverRaiseSizesStr: "60",
+    oopFlopBetStr: "50",
+    oopFlopRaiseStr: "60",
+    oopTurnBetStr: "60",
+    oopTurnRaiseStr: "60",
+    oopRiverBetStr: "70",
+    oopRiverRaiseStr: "60",
+    ipFlopBetStr: "50",
+    ipFlopRaiseStr: "60",
+    ipTurnBetStr: "60",
+    ipTurnRaiseStr: "60",
+    ipRiverBetStr: "70",
+    ipRiverRaiseStr: "60",
     addAllInThreshold: 120,
     forceAllInThreshold: 10,
     adjustLastTwoBetSizes: true,
   }),
 
   getters: {
-    oopFlopBetSizes: (state) => parseBetSizes(state.oopFlopBetSizesStr),
-    oopFlopRaiseSizes: (state) => parseBetSizes(state.oopFlopRaiseSizesStr),
-    oopTurnBetSizes: (state) => parseBetSizes(state.oopTurnBetSizesStr),
-    oopTurnRaiseSizes: (state) => parseBetSizes(state.oopTurnRaiseSizesStr),
-    oopRiverBetSizes: (state) => parseBetSizes(state.oopRiverBetSizesStr),
-    oopRiverRaiseSizes: (state) => parseBetSizes(state.oopRiverRaiseSizesStr),
-    ipFlopBetSizes: (state) => parseBetSizes(state.ipFlopBetSizesStr),
-    ipFlopRaiseSizes: (state) => parseBetSizes(state.ipFlopRaiseSizesStr),
-    ipTurnBetSizes: (state) => parseBetSizes(state.ipTurnBetSizesStr),
-    ipTurnRaiseSizes: (state) => parseBetSizes(state.ipTurnRaiseSizesStr),
-    ipRiverBetSizes: (state) => parseBetSizes(state.ipRiverBetSizesStr),
-    ipRiverRaiseSizes: (state) => parseBetSizes(state.ipRiverRaiseSizesStr),
+    oopFlopBet: (state) => parseBetSizes(state.oopFlopBetStr, false),
+    oopFlopRaise: (state) => parseBetSizes(state.oopFlopRaiseStr, true),
+    oopTurnBet: (state) => parseBetSizes(state.oopTurnBetStr, false),
+    oopTurnRaise: (state) => parseBetSizes(state.oopTurnRaiseStr, true),
+    oopRiverBet: (state) => parseBetSizes(state.oopRiverBetStr, false),
+    oopRiverRaise: (state) => parseBetSizes(state.oopRiverRaiseStr, true),
+    ipFlopBet: (state) => parseBetSizes(state.ipFlopBetStr, false),
+    ipFlopRaise: (state) => parseBetSizes(state.ipFlopRaiseStr, true),
+    ipTurnBet: (state) => parseBetSizes(state.ipTurnBetStr, false),
+    ipTurnRaise: (state) => parseBetSizes(state.ipTurnRaiseStr, true),
+    ipRiverBet: (state) => parseBetSizes(state.ipRiverBetStr, false),
+    ipRiverRaise: (state) => parseBetSizes(state.ipRiverRaiseStr, true),
   },
 });
 
@@ -170,18 +190,18 @@ export const useSavedConfigStore = defineStore("savedConfig", {
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
-    oopFlopBetSizes: [] as number[],
-    oopFlopRaiseSizes: [] as number[],
-    oopTurnBetSizes: [] as number[],
-    oopTurnRaiseSizes: [] as number[],
-    oopRiverBetSizes: [] as number[],
-    oopRiverRaiseSizes: [] as number[],
-    ipFlopBetSizes: [] as number[],
-    ipFlopRaiseSizes: [] as number[],
-    ipTurnBetSizes: [] as number[],
-    ipTurnRaiseSizes: [] as number[],
-    ipRiverBetSizes: [] as number[],
-    ipRiverRaiseSizes: [] as number[],
+    oopFlopBet: [] as number[],
+    oopFlopRaise: [] as number[],
+    oopTurnBet: [] as number[],
+    oopTurnRaise: [] as number[],
+    oopRiverBet: [] as number[],
+    oopRiverRaise: [] as number[],
+    ipFlopBet: [] as number[],
+    ipFlopRaise: [] as number[],
+    ipTurnBet: [] as number[],
+    ipTurnRaise: [] as number[],
+    ipRiverBet: [] as number[],
+    ipRiverRaise: [] as number[],
     addAllInThreshold: 0,
     forceAllInThreshold: 0,
     adjustLastTwoBetSizes: true,

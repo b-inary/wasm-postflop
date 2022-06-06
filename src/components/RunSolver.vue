@@ -235,51 +235,51 @@ function checkConfig(config: ReturnType<typeof useConfigStore>): string | null {
     return "Effective stack is be an integer";
   }
 
-  if (config.oopFlopBetSizes === null) {
+  if (config.oopFlopBet === null) {
     return "Invalid tree configuration (OOP flop bet)";
   }
 
-  if (config.oopFlopRaiseSizes === null) {
+  if (config.oopFlopRaise === null) {
     return "Invalid tree configuration (OOP flop raise)";
   }
 
-  if (config.oopTurnBetSizes === null) {
+  if (config.oopTurnBet === null) {
     return "Invalid tree configuration (OOP turn bet)";
   }
 
-  if (config.oopTurnRaiseSizes === null) {
+  if (config.oopTurnRaise === null) {
     return "Invalid tree configuration (OOP turn raise)";
   }
 
-  if (config.oopRiverBetSizes === null) {
+  if (config.oopRiverBet === null) {
     return "Invalid tree configuration (OOP river bet)";
   }
 
-  if (config.oopRiverRaiseSizes === null) {
+  if (config.oopRiverRaise === null) {
     return "Invalid tree configuration (OOP river raise)";
   }
 
-  if (config.ipFlopBetSizes === null) {
+  if (config.ipFlopBet === null) {
     return "Invalid tree configuration (IP flop bet)";
   }
 
-  if (config.ipFlopRaiseSizes === null) {
+  if (config.ipFlopRaise === null) {
     return "Invalid tree configuration (IP flop raise)";
   }
 
-  if (config.ipTurnBetSizes === null) {
+  if (config.ipTurnBet === null) {
     return "Invalid tree configuration (IP turn bet)";
   }
 
-  if (config.ipTurnRaiseSizes === null) {
+  if (config.ipTurnRaise === null) {
     return "Invalid tree configuration (IP turn raise)";
   }
 
-  if (config.ipRiverBetSizes === null) {
+  if (config.ipRiverBet === null) {
     return "Invalid tree configuration (IP river bet)";
   }
 
-  if (config.ipRiverRaiseSizes === null) {
+  if (config.ipRiverRaise === null) {
     return "Invalid tree configuration (IP river raise)";
   }
 
@@ -287,7 +287,7 @@ function checkConfig(config: ReturnType<typeof useConfigStore>): string | null {
     return "Invalid add all-in threshold";
   }
 
-  if (config.addAllInThreshold > 1000) {
+  if (config.addAllInThreshold > 10000) {
     return "Add all-in threshold is too large";
   }
 
@@ -295,7 +295,7 @@ function checkConfig(config: ReturnType<typeof useConfigStore>): string | null {
     return "Invalid force all-in threshold";
   }
 
-  if (config.forceAllInThreshold > 100) {
+  if (config.forceAllInThreshold > 10000) {
     return "Force all-in threshold is too large";
   }
 
@@ -379,18 +379,18 @@ export default defineComponent({
 
       // needed for type inference
       if (
-        config.oopFlopBetSizes === null ||
-        config.oopFlopRaiseSizes === null ||
-        config.oopTurnBetSizes === null ||
-        config.oopTurnRaiseSizes === null ||
-        config.oopRiverBetSizes === null ||
-        config.oopRiverRaiseSizes === null ||
-        config.ipFlopBetSizes === null ||
-        config.ipFlopRaiseSizes === null ||
-        config.ipTurnBetSizes === null ||
-        config.ipTurnRaiseSizes === null ||
-        config.ipRiverBetSizes === null ||
-        config.ipRiverRaiseSizes === null
+        config.oopFlopBet === null ||
+        config.oopFlopRaise === null ||
+        config.oopTurnBet === null ||
+        config.oopTurnRaise === null ||
+        config.oopRiverBet === null ||
+        config.oopRiverRaise === null ||
+        config.ipFlopBet === null ||
+        config.ipFlopRaise === null ||
+        config.ipTurnBet === null ||
+        config.ipTurnRaise === null ||
+        config.ipRiverBet === null ||
+        config.ipRiverRaise === null
       ) {
         return;
       }
@@ -407,18 +407,18 @@ export default defineComponent({
         new Uint8Array(config.board),
         config.startingPot,
         config.effectiveStack,
-        new Float32Array(config.oopFlopBetSizes),
-        new Float32Array(config.oopFlopRaiseSizes),
-        new Float32Array(config.oopTurnBetSizes),
-        new Float32Array(config.oopTurnRaiseSizes),
-        new Float32Array(config.oopRiverBetSizes),
-        new Float32Array(config.oopRiverRaiseSizes),
-        new Float32Array(config.ipFlopBetSizes),
-        new Float32Array(config.ipFlopRaiseSizes),
-        new Float32Array(config.ipTurnBetSizes),
-        new Float32Array(config.ipTurnRaiseSizes),
-        new Float32Array(config.ipRiverBetSizes),
-        new Float32Array(config.ipRiverRaiseSizes),
+        new Float32Array(config.oopFlopBet),
+        new Float32Array(config.oopFlopRaise),
+        new Float32Array(config.oopTurnBet),
+        new Float32Array(config.oopTurnRaise),
+        new Float32Array(config.oopRiverBet),
+        new Float32Array(config.oopRiverRaise),
+        new Float32Array(config.ipFlopBet),
+        new Float32Array(config.ipFlopRaise),
+        new Float32Array(config.ipTurnBet),
+        new Float32Array(config.ipTurnRaise),
+        new Float32Array(config.ipRiverBet),
+        new Float32Array(config.ipRiverRaise),
         config.addAllInThreshold / 100,
         config.forceAllInThreshold / 100,
         config.adjustLastTwoBetSizes

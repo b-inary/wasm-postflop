@@ -45,31 +45,37 @@ impl GameManager {
         flop: &[u8],
         starting_pot: i32,
         effective_stack: i32,
-        oop_flop_bet_sizes: &[f32],
-        oop_flop_raise_sizes: &[f32],
-        oop_turn_bet_sizes: &[f32],
-        oop_turn_raise_sizes: &[f32],
-        oop_river_bet_sizes: &[f32],
-        oop_river_raise_sizes: &[f32],
-        ip_flop_bet_sizes: &[f32],
-        ip_flop_raise_sizes: &[f32],
-        ip_turn_bet_sizes: &[f32],
-        ip_turn_raise_sizes: &[f32],
-        ip_river_bet_sizes: &[f32],
-        ip_river_raise_sizes: &[f32],
+        oop_flop_bet: &[f32],
+        oop_flop_raise: &[f32],
+        oop_turn_bet: &[f32],
+        oop_turn_raise: &[f32],
+        oop_river_bet: &[f32],
+        oop_river_raise: &[f32],
+        ip_flop_bet: &[f32],
+        ip_flop_raise: &[f32],
+        ip_turn_bet: &[f32],
+        ip_turn_raise: &[f32],
+        ip_river_bet: &[f32],
+        ip_river_raise: &[f32],
         add_all_in_threshold: f32,
         replace_all_in_threshold: f32,
         adjust_last_two_bet_sizes: bool,
     ) -> Option<String> {
+        let convert_bet_sizes = |sizes: &[f32]| {
+            sizes
+                .iter()
+                .map(|&x| {
+                    if x >= 0.0 {
+                        BetSize::PotRelative(x)
+                    } else {
+                        BetSize::LastBetRelative(-x)
+                    }
+                })
+                .collect()
+        };
         let bet_sizes = |bet: &[f32], raise: &[f32]| BetSizeCandidates {
-            bet: bet
-                .iter()
-                .map(|&x| BetSize::PotRelative(x))
-                .collect::<Vec<_>>(),
-            raise: raise
-                .iter()
-                .map(|&x| BetSize::PotRelative(x))
-                .collect::<Vec<_>>(),
+            bet: convert_bet_sizes(bet),
+            raise: convert_bet_sizes(raise),
         };
 
         let config = GameConfig {
@@ -81,16 +87,16 @@ impl GameManager {
                 Range::from_raw_data(ip_range),
             ],
             flop_bet_sizes: [
-                bet_sizes(oop_flop_bet_sizes, oop_flop_raise_sizes),
-                bet_sizes(ip_flop_bet_sizes, ip_flop_raise_sizes),
+                bet_sizes(oop_flop_bet, oop_flop_raise),
+                bet_sizes(ip_flop_bet, ip_flop_raise),
             ],
             turn_bet_sizes: [
-                bet_sizes(oop_turn_bet_sizes, oop_turn_raise_sizes),
-                bet_sizes(ip_turn_bet_sizes, ip_turn_raise_sizes),
+                bet_sizes(oop_turn_bet, oop_turn_raise),
+                bet_sizes(ip_turn_bet, ip_turn_raise),
             ],
             river_bet_sizes: [
-                bet_sizes(oop_river_bet_sizes, oop_river_raise_sizes),
-                bet_sizes(ip_river_bet_sizes, ip_river_raise_sizes),
+                bet_sizes(oop_river_bet, oop_river_raise),
+                bet_sizes(ip_river_bet, ip_river_raise),
             ],
             add_all_in_threshold,
             replace_all_in_threshold,
