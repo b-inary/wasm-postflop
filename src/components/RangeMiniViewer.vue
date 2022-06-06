@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { useStore } from "../store";
+import { useConfigStore } from "../store";
 
 export default defineComponent({
   props: {
@@ -28,9 +28,9 @@ export default defineComponent({
   },
 
   setup(props) {
-    const store = useStore();
+    const config = useConfigStore();
 
-    const range = store.range[props.player];
+    const range = config.range[props.player];
 
     const weightWidth = (row: number, col: number) => {
       return range[13 * (row - 1) + col - 1] + "%";

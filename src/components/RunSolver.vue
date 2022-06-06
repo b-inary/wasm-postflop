@@ -199,103 +199,103 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import * as GlobalWorker from "../global-worker";
-import { useStore } from "../store";
+import { useStore, useConfigStore, saveConfig } from "../store";
 import { detect } from "detect-browser";
 
 const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024;
 const browser = detect();
 const isSafari = browser && (browser.name === "safari" || browser.os === "iOS");
 
-function checkConfig(store: ReturnType<typeof useStore>): string | null {
-  if (store.board.length !== 3) {
+function checkConfig(config: ReturnType<typeof useConfigStore>): string | null {
+  if (config.board.length !== 3) {
     return "Board must consist of exactly three cards";
   }
 
-  if (store.startingPot <= 0) {
+  if (config.startingPot <= 0) {
     return "Starting pot must be positive";
   }
 
-  if (store.startingPot > 100000) {
+  if (config.startingPot > 100000) {
     return "Starting pot is too large";
   }
 
-  if (store.startingPot % 1 !== 0) {
+  if (config.startingPot % 1 !== 0) {
     return "Starting pot must be an integer";
   }
 
-  if (store.effectiveStack <= 0) {
+  if (config.effectiveStack <= 0) {
     return "Effective stack must be positive";
   }
 
-  if (store.effectiveStack > 100000) {
+  if (config.effectiveStack > 100000) {
     return "Effective stack is too large";
   }
 
-  if (store.effectiveStack % 1 !== 0) {
+  if (config.effectiveStack % 1 !== 0) {
     return "Effective stack is be an integer";
   }
 
-  if (store.oopFlopBetSizes === null) {
+  if (config.oopFlopBetSizes === null) {
     return "Invalid tree configuration (OOP flop bet)";
   }
 
-  if (store.oopFlopRaiseSizes === null) {
+  if (config.oopFlopRaiseSizes === null) {
     return "Invalid tree configuration (OOP flop raise)";
   }
 
-  if (store.oopTurnBetSizes === null) {
+  if (config.oopTurnBetSizes === null) {
     return "Invalid tree configuration (OOP turn bet)";
   }
 
-  if (store.oopTurnRaiseSizes === null) {
+  if (config.oopTurnRaiseSizes === null) {
     return "Invalid tree configuration (OOP turn raise)";
   }
 
-  if (store.oopRiverBetSizes === null) {
+  if (config.oopRiverBetSizes === null) {
     return "Invalid tree configuration (OOP river bet)";
   }
 
-  if (store.oopRiverRaiseSizes === null) {
+  if (config.oopRiverRaiseSizes === null) {
     return "Invalid tree configuration (OOP river raise)";
   }
 
-  if (store.ipFlopBetSizes === null) {
+  if (config.ipFlopBetSizes === null) {
     return "Invalid tree configuration (IP flop bet)";
   }
 
-  if (store.ipFlopRaiseSizes === null) {
+  if (config.ipFlopRaiseSizes === null) {
     return "Invalid tree configuration (IP flop raise)";
   }
 
-  if (store.ipTurnBetSizes === null) {
+  if (config.ipTurnBetSizes === null) {
     return "Invalid tree configuration (IP turn bet)";
   }
 
-  if (store.ipTurnRaiseSizes === null) {
+  if (config.ipTurnRaiseSizes === null) {
     return "Invalid tree configuration (IP turn raise)";
   }
 
-  if (store.ipRiverBetSizes === null) {
+  if (config.ipRiverBetSizes === null) {
     return "Invalid tree configuration (IP river bet)";
   }
 
-  if (store.ipRiverRaiseSizes === null) {
+  if (config.ipRiverRaiseSizes === null) {
     return "Invalid tree configuration (IP river raise)";
   }
 
-  if (store.addAllInThreshold < 0) {
+  if (config.addAllInThreshold < 0) {
     return "Invalid add all-in threshold";
   }
 
-  if (store.addAllInThreshold > 1000) {
+  if (config.addAllInThreshold > 1000) {
     return "Add all-in threshold is too large";
   }
 
-  if (store.forceAllInThreshold < 0) {
+  if (config.forceAllInThreshold < 0) {
     return "Invalid force all-in threshold";
   }
 
-  if (store.forceAllInThreshold > 100) {
+  if (config.forceAllInThreshold > 100) {
     return "Force all-in threshold is too large";
   }
 
@@ -305,6 +305,7 @@ function checkConfig(store: ReturnType<typeof useStore>): string | null {
 export default defineComponent({
   setup() {
     const store = useStore();
+    const config = useConfigStore();
 
     const numThreads = ref((!isSafari && navigator.hardwareConcurrency) || 1);
     const targetExploitability = ref(0.5);
@@ -337,7 +338,7 @@ export default defineComponent({
         return "";
       } else {
         const valueText = exploitability.value.toFixed(2);
-        const percent = (exploitability.value * 100) / store.startingPot;
+        const percent = (exploitability.value * 100) / config.startingPot;
         const percentText = `${percent.toFixed(2)}%`;
         return `Exploitability: ${valueText} (${percentText})`;
       }
@@ -370,7 +371,7 @@ export default defineComponent({
         return;
       }
 
-      const configError = checkConfig(store);
+      const configError = checkConfig(config);
       if (configError !== null) {
         treeStatus.value = `Error: ${configError}`;
         return;
@@ -378,18 +379,18 @@ export default defineComponent({
 
       // needed for type inference
       if (
-        store.oopFlopBetSizes === null ||
-        store.oopFlopRaiseSizes === null ||
-        store.oopTurnBetSizes === null ||
-        store.oopTurnRaiseSizes === null ||
-        store.oopRiverBetSizes === null ||
-        store.oopRiverRaiseSizes === null ||
-        store.ipFlopBetSizes === null ||
-        store.ipFlopRaiseSizes === null ||
-        store.ipTurnBetSizes === null ||
-        store.ipTurnRaiseSizes === null ||
-        store.ipRiverBetSizes === null ||
-        store.ipRiverRaiseSizes === null
+        config.oopFlopBetSizes === null ||
+        config.oopFlopRaiseSizes === null ||
+        config.oopTurnBetSizes === null ||
+        config.oopTurnRaiseSizes === null ||
+        config.oopRiverBetSizes === null ||
+        config.oopRiverRaiseSizes === null ||
+        config.ipFlopBetSizes === null ||
+        config.ipFlopRaiseSizes === null ||
+        config.ipTurnBetSizes === null ||
+        config.ipTurnRaiseSizes === null ||
+        config.ipRiverBetSizes === null ||
+        config.ipRiverRaiseSizes === null
       ) {
         return;
       }
@@ -401,26 +402,26 @@ export default defineComponent({
       const handler = await GlobalWorker.getHandler();
 
       const errorString = await handler.init(
-        store.rangeRaw[0],
-        store.rangeRaw[1],
-        new Uint8Array(store.board),
-        store.startingPot,
-        store.effectiveStack,
-        new Float32Array(store.oopFlopBetSizes),
-        new Float32Array(store.oopFlopRaiseSizes),
-        new Float32Array(store.oopTurnBetSizes),
-        new Float32Array(store.oopTurnRaiseSizes),
-        new Float32Array(store.oopRiverBetSizes),
-        new Float32Array(store.oopRiverRaiseSizes),
-        new Float32Array(store.ipFlopBetSizes),
-        new Float32Array(store.ipFlopRaiseSizes),
-        new Float32Array(store.ipTurnBetSizes),
-        new Float32Array(store.ipTurnRaiseSizes),
-        new Float32Array(store.ipRiverBetSizes),
-        new Float32Array(store.ipRiverRaiseSizes),
-        store.addAllInThreshold / 100,
-        store.forceAllInThreshold / 100,
-        store.adjustLastTwoBetSizes
+        config.rangeRaw[0],
+        config.rangeRaw[1],
+        new Uint8Array(config.board),
+        config.startingPot,
+        config.effectiveStack,
+        new Float32Array(config.oopFlopBetSizes),
+        new Float32Array(config.oopFlopRaiseSizes),
+        new Float32Array(config.oopTurnBetSizes),
+        new Float32Array(config.oopTurnRaiseSizes),
+        new Float32Array(config.oopRiverBetSizes),
+        new Float32Array(config.oopRiverRaiseSizes),
+        new Float32Array(config.ipFlopBetSizes),
+        new Float32Array(config.ipFlopRaiseSizes),
+        new Float32Array(config.ipTurnBetSizes),
+        new Float32Array(config.ipTurnRaiseSizes),
+        new Float32Array(config.ipRiverBetSizes),
+        new Float32Array(config.ipRiverRaiseSizes),
+        config.addAllInThreshold / 100,
+        config.forceAllInThreshold / 100,
+        config.adjustLastTwoBetSizes
       );
 
       if (errorString) {
@@ -428,6 +429,8 @@ export default defineComponent({
         treeStatus.value = "Error: " + errorString;
         return;
       }
+
+      saveConfig();
 
       memoryUsage.value = await handler.memoryUsage(false);
       memoryUsageCompressed.value = await handler.memoryUsage(true);
@@ -480,7 +483,7 @@ export default defineComponent({
         startTime = performance.now();
       }
 
-      const target = (store.startingPot * targetExploitability.value) / 100;
+      const target = (config.startingPot * targetExploitability.value) / 100;
 
       while (currentIteration.value < maxIterations.value) {
         if (pauseFlag.value) {

@@ -53,7 +53,7 @@
 
 <script lang="ts">
 import { computed, defineComponent } from "vue";
-import { MainView, cardText, useStore } from "../store";
+import { MainView, cardText, useStore, useConfigStore } from "../store";
 
 import RangeMiniViewer from "./RangeMiniViewer.vue";
 
@@ -64,12 +64,13 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
+    const config = useConfigStore();
 
     const boardTexts = computed(() => {
-      if (store.board.length === 0) {
+      if (config.board.length === 0) {
         return [{ rank: "-", suit: "", colorClass: "text-black" }];
       } else {
-        return store.board.map(cardText);
+        return config.board.map(cardText);
       }
     });
 

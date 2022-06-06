@@ -5,7 +5,7 @@
       :key="rank"
       class="m-1"
       :card-id="56 - 4 * rank - suit"
-      :is-selected="store.board.includes(56 - 4 * rank - suit)"
+      :is-selected="config.board.includes(56 - 4 * rank - suit)"
       @click="toggleCard(56 - 4 * rank - suit)"
     />
   </div>
@@ -16,7 +16,7 @@
         'rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium ' +
         'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
       "
-      @click="store.board = []"
+      @click="config.board = []"
     >
       Clear
     </button>
@@ -35,7 +35,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { useStore } from "../store";
+import { useConfigStore } from "../store";
 
 import BoardSelectorCard from "./BoardSelectorCard.vue";
 
@@ -45,32 +45,32 @@ export default defineComponent({
   },
 
   setup() {
-    const store = useStore();
+    const config = useConfigStore();
 
     const toggleCard = (cardId: number) => {
-      if (store.board.includes(cardId)) {
-        store.board = store.board.filter((card) => card !== cardId);
-      } else if (store.board.length < 5) {
-        store.board.push(cardId);
-        store.board.sort((a, b) => b - a);
+      if (config.board.includes(cardId)) {
+        config.board = config.board.filter((card) => card !== cardId);
+      } else if (config.board.length < 5) {
+        config.board.push(cardId);
+        config.board.sort((a, b) => b - a);
       }
     };
 
     const generateRandomBoard = () => {
-      store.board = [];
+      config.board = [];
 
-      while (store.board.length < 3) {
+      while (config.board.length < 3) {
         const randomCard = Math.floor(Math.random() * 52);
-        if (!store.board.includes(randomCard)) {
-          store.board.push(randomCard);
+        if (!config.board.includes(randomCard)) {
+          config.board.push(randomCard);
         }
       }
 
-      store.board.sort((a, b) => b - a);
+      config.board.sort((a, b) => b - a);
     };
 
     return {
-      store,
+      config,
       toggleCard,
       generateRandomBoard,
     };

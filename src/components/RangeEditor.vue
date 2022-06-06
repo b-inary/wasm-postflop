@@ -101,7 +101,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { useStore } from "../store";
+import { useConfigStore } from "../store";
 import { RangeManager } from "../../pkg/range/range";
 
 const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
@@ -124,11 +124,11 @@ export default defineComponent({
   },
 
   setup(props) {
-    const store = useStore();
+    const config = useConfigStore();
 
     const range = RangeManager.new();
-    const rangeStore = store.range[props.player];
-    const rangeStoreRaw = store.rangeRaw[props.player];
+    const rangeStore = config.range[props.player];
+    const rangeStoreRaw = config.rangeRaw[props.player];
     const rangeText = ref("");
     const rangeTextError = ref("");
     const weight = ref(100);

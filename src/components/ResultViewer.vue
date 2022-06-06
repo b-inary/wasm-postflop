@@ -29,7 +29,7 @@
         >
           <span class="inline-block mr-2 underline">Flop</span>
           <span
-            v-for="item in flop.map(cardText)"
+            v-for="item in board.map(cardText)"
             :key="item.rank + item.suit"
             :class="item.colorClass"
           >
@@ -259,7 +259,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
-import { cardText, useStore } from "../store";
+import { cardText, useStore, useSavedConfigStore } from "../store";
 import * as GlobalWorker from "../global-worker";
 
 import BoardSelectorCard from "./BoardSelectorCard.vue";
@@ -273,13 +273,11 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
+    const savedConfig = useSavedConfigStore();
+
     const resultNav = ref(null as HTMLDivElement | null);
 
     const isSolverFinished = ref(false);
-    const flop = ref([] as number[]);
-    const startingPot = ref(0);
-    const effectiveStack = ref(0);
-
     const handCards = ref([new Uint16Array(), new Uint16Array()]);
 
     const actionList = ref(
@@ -342,6 +340,8 @@ export default defineComponent({
       }
     });
 
+    const board = computed(() => savedConfig.board);
+
     const turn = computed(() => {
       const item = actionList.value.find((item) => item.type === "Turn");
       return item?.selectedIndex ?? -1;
@@ -389,9 +389,6 @@ export default defineComponent({
       if (isFirstCall) {
         const memory = await GlobalWorker.getMemory();
         const buffer = await memory.buffer;
-        flop.value = [...store.board];
-        startingPot.value = store.startingPot;
-        effectiveStack.value = store.effectiveStack;
         for (let player = 0; player < 2; ++player) {
           const cardsBuffer = await handler.privateHandCards(player);
           handCards.value[player] = new Uint16Array(
@@ -413,14 +410,12 @@ export default defineComponent({
           type: "River",
           selectedIndex: -1,
           depth: depth + 1,
-          actions: Array.from({ length: 52 }, (_, i) => {
-            return {
-              index: i,
-              str: i.toString(),
-              isSelected: false,
-              isTerminal: !isPossibleChance[i],
-            };
-          }),
+          actions: Array.from({ length: 52 }, (_, i) => ({
+            index: i,
+            str: i.toString(),
+            isSelected: false,
+            isTerminal: !isPossibleChance[i],
+          })),
         });
 
         if (turn.value === -1) {
@@ -435,14 +430,12 @@ export default defineComponent({
         type: "Player",
         selectedIndex: -1,
         depth: depth + 1,
-        actions: Array.from({ length: numActions }, (_, i) => {
-          return {
-            index: i,
-            str: nextActions[i],
-            isSelected: false,
-            isTerminal: !!isTerminalAction[i],
-          };
-        }).reverse(),
+        actions: Array.from({ length: numActions }, (_, i) => ({
+          index: i,
+          str: nextActions[i],
+          isSelected: false,
+          isTerminal: !!isTerminalAction[i],
+        })).reverse(),
       });
 
       let player = 0;
@@ -480,8 +473,8 @@ export default defineComponent({
 
       nodeInformation.value = {
         player,
-        pot: startingPot.value + pot[0] + pot[1],
-        stack: effectiveStack.value - pot[player],
+        pot: savedConfig.startingPot + pot[0] + pot[1],
+        stack: savedConfig.effectiveStack - pot[player],
         toCall: pot[1 - player] - pot[player],
       };
 
@@ -510,23 +503,21 @@ export default defineComponent({
       if (turn.value !== -1) factor *= 45;
       if (river.value !== -1) factor *= 44;
 
-      result.value = Array.from({ length: cards.length }, (_, i) => {
-        return {
-          card1: cards[i] >> 8,
-          card2: cards[i] & 0xff,
-          weight: weights[i],
-          weightNormalized: weightsNormalized[i],
-          equity: (equity[i] / weightsNormalized[i]) * factor + 0.5,
-          expectedValue:
-            (expectedValues[i] / weightsNormalized[i]) * factor +
-            startingPot.value / 2 +
-            pot[currentPlayer],
-          strategy: Array.from(
-            { length: numActions },
-            (_, j) => strategy[j * cards.length + i]
-          ).reverse(),
-        };
-      });
+      result.value = Array.from({ length: cards.length }, (_, i) => ({
+        card1: cards[i] >> 8,
+        card2: cards[i] & 0xff,
+        weight: weights[i],
+        weightNormalized: weightsNormalized[i],
+        equity: (equity[i] / weightsNormalized[i]) * factor + 0.5,
+        expectedValue:
+          (expectedValues[i] / weightsNormalized[i]) * factor +
+          savedConfig.startingPot / 2 +
+          pot[currentPlayer],
+        strategy: Array.from(
+          { length: numActions },
+          (_, j) => strategy[j * cards.length + i]
+        ).reverse(),
+      }));
 
       for (let i = 0; i < numActions; ++i) {
         const action = actionList.value.slice(-1)[0].actions[i];
@@ -591,21 +582,19 @@ export default defineComponent({
         }
       }
 
-      resultCell.value = Array.from({ length: 13 * 13 }, (_, i) => {
-        return {
-          weight: weightSumCell[i],
-          count: countCell[i],
-          equity: equitySumCell[i] / weightNormalizedSumCell[i] + 0.5,
-          expectedValue:
-            expectedValueSumCell[i] / weightNormalizedSumCell[i] +
-            startingPot.value / 2 +
-            pot[currentPlayer],
-          strategy: Array.from(
-            { length: numActions },
-            (_, j) => strategySumCell[i][j] / weightNormalizedSumCell[i]
-          ),
-        };
-      });
+      resultCell.value = Array.from({ length: 13 * 13 }, (_, i) => ({
+        weight: weightSumCell[i],
+        count: countCell[i],
+        equity: equitySumCell[i] / weightNormalizedSumCell[i] + 0.5,
+        expectedValue:
+          expectedValueSumCell[i] / weightNormalizedSumCell[i] +
+          savedConfig.startingPot / 2 +
+          pot[currentPlayer],
+        strategy: Array.from(
+          { length: numActions },
+          (_, j) => strategySumCell[i][j] / weightNormalizedSumCell[i]
+        ),
+      }));
     };
 
     const moveResult = async (depth: number, index: number) => {
@@ -701,10 +690,10 @@ export default defineComponent({
             const c1 = r1 * 4 + s1;
             const c2 = r2 * 4 + s2;
             if (
-              flop.value.indexOf(c1) === -1 &&
+              savedConfig.board.indexOf(c1) === -1 &&
               turn.value !== c1 &&
               river.value !== c1 &&
-              flop.value.indexOf(c2) === -1 &&
+              savedConfig.board.indexOf(c2) === -1 &&
               turn.value !== c2 &&
               river.value !== c2
             ) {
@@ -910,7 +899,7 @@ export default defineComponent({
       store,
       cardText,
       resultNav,
-      flop,
+      board,
       actionList,
       sortKey,
       sortBy,

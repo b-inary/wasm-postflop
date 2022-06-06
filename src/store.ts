@@ -64,9 +64,59 @@ function parseBetSizes(sizesStr: string): number[] | null {
   }
 }
 
+export function saveConfig() {
+  const config = useConfigStore();
+  const savedConfig = useSavedConfigStore();
+
+  savedConfig.rangeRaw[0].set(config.rangeRaw[0]);
+  savedConfig.rangeRaw[1].set(config.rangeRaw[1]);
+
+  savedConfig.$patch({
+    board: [...config.board],
+    startingPot: config.startingPot,
+    effectiveStack: config.effectiveStack,
+    oopFlopBetSizes: config.oopFlopBetSizes ?? [],
+    oopFlopRaiseSizes: config.oopFlopRaiseSizes ?? [],
+    oopTurnBetSizes: config.oopTurnBetSizes ?? [],
+    oopTurnRaiseSizes: config.oopTurnRaiseSizes ?? [],
+    oopRiverBetSizes: config.oopRiverBetSizes ?? [],
+    oopRiverRaiseSizes: config.oopRiverRaiseSizes ?? [],
+    ipFlopBetSizes: config.ipFlopBetSizes ?? [],
+    ipFlopRaiseSizes: config.ipFlopRaiseSizes ?? [],
+    ipTurnBetSizes: config.ipTurnBetSizes ?? [],
+    ipTurnRaiseSizes: config.ipTurnRaiseSizes ?? [],
+    ipRiverBetSizes: config.ipRiverBetSizes ?? [],
+    ipRiverRaiseSizes: config.ipRiverRaiseSizes ?? [],
+    addAllInThreshold: config.addAllInThreshold,
+    forceAllInThreshold: config.forceAllInThreshold,
+    adjustLastTwoBetSizes: config.adjustLastTwoBetSizes,
+  });
+}
+
 export const useStore = defineStore("app", {
   state: () => ({
     mainView: "About" as MainView,
+    isSolverRunning: false,
+    isSolverPaused: false,
+    isSolverFinished: false,
+    isFinalizing: false,
+    normalizer: 0,
+  }),
+
+  getters: {
+    hasSolverRun: (state) => {
+      return (
+        state.isSolverRunning ||
+        state.isSolverPaused ||
+        state.isSolverFinished ||
+        state.isFinalizing
+      );
+    },
+  },
+});
+
+export const useConfigStore = defineStore("config", {
+  state: () => ({
     range: [
       Array.from({ length: 13 * 13 }, () => 0),
       Array.from({ length: 13 * 13 }, () => 0),
@@ -93,23 +143,9 @@ export const useStore = defineStore("app", {
     addAllInThreshold: 120,
     forceAllInThreshold: 10,
     adjustLastTwoBetSizes: true,
-    isSolverRunning: false,
-    isSolverPaused: false,
-    isSolverFinished: false,
-    isFinalizing: false,
-    normalizer: 0,
   }),
 
   getters: {
-    hasSolverRun: (state) => {
-      return (
-        state.isSolverRunning ||
-        state.isSolverPaused ||
-        state.isSolverFinished ||
-        state.isFinalizing
-      );
-    },
-
     oopFlopBetSizes: (state) => parseBetSizes(state.oopFlopBetSizesStr),
     oopFlopRaiseSizes: (state) => parseBetSizes(state.oopFlopRaiseSizesStr),
     oopTurnBetSizes: (state) => parseBetSizes(state.oopTurnBetSizesStr),
@@ -123,4 +159,31 @@ export const useStore = defineStore("app", {
     ipRiverBetSizes: (state) => parseBetSizes(state.ipRiverBetSizesStr),
     ipRiverRaiseSizes: (state) => parseBetSizes(state.ipRiverRaiseSizesStr),
   },
+});
+
+export const useSavedConfigStore = defineStore("savedConfig", {
+  state: () => ({
+    rangeRaw: [
+      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
+      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
+    ],
+    board: [] as number[],
+    startingPot: 0,
+    effectiveStack: 0,
+    oopFlopBetSizes: [] as number[],
+    oopFlopRaiseSizes: [] as number[],
+    oopTurnBetSizes: [] as number[],
+    oopTurnRaiseSizes: [] as number[],
+    oopRiverBetSizes: [] as number[],
+    oopRiverRaiseSizes: [] as number[],
+    ipFlopBetSizes: [] as number[],
+    ipFlopRaiseSizes: [] as number[],
+    ipTurnBetSizes: [] as number[],
+    ipTurnRaiseSizes: [] as number[],
+    ipRiverBetSizes: [] as number[],
+    ipRiverRaiseSizes: [] as number[],
+    addAllInThreshold: 0,
+    forceAllInThreshold: 0,
+    adjustLastTwoBetSizes: true,
+  }),
 });

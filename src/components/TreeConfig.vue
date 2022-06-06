@@ -3,13 +3,13 @@
     <p class="my-1">
       <span class="inline-block w-[7.5rem]">Starting pot:</span>
       <input
-        v-model="store.startingPot"
+        v-model="config.startingPot"
         type="number"
         :class="
           'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
-          (store.startingPot <= 0 ||
-          store.startingPot > 100000 ||
-          store.startingPot % 1 !== 0
+          (config.startingPot <= 0 ||
+          config.startingPot > 100000 ||
+          config.startingPot % 1 !== 0
             ? 'input-error'
             : '')
         "
@@ -21,13 +21,13 @@
     <p class="my-1">
       <span class="inline-block w-[7.5rem]">Effective stack:</span>
       <input
-        v-model="store.effectiveStack"
+        v-model="config.effectiveStack"
         type="number"
         :class="
           'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
-          (store.effectiveStack <= 0 ||
-          store.effectiveStack > 100000 ||
-          store.effectiveStack % 1 !== 0
+          (config.effectiveStack <= 0 ||
+          config.effectiveStack > 100000 ||
+          config.effectiveStack % 1 !== 0
             ? 'input-error'
             : '')
         "
@@ -45,11 +45,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="store.oopFlopBetSizesStr"
+            v-model="config.oopFlopBetSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.oopFlopBetSizes === null ? 'input-error' : '')
+              (config.oopFlopBetSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -57,11 +57,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="store.oopFlopRaiseSizesStr"
+            v-model="config.oopFlopRaiseSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.oopFlopRaiseSizes === null ? 'input-error' : '')
+              (config.oopFlopRaiseSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -73,11 +73,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="store.oopTurnBetSizesStr"
+            v-model="config.oopTurnBetSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.oopTurnBetSizes === null ? 'input-error' : '')
+              (config.oopTurnBetSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -85,11 +85,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="store.oopTurnRaiseSizesStr"
+            v-model="config.oopTurnRaiseSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.oopTurnRaiseSizes === null ? 'input-error' : '')
+              (config.oopTurnRaiseSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -101,11 +101,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="store.oopRiverBetSizesStr"
+            v-model="config.oopRiverBetSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.oopRiverBetSizes === null ? 'input-error' : '')
+              (config.oopRiverBetSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -113,11 +113,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="store.oopRiverRaiseSizesStr"
+            v-model="config.oopRiverRaiseSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.oopRiverRaiseSizes === null ? 'input-error' : '')
+              (config.oopRiverRaiseSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -134,11 +134,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="store.ipFlopBetSizesStr"
+            v-model="config.ipFlopBetSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.ipFlopBetSizes === null ? 'input-error' : '')
+              (config.ipFlopBetSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -146,11 +146,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="store.ipFlopRaiseSizesStr"
+            v-model="config.ipFlopRaiseSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.ipFlopRaiseSizes === null ? 'input-error' : '')
+              (config.ipFlopRaiseSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -162,11 +162,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="store.ipTurnBetSizesStr"
+            v-model="config.ipTurnBetSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.ipTurnBetSizes === null ? 'input-error' : '')
+              (config.ipTurnBetSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -174,11 +174,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="store.ipTurnRaiseSizesStr"
+            v-model="config.ipTurnRaiseSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.ipTurnRaiseSizes === null ? 'input-error' : '')
+              (config.ipTurnRaiseSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -190,11 +190,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Bet sizes:</span>
           <input
-            v-model="store.ipRiverBetSizesStr"
+            v-model="config.ipRiverBetSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.ipRiverBetSizes === null ? 'input-error' : '')
+              (config.ipRiverBetSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -202,11 +202,11 @@
         <p class="my-1">
           <span class="inline-block w-24">Raise sizes:</span>
           <input
-            v-model="store.ipRiverRaiseSizesStr"
+            v-model="config.ipRiverRaiseSizesStr"
             type="text"
             :class="
               'w-24 -ml-1 px-2 py-1 rounded-lg text-sm ' +
-              (store.ipRiverRaiseSizes === null ? 'input-error' : '')
+              (config.ipRiverRaiseSizes === null ? 'input-error' : '')
             "
           />
           %
@@ -219,11 +219,11 @@
     <p class="my-1">
       Add all-in if effective stack is less than:
       <input
-        v-model="store.addAllInThreshold"
+        v-model="config.addAllInThreshold"
         type="number"
         :class="
           'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (store.addAllInThreshold < 0 || store.addAllInThreshold > 1000
+          (config.addAllInThreshold < 0 || config.addAllInThreshold > 1000
             ? 'input-error'
             : '')
         "
@@ -234,13 +234,13 @@
     </p>
 
     <p class="my-1">
-      Force all-in if next opponent's bet size is less than:
+      Force all-in if next opponent's raise size is less than:
       <input
-        v-model="store.forceAllInThreshold"
+        v-model="config.forceAllInThreshold"
         type="number"
         :class="
           'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (store.forceAllInThreshold < 0 || store.forceAllInThreshold > 100
+          (config.forceAllInThreshold < 0 || config.forceAllInThreshold > 100
             ? 'input-error'
             : '')
         "
@@ -253,7 +253,7 @@
     <p class="my-1">
       <label class="cursor-pointer">
         <input
-          v-model="store.adjustLastTwoBetSizes"
+          v-model="config.adjustLastTwoBetSizes"
           type="checkbox"
           class="mr-1 align-middle rounded cursor-pointer"
         />
@@ -265,14 +265,11 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { useStore } from "../store";
+import { useConfigStore } from "../store";
 
 export default defineComponent({
   setup() {
-    const store = useStore();
-    return {
-      store,
-    };
+    return { config: useConfigStore() };
   },
 });
 </script>
