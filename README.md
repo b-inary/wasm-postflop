@@ -41,6 +41,42 @@ This project intends to make it easier for more people to use the GTO solver.
 
 [Discounted CFR]: https://arxiv.org/abs/1809.04040
 
+## Comparison
+
+We tested [PioSOLVER Free] (2.0.8 / 6 threads), [GTO+] (v1.4.1), and WASM Postflop with the "3betpotFAST" preset of the PioSOLVER (all-in threshold is replaced with 100%).
+
+### Execution time and memory usage
+
+We experimented on a Windows 10 PC with a Ryzen 7 3700X CPU (16 threads).
+WASM Postflop is the slowest, but it is not that inferior to commercial solvers despite being a web application.
+
+| Solver | PioSOLVER | GTO+ | WASM<br/>(w/o compression) | WASM<br/>(w/ compression) |
+| :---: | :---: | :---: | :---: | :---: |
+| **Time (Target = 0.5%)** | 23.36 s | 14.15 s | 32.28 s | 38.46 s |
+| **Time (Target = 0.3%)** | 28.68 s | 19.87 s | 40.09 s | 47.94 s |
+| **Time (Target = 0.1%)** | 61.13 s | 42.66 s | 71.40 s | 85.32 s |
+| **Memory usage** | 634 MB | 705 MB | 1.21 GB | 640 MB |
+
+[PioSOLVER Free]: https://www.piosolver.com/
+[GTO+]: https://www.gtoplus.com/
+
+### Results
+
+A comparison of the obtained results is as follows (target exploitability = 0.1%).
+We can see that PioSOLVER, GTO+, and WASM Postflop return nearly identical results.
+
+| PioSOLVER | GTO+ | WASM Postflop |
+| --- | --- | --- |
+| ![PioSOLVER results](comparison_pio.png) | ![GTO+ results](comparison_gtoplus.png) | ![WASM Postflop results](comparison_wasm.png) |
+
+**Summary for those who do not want to compare images:**
+
+| Solver | PioSOLVER | GTO+ | WASM Postflop |
+| :---: | :---: | :---: | :---: |
+| **Bet %** | 55.19% | 55.2% | 55.2% |
+| **Equity** | 55.347% | 55.35% | 55.3% |
+| **EV** | 105.11 | 105.115 | 105.1 |
+
 ## Build
 
 ```sh
