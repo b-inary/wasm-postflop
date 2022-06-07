@@ -37,7 +37,9 @@ This project intends to make it easier for more people to use the GTO solver.
 - **Sufficiently fast**.
   Slow solvers are not wanted.
   By using WebAssembly, we have reduced the performance penalty of being a web application.
-  We also supported multithreading and used a state-of-the-art algorithm ([Discounted CFR](https://arxiv.org/abs/1809.04040)).
+  We also supported multithreading and used a state-of-the-art algorithm ([Discounted CFR]).
+
+[Discounted CFR]: https://arxiv.org/abs/1809.04040
 
 ## Build
 

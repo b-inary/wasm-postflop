@@ -50,8 +50,12 @@
           :disabled="store.hasSolverRun || memoryUsage > maxMemoryUsage"
         />
         No compression: requires
-        {{ (memoryUsage / (1024 * 1024 * 1024)).toFixed(2) }}
-        GB of RAM
+        {{
+          memoryUsage >= 1023.5 * 1024 * 1024
+            ? (memoryUsage / (1024 * 1024 * 1024)).toFixed(2) + " GB"
+            : (memoryUsage / (1024 * 1024)).toFixed(0) + " MB"
+        }}
+        of RAM
         {{ memoryUsage <= maxMemoryUsage ? "(fast)" : "(limit exceeded)" }}
       </label>
     </p>
@@ -76,8 +80,12 @@
           "
         />
         Use compression: requires
-        {{ (memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) }}
-        GB of RAM
+        {{
+          memoryUsageCompressed >= 1023.5 * 1024 * 1024
+            ? (memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) + " GB"
+            : (memoryUsageCompressed / (1024 * 1024)).toFixed(0) + " MB"
+        }}
+        of RAM
         {{ memoryUsageCompressed <= maxMemoryUsage ? "" : "(limit exceeded)" }}
       </label>
     </p>
@@ -308,7 +316,7 @@ export default defineComponent({
     const config = useConfigStore();
 
     const numThreads = ref((!isSafari && navigator.hardwareConcurrency) || 1);
-    const targetExploitability = ref(0.5);
+    const targetExploitability = ref(0.3);
     const maxIterations = ref(1000);
 
     const isTreeBuilding = ref(false);

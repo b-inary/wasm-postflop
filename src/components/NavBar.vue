@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="sticky flex top-0 z-30 w-full h-14 shadow-lg px-4 justify-center bg-slate-800 text-gray-200"
+    class="sticky flex top-0 z-30 w-full h-14 shadow-lg px-4 justify-center bg-slate-800 text-gray-50"
   >
     <div class="flex w-full max-w-screen-xl">
       <div class="flex items-center">

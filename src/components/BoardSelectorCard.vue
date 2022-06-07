@@ -1,5 +1,5 @@
 <template>
-  <div
+  <button
     :class="
       'relative w-10 h-14 rounded-lg border shadow cursor-pointer select-none ' +
       (isSelected
@@ -7,13 +7,13 @@
         : 'bg-white border-black')
     "
   >
-    <div :class="'absolute top-0.5 left-1.5 text-xl font-bold ' + colorClass">
+    <span :class="'absolute top-0.5 left-1.5 text-xl font-bold ' + colorClass">
       {{ rank }}
-    </div>
-    <div :class="'absolute bottom-0.5 right-1 ' + colorClass">
+    </span>
+    <span :class="'absolute bottom-0.5 right-1 ' + colorClass">
       {{ suit }}
-    </div>
-  </div>
+    </span>
+  </button>
 </template>
 
 <script lang="ts">

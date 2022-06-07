@@ -18,9 +18,9 @@
   <div v-else>
     <div ref="resultNav" class="flex pl-0.5 overflow-x-auto">
       <div class="flex flex-col items-start">
-        <div
+        <button
           :class="
-            'my-[3px] px-2 py-px whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
+            'my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
             (actionList.length === 1
               ? 'ring-1 ring-red-600 border-red-600'
               : 'border-black cursor-pointer')
@@ -35,7 +35,7 @@
           >
             {{ item.rank + item.suit }}
           </span>
-        </div>
+        </button>
       </div>
 
       <div
@@ -44,9 +44,9 @@
         class="flex flex-col ml-2 items-start"
       >
         <template v-if="item.type !== 'Player'">
-          <div
+          <button
             :class="
-              'my-[3px] px-2 py-px whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
+              'my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
               (item.depth === actionList.length - 1
                 ? 'ring-1 ring-red-600 border-red-600 '
                 : 'border-black ') +
@@ -66,14 +66,14 @@
             >
               {{ tmp.rank + tmp.suit }}
             </span>
-          </div>
+          </button>
         </template>
         <template v-else>
-          <div
+          <button
             v-for="action in item.actions"
             :key="action.str"
             :class="
-              'w-full my-[3px] px-2 py-px whitespace-nowrap border rounded-lg shadow text-center select-none ' +
+              'w-full my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border rounded-lg shadow text-center select-none ' +
               (!action.isSelected && item.depth < actionList.length
                 ? 'opacity-40 '
                 : '') +
@@ -88,7 +88,7 @@
             @click="moveResult(item.depth, action.index)"
           >
             {{ action.str }}
-          </div>
+          </button>
         </template>
       </div>
     </div>
@@ -98,7 +98,7 @@
         actionList.length === 0 || actionList.slice(-1)[0].type === 'Player'
       "
     >
-      <div class="flex mt-5 items-start">
+      <div class="flex mt-5 h-[30.25rem] items-start">
         <div class="shrink-0">
           <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
             <tr v-for="row in 13" :key="row" class="h-9">
@@ -134,7 +134,7 @@
         </div>
 
         <div
-          class="ml-5 max-h-[470px] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll"
+          class="ml-5 max-h-full border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll"
         >
           <table class="relative divide-y divide-gray-300">
             <thead class="sticky top-0 bg-gray-100 shadow">
@@ -144,7 +144,7 @@
                   :key="text"
                   scope="col"
                   :class="
-                    'py-[5px] whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                    'py-[0.3125rem] whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
                     (text === 'Hand' ? 'text-center ' : '') +
                     (text === 'Weight' ? 'px-1.5' : 'px-2.5')
                   "
@@ -172,7 +172,7 @@
                 :key="item.card1 + '-' + item.card2"
                 class="text-right text-sm"
               >
-                <td class="px-2.5 py-[5px] text-center">
+                <td class="px-2.5 py-[0.3125rem] text-center">
                   <template
                     v-for="card in [item.card1, item.card2].map(cardText)"
                     :key="card.rank + card.suit"
@@ -182,19 +182,19 @@
                     </span>
                   </template>
                 </td>
-                <td class="px-2.5 py-[5px]">
+                <td class="px-2.5 py-[0.3125rem]">
                   {{ percentStr(item.weight) }}
                 </td>
-                <td class="px-2.5 py-[5px]">
+                <td class="px-2.5 py-[0.3125rem]">
                   {{ percentStr(item.equity) }}
                 </td>
-                <td class="px-2.5 py-[5px]">
+                <td class="px-2.5 py-[0.3125rem]">
                   {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
                 </td>
                 <td
                   v-for="i in item.strategy.length"
                   :key="i"
-                  class="px-2.5 py-[5px]"
+                  class="px-2.5 py-[0.3125rem]"
                 >
                   {{ percentStr(item.strategy[i - 1]) }}
                 </td>
@@ -203,23 +203,26 @@
 
             <tfoot class="sticky bottom-0 font-bold bg-white shadow">
               <tr class="text-right text-sm">
-                <th scope="col" class="px-2.5 py-[5px] text-center underline">
+                <th
+                  scope="col"
+                  class="px-2.5 py-[0.3125rem] text-center underline"
+                >
                   {{ hoveredCellText }}
                 </th>
-                <th scope="col" class="px-2.5 py-[5px]">
+                <th scope="col" class="px-2.5 py-[0.3125rem]">
                   {{ resultAverage.combos }}
                 </th>
-                <th scope="col" class="px-2.5 py-[5px]">
+                <th scope="col" class="px-2.5 py-[0.3125rem]">
                   {{ resultAverage.equity }}
                 </th>
-                <th scope="col" class="px-2.5 py-[5px]">
+                <th scope="col" class="px-2.5 py-[0.3125rem]">
                   {{ resultAverage.expectedValue }}
                 </th>
                 <th
                   v-for="i in resultAverage.strategy.length"
                   :key="i"
                   scope="col"
-                  class="px-2.5 py-[5px]"
+                  class="px-2.5 py-[0.3125rem]"
                 >
                   {{ resultAverage.strategy[i - 1] }}
                 </th>
@@ -229,7 +232,7 @@
         </div>
       </div>
 
-      <div class="mt-4">
+      <div class="mt-1">
         Player: {{ nodeInformation.player === 0 ? "OOP" : "IP" }} / Pot:
         {{ nodeInformation.pot }} / Stack: {{ nodeInformation.stack }}
         {{
@@ -762,8 +765,15 @@ export default defineComponent({
     const hoveredCellText = computed(() => {
       const { row, col } = hoveredCell.value;
       const idx = (row - 1) * 13 + col - 1;
-      if (idx < 0 || resultCell.value[idx].count === 0) return "All";
-      return cellText(row, col);
+      if (
+        idx < 0 ||
+        resultCell.value.length === 0 ||
+        resultCell.value[idx].count === 0
+      ) {
+        return "All";
+      } else {
+        return cellText(row, col);
+      }
     });
 
     const headers = computed(() => {
@@ -773,7 +783,11 @@ export default defineComponent({
     const resultFiltered = computed(() => {
       const { row, col } = hoveredCell.value;
       const idx = (row - 1) * 13 + col - 1;
-      if (idx < 0 || resultCell.value[idx].count === 0) {
+      if (
+        idx < 0 ||
+        resultCell.value.length === 0 ||
+        resultCell.value[idx].count === 0
+      ) {
         return result.value.filter(
           (r) => r.weightNormalized > 0 && r.weight >= 0.05 / 100
         );
