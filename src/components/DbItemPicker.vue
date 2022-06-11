@@ -41,7 +41,12 @@
           />
 
           <!-- Group name -->
-          <label v-else class="inline-block" @dblclick="toggleGroup(item0)">
+          <label
+            v-else
+            class="inline-block"
+            @dblclick="toggleGroup(item0)"
+            @keydown.enter="toggleGroup(item0)"
+          >
             <input
               v-model="selectedValue"
               type="radio"
@@ -102,6 +107,7 @@
                   v-else
                   class="inline-block"
                   @dblclick="toggleGroup(item1)"
+                  @keydown.enter="toggleGroup(item1)"
                 >
                   <input
                     v-model="selectedValue"
@@ -166,6 +172,7 @@
                         v-else
                         class="inline-block"
                         @dblclick="toggleGroup(item2)"
+                        @keydown.enter="toggleGroup(item2)"
                       >
                         <input
                           v-model="selectedValue"
@@ -222,7 +229,8 @@
                           <label
                             v-else
                             class="inline-block"
-                            @dblclick="loadItem"
+                            @dblclick="loadItem()"
+                            @keydown.enter="loadItem()"
                           >
                             <input
                               v-model="selectedValue"
@@ -258,7 +266,12 @@
                       />
 
                       <!-- Item name -->
-                      <label v-else class="inline-block" @dblclick="loadItem">
+                      <label
+                        v-else
+                        class="inline-block"
+                        @dblclick="loadItem()"
+                        @keydown.enter="loadItem()"
+                      >
                         <input
                           v-model="selectedValue"
                           type="radio"
@@ -294,7 +307,12 @@
                 />
 
                 <!-- Item name -->
-                <label v-else class="inline-block" @dblclick="loadItem">
+                <label
+                  v-else
+                  class="inline-block"
+                  @dblclick="loadItem()"
+                  @keydown.enter="loadItem()"
+                >
                   <input
                     v-model="selectedValue"
                     type="radio"
@@ -329,7 +347,12 @@
           />
 
           <!-- Item name -->
-          <label v-else class="inline-block" @dblclick="loadItem">
+          <label
+            v-else
+            class="inline-block"
+            @dblclick="loadItem()"
+            @keydown.enter="loadItem()"
+          >
             <input
               v-model="selectedValue"
               type="radio"
@@ -825,9 +848,10 @@ export default defineComponent({
     };
 
     const tryRename = async (item: Item | Group, newName?: string) => {
-      const isNameProvided = newName !== undefined;
+      const isUserAction = newName === undefined;
 
       if (newName === undefined) {
+        // is user action
         item.isEditing = false;
 
         if (!isNameValid.value) {
@@ -850,8 +874,19 @@ export default defineComponent({
       const prevPath = [...item.path];
 
       if (item.path[depth] === newName) {
-        // no change
-        selectedValue.value = item.pathStr;
+        if (isUserAction) {
+          // give focus
+          selectedValue.value = item.pathStr;
+          await nextTick();
+          const name = `item-picker-${props.storeName}-${props.index}`;
+          const checked = document.querySelector(
+            `input[name="${name}"]:checked`
+          );
+          if (checked) {
+            (checked as HTMLInputElement).focus();
+          }
+        }
+
         return;
       }
 
@@ -873,7 +908,7 @@ export default defineComponent({
         );
       }
 
-      if (!isNameProvided) {
+      if (isUserAction) {
         // save and broadcast
         if (isNewItem) {
           // add
@@ -911,6 +946,14 @@ export default defineComponent({
             path: prevPath,
             newName: newName,
           } as RenameItemMessage);
+        }
+
+        // give focus
+        await nextTick();
+        const name = `item-picker-${props.storeName}-${props.index}`;
+        const checked = document.querySelector(`input[name="${name}"]:checked`);
+        if (checked) {
+          (checked as HTMLInputElement).focus();
         }
       } else {
         selectedValue.value = false;
