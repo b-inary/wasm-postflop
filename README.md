@@ -1,6 +1,6 @@
 # WASM Postflop
 
-**WASM Postflop** is a free and open-source GTO solver for Texas hold'em poker that works on web browsers.
+**WASM Postflop** is a free, open-source GTO solver for Texas hold'em poker that works on web browsers.
 
 Website: https://wasm-postflop.pages.dev/
 
@@ -10,13 +10,13 @@ Solver engine repository: https://github.com/b-inary/postflop-solver
 
 ## Why WASM Postflop?
 
-The GTO (Game Theory Optimal) solver has become an indispensable tool for poker studies.
-Unfortunately, however, there exists a high barrier to trying out the GTO solver: the need to purchase expensive commercial software.
-This project aims to overcome this situation by developing a free and open-source GTO solver.
+The GTO (Game Theory Optimal) solver has become an indispensable tool for poker research.
+However, unfortunately, there is a high barrier to trying out the GTO solver: the need to purchase expensive commercial software.
+This project aims to overcome this situation by developing a free, open-source GTO solver.
 
 Please note that this project does not intend to *replace* commercial GTO solvers.
 They are great software, and it is not easy to create a new one that can compete with them.
-This project intends to make it easier for more people to use the GTO solver.
+This project intends to make the GTO solver more easily accessible to a broader audience.
 
 ### Features
 

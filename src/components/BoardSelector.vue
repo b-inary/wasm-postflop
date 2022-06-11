@@ -10,26 +10,9 @@
     />
   </div>
 
-  <div class="mt-4 mx-1">
-    <button
-      :class="
-        'rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium ' +
-        'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
-      "
-      @click="config.board = []"
-    >
-      Clear
-    </button>
-
-    <button
-      :class="
-        'rounded-lg shadow-sm ml-3 px-3.5 py-1.5 text-white text-sm font-medium ' +
-        'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
-      "
-      @click="generateRandomBoard"
-    >
-      Random
-    </button>
+  <div class="flex mt-4 mx-1 gap-3">
+    <button class="button-blue" @click="config.board = []">Clear</button>
+    <button class="button-blue" @click="generateRandomBoard">Random</button>
   </div>
 </template>
 
@@ -77,3 +60,10 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.button-blue {
+  @apply rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium;
+  @apply bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300;
+}
+</style>

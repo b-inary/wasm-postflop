@@ -154,8 +154,27 @@
         </div>
       </div>
 
-      <div class="mt-6">
-        <p class="font-bold">IP bet sizes</p>
+      <div>
+        <div class="flex">
+          <p class="mt-6 font-bold">IP bet sizes</p>
+          <div class="flex flex-grow items-center justify-center gap-6">
+            <button
+              class="mt-3 button-blue"
+              :disabled="isIpError"
+              @click="ipToOop"
+            >
+              ↑
+            </button>
+            <button
+              class="mt-3 button-blue"
+              :disabled="isOopError"
+              @click="oopToIp"
+            >
+              ↓
+            </button>
+          </div>
+        </div>
+
         <div class="flex flex-row">
           <div>
             <p class="my-1 underline">Flop</p>
@@ -370,6 +389,46 @@ export default defineComponent({
         .replace(whitespacesPat, " ");
     };
 
+    const isOopError = computed(() => {
+      return (
+        config.oopFlopBet === null ||
+        config.oopFlopRaise === null ||
+        config.oopTurnBet === null ||
+        config.oopTurnRaise === null ||
+        config.oopRiverBet === null ||
+        config.oopRiverRaise === null
+      );
+    });
+
+    const isIpError = computed(() => {
+      return (
+        config.ipFlopBet === null ||
+        config.ipFlopRaise === null ||
+        config.ipTurnBet === null ||
+        config.ipTurnRaise === null ||
+        config.ipRiverBet === null ||
+        config.ipRiverRaise === null
+      );
+    });
+
+    const oopToIp = () => {
+      config.ipFlopBetStr = config.oopFlopBetStr;
+      config.ipFlopRaiseStr = config.oopFlopRaiseStr;
+      config.ipTurnBetStr = config.oopTurnBetStr;
+      config.ipTurnRaiseStr = config.oopTurnRaiseStr;
+      config.ipRiverBetStr = config.oopRiverBetStr;
+      config.ipRiverRaiseStr = config.oopRiverRaiseStr;
+    };
+
+    const ipToOop = () => {
+      config.oopFlopBetStr = config.ipFlopBetStr;
+      config.oopFlopRaiseStr = config.ipFlopRaiseStr;
+      config.oopTurnBetStr = config.ipTurnBetStr;
+      config.oopTurnRaiseStr = config.ipTurnRaiseStr;
+      config.oopRiverBetStr = config.ipRiverBetStr;
+      config.oopRiverRaiseStr = config.ipRiverRaiseStr;
+    };
+
     const dbValue = computed(
       () =>
         ({
@@ -401,18 +460,8 @@ export default defineComponent({
         config.effectiveStack > 0 &&
         config.effectiveStack <= 100000 &&
         config.effectiveStack % 1 === 0 &&
-        config.oopFlopBet !== null &&
-        config.oopFlopRaise !== null &&
-        config.oopTurnBet !== null &&
-        config.oopTurnRaise !== null &&
-        config.oopRiverBet !== null &&
-        config.oopRiverRaise !== null &&
-        config.ipFlopBet !== null &&
-        config.ipFlopRaise !== null &&
-        config.ipTurnBet !== null &&
-        config.ipTurnRaise !== null &&
-        config.ipRiverBet !== null &&
-        config.ipRiverRaise !== null &&
+        !isOopError.value &&
+        !isIpError.value &&
         config.addAllInThreshold >= 0 &&
         config.addAllInThreshold <= 10000 &&
         config.forceAllInThreshold >= 0 &&
@@ -442,6 +491,10 @@ export default defineComponent({
     return {
       config,
       sanitize,
+      isOopError,
+      isIpError,
+      oopToIp,
+      ipToOop,
       dbValue,
       allowSave,
       loadConfig,
@@ -453,5 +506,11 @@ export default defineComponent({
 <style scoped>
 input.input-error {
   @apply ring-1 ring-red-600 border-red-600 bg-red-50;
+}
+
+.button-blue {
+  @apply rounded-lg shadow-sm px-2 py-1 text-white text-lg;
+  @apply bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300;
+  @apply disabled:opacity-40 disabled:bg-blue-600;
 }
 </style>

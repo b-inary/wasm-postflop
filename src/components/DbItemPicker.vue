@@ -353,11 +353,7 @@
 
     <div class="flex flex-wrap justify-center mt-4 gap-3 max-w-xs">
       <button
-        :class="
-          'rounded-lg shadow-sm py-1.5 w-24 text-white text-sm font-medium ' +
-          'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
-          'disabled:opacity-40 disabled:bg-blue-600'
-        "
+        class="button button-blue"
         :disabled="selectedItem?.item?.isGroup ?? true"
         @click="loadItem()"
       >
@@ -365,11 +361,7 @@
       </button>
 
       <button
-        :class="
-          'rounded-lg shadow-sm py-1.5 w-24 text-white text-sm font-medium ' +
-          'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
-          'disabled:opacity-40 disabled:bg-blue-600'
-        "
+        class="button button-blue"
         :disabled="errorOccured || !allowSave"
         @click="addOrOverwriteItem()"
       >
@@ -377,11 +369,7 @@
       </button>
 
       <button
-        :class="
-          'rounded-lg shadow-sm py-1.5 w-24 text-white text-sm font-medium ' +
-          'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
-          'disabled:opacity-40 disabled:bg-blue-600'
-        "
+        class="button button-blue"
         :disabled="errorOccured || selectedValue === false"
         @click="renameItem()"
       >
@@ -389,11 +377,7 @@
       </button>
 
       <button
-        :class="
-          'rounded-lg shadow-sm py-1.5 w-24 text-white text-sm font-medium ' +
-          'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
-          'disabled:opacity-40 disabled:bg-blue-600'
-        "
+        class="button button-blue"
         :disabled="
           errorOccured ||
           (selectedItem !== null &&
@@ -407,11 +391,7 @@
       </button>
 
       <button
-        :class="
-          'rounded-lg shadow-sm py-1.5 w-24 text-white text-sm font-medium ' +
-          'bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 ' +
-          'disabled:opacity-40 disabled:bg-red-600'
-        "
+        class="button button-red"
         :disabled="errorOccured || selectedValue === false"
         @click="deleteItem(true)"
       >
@@ -1099,5 +1079,18 @@ input.input-error {
 .bottom-arrow::before {
   content: "";
   @apply absolute w-1.5 h-1.5 -mt-[0.1875rem] top-1/2 left-[0.4375rem] border-r-2 border-b-2 border-gray-500 rotate-45;
+}
+
+.button {
+  @apply rounded-lg shadow-sm py-1.5 w-24 text-white text-sm font-medium;
+  @apply focus:outline-none focus:ring-4 disabled:opacity-40;
+}
+
+.button-blue {
+  @apply bg-blue-600 hover:bg-blue-700 focus:ring-blue-300 disabled:bg-blue-600;
+}
+
+.button-red {
+  @apply bg-red-600 hover:bg-red-700 focus:ring-red-300 disabled:bg-red-600;
 }
 </style>

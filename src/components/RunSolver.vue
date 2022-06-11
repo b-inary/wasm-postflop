@@ -16,11 +16,7 @@
       max="64"
     />
     <button
-      :class="
-        'rounded-lg shadow-sm ml-3 px-3.5 py-1.5 text-white text-sm font-medium ' +
-        'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
-        'disabled:opacity-40 disabled:bg-blue-600'
-      "
+      class="ml-3 button button-blue"
       :disabled="isTreeBuilding || store.isSolverRunning || store.isFinalizing"
       @click="buildTree"
     >
@@ -125,13 +121,9 @@
       />
     </p>
 
-    <p class="mt-6">
+    <p class="flex mt-6 gap-3">
       <button
-        :class="
-          'rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium ' +
-          'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 ' +
-          'disabled:opacity-40 disabled:bg-blue-600'
-        "
+        class="button button-blue"
         :disabled="
           store.hasSolverRun ||
           memoryUsageCompressed > maxMemoryUsage ||
@@ -144,11 +136,7 @@
         Run solver
       </button>
       <button
-        :class="
-          'rounded-lg shadow-sm ml-3 px-3.5 py-1.5 text-white text-sm font-medium ' +
-          'bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 ' +
-          'disabled:opacity-40 disabled:bg-red-600'
-        "
+        class="button button-red"
         :disabled="!store.isSolverRunning"
         @click="() => (terminateFlag = true)"
       >
@@ -156,25 +144,13 @@
       </button>
       <button
         v-if="!store.isSolverPaused"
-        :class="
-          'rounded-lg shadow-sm ml-3 px-3.5 py-1.5 text-white text-sm font-medium ' +
-          'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 ' +
-          'disabled:opacity-40 disabled:bg-green-600'
-        "
+        class="button button-green"
         :disabled="!store.isSolverRunning"
         @click="() => (pauseFlag = true)"
       >
         Pause
       </button>
-      <button
-        v-else
-        :class="
-          'rounded-lg shadow-sm ml-3 px-3.5 py-1.5 text-white text-sm font-medium ' +
-          'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 ' +
-          'disabled:opacity-40 disabled:bg-green-600'
-        "
-        @click="resumeSolver"
-      >
+      <button v-else class="button button-green" @click="resumeSolver">
         Resume
       </button>
     </p>
@@ -552,3 +528,22 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.button {
+  @apply rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium;
+  @apply focus:outline-none focus:ring-4 disabled:opacity-40;
+}
+
+.button-blue {
+  @apply bg-blue-600 hover:bg-blue-700 focus:ring-blue-300 disabled:bg-blue-600;
+}
+
+.button-red {
+  @apply bg-red-600 hover:bg-red-700 focus:ring-red-300 disabled:bg-red-600;
+}
+
+.button-green {
+  @apply bg-green-600 hover:bg-green-700 focus:ring-green-300 disabled:bg-green-600;
+}
+</style>
