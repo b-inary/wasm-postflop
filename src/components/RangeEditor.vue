@@ -1,101 +1,112 @@
 <template>
-  <div class="mt-2 ml-1">
-    <table class="bg-gray-200 shadow" @mouseleave="dragEnd">
-      <tr v-for="row in 13" :key="row" class="h-9">
-        <td
-          v-for="col in 13"
-          :key="col"
-          :class="
-            'relative w-10 border-black select-none ' +
-            (row === col ? 'border-2' : 'border')
-          "
-          @mousedown="dragStart(row, col)"
-          @mouseup="dragEnd"
-          @mouseover="mouseOver(row, col)"
-        >
-          <div
-            class="absolute bottom-0 left-0 w-full bg-yellow-300"
-            :style="{ height: weightPercent(row, col) }"
-          ></div>
-          <div class="absolute -top-px left-px z-10 text-sm">
-            {{ cellText(row, col) }}
-          </div>
-          <div class="absolute -bottom-px right-px z-10 text-sm">
-            {{
-              weightPercent(row, col) === "0%" ||
-              weightPercent(row, col) === "100%"
-                ? ""
-                : weightPercent(row, col)
-            }}
-          </div>
-        </td>
-      </tr>
-    </table>
+  <div class="flex mt-2">
+    <div class="shrink-0 ml-1">
+      <table class="bg-gray-200 shadow" @mouseleave="dragEnd">
+        <tr v-for="row in 13" :key="row" class="h-9">
+          <td
+            v-for="col in 13"
+            :key="col"
+            :class="
+              'relative w-10 border-black select-none ' +
+              (row === col ? 'border-2' : 'border')
+            "
+            @mousedown="dragStart(row, col)"
+            @mouseup="dragEnd"
+            @mouseover="mouseOver(row, col)"
+          >
+            <div
+              class="absolute bottom-0 left-0 w-full bg-yellow-300"
+              :style="{ height: weightPercent(row, col) }"
+            ></div>
+            <div class="absolute -top-px left-px z-10 text-sm">
+              {{ cellText(row, col) }}
+            </div>
+            <div class="absolute -bottom-px right-px z-10 text-sm">
+              {{
+                weightPercent(row, col) === "0%" ||
+                weightPercent(row, col) === "100%"
+                  ? ""
+                  : weightPercent(row, col)
+              }}
+            </div>
+          </td>
+        </tr>
+      </table>
 
-    <div class="mt-5">
-      <div class="flex items-center">
-        <input
-          v-model="rangeText"
-          type="text"
-          :class="
-            'w-[27rem] px-2 py-1 rounded-lg text-sm ' +
-            (rangeTextError
-              ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
-              : '')
-          "
-          @focus="($event.target as HTMLInputElement).select()"
-          @change="onRangeTextChange"
-        />
+      <div class="mt-5">
+        <div class="flex items-center">
+          <input
+            v-model="rangeText"
+            type="text"
+            :class="
+              'w-[27rem] px-2 py-1 rounded-lg text-sm ' +
+              (rangeTextError
+                ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+                : '')
+            "
+            @focus="($event.target as HTMLInputElement).select()"
+            @change="onRangeTextChange"
+          />
 
-        <button
-          :class="
-            'rounded-lg shadow-sm ml-6 px-3.5 py-1.5 text-white text-sm font-medium ' +
-            'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
-          "
-          @click="clearRange"
-        >
-          Clear
-        </button>
-      </div>
+          <button
+            :class="
+              'rounded-lg shadow-sm ml-6 px-3.5 py-1.5 text-white text-sm font-medium ' +
+              'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
+            "
+            @click="clearRange"
+          >
+            Clear
+          </button>
+        </div>
 
-      <div v-if="rangeTextError" class="mt-1 text-red-600">
-        Error: {{ rangeTextError }}
+        <div v-if="rangeTextError" class="mt-1 text-red-600">
+          Error: {{ rangeTextError }}
+        </div>
       </div>
     </div>
 
-    <div class="mt-3">
-      Weight:
-      <input
-        v-model="weight"
-        type="range"
-        class="ml-4 w-40 align-middle"
-        min="0"
-        max="100"
-        step="5"
-        @change="onWeightChange"
-      />
-      <input
-        v-model="weight"
-        type="number"
-        :class="
-          'w-20 ml-4 px-2 py-1 rounded-lg text-sm text-center ' +
-          (weight < 0 || weight > 100
-            ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
-            : '')
-        "
-        min="0"
-        max="100"
-        step="5"
-        @change="onWeightChange"
-      />
-      %
+    <db-item-picker
+      class="shrink ml-6"
+      store-name="ranges"
+      :index="player"
+      :value="rangeText"
+      :allow-save="rangeText !== ''"
+      @load-item="loadRange"
+    />
+  </div>
 
-      <span class="inline-block ml-8">
-        {{ numCombos.toFixed(1) }} combos ({{
-          ((numCombos * 100) / ((52 * 51) / 2)).toFixed(1)
-        }}%)
-      </span>
-    </div>
+  <div class="mt-3">
+    Weight:
+    <input
+      v-model="weight"
+      type="range"
+      class="ml-4 w-40 align-middle"
+      min="0"
+      max="100"
+      step="5"
+      @change="onWeightChange"
+    />
+    <input
+      v-model="weight"
+      type="number"
+      :class="
+        'w-20 ml-4 px-2 py-1 rounded-lg text-sm text-center ' +
+        (weight < 0 || weight > 100
+          ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+          : '')
+      "
+      min="0"
+      max="100"
+      step="5"
+      @change="onWeightChange"
+    />
+    %
+
+    <span class="inline-block ml-8">
+      {{ numCombos.toFixed(1) }} combos ({{
+        ((numCombos * 100) / ((52 * 51) / 2)).toFixed(1)
+      }}%)
+    </span>
   </div>
 </template>
 
@@ -103,6 +114,8 @@
 import { defineComponent, ref } from "vue";
 import { useConfigStore } from "../store";
 import { RangeManager } from "../../pkg/range/range";
+
+import DbItemPicker from "./DbItemPicker.vue";
 
 const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
 
@@ -116,6 +129,10 @@ const rangeRegex = new RegExp(
 type DraggingMode = "none" | "enabling" | "disabling";
 
 export default defineComponent({
+  components: {
+    DbItemPicker,
+  },
+
   props: {
     player: {
       type: Number,
@@ -160,7 +177,7 @@ export default defineComponent({
       const trimmed = rangeText.value.replace(trimRegex, "$1").trim();
       const ranges = trimmed.split(",");
 
-      if (ranges.slice(-1)[0] === "") {
+      if (ranges[ranges.length - 1] === "") {
         ranges.pop();
       }
 
@@ -228,6 +245,11 @@ export default defineComponent({
       numCombos.value = 0;
     };
 
+    const loadRange = (rangeStr: string) => {
+      rangeText.value = rangeStr;
+      onRangeTextChange();
+    };
+
     return {
       rangeText,
       rangeTextError,
@@ -241,6 +263,7 @@ export default defineComponent({
       weightPercent,
       onWeightChange,
       clearRange,
+      loadRange,
     };
   },
 });

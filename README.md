@@ -4,7 +4,7 @@
 
 Website: https://wasm-postflop.pages.dev/
 
-Core solver repository: https://github.com/b-inary/postflop-solver
+Solver engine repository: https://github.com/b-inary/postflop-solver
 
 ![Image](image.png)
 
@@ -43,26 +43,31 @@ This project intends to make it easier for more people to use the GTO solver.
 
 ## Comparison
 
-We tested [PioSOLVER Free] (2.0.8 / 6 threads), [GTO+] (v1.4.1), and WASM Postflop with the "3betpotFAST" preset of the PioSOLVER (all-in threshold is replaced with 100%).
-
-### Execution time and memory usage
-
-We experimented on a Windows 10 PC with a Ryzen 7 3700X CPU (16 threads).
-WASM Postflop is the slowest, but it is not that inferior to commercial solvers despite being a web application.
-
-| Solver | PioSOLVER | GTO+ | WASM<br/>(w/o compression) | WASM<br/>(w/ compression) |
-| :---: | :---: | :---: | :---: | :---: |
-| **Time (Target = 0.5%)** | 23.36 s | 14.15 s | 32.28 s | 38.46 s |
-| **Time (Target = 0.3%)** | 28.68 s | 19.87 s | 40.09 s | 47.94 s |
-| **Time (Target = 0.1%)** | 61.13 s | 42.66 s | 71.40 s | 85.32 s |
-| **Memory usage** | 634 MB | 705 MB | 1.21 GB | 640 MB |
+We tested [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and WASM Postflop with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
 
 [PioSOLVER Free]: https://www.piosolver.com/
 [GTO+]: https://www.gtoplus.com/
 
+### Execution time and memory usage
+
+We experimented on a Windows 10 PC with a Ryzen 7 3700X CPU (16 threads; PioSOLVER Free is limited to 6 threads).
+WASM Postflop was executed on Google Chrome 102.
+Since the solver engine of WASM Postflop is written in Rust, we also tested it as a native WSL2 application.
+
+WASM Postflop is the slowest, but it is not so inferior to commercial solvers despite being a web application.
+
+[1]: No compression / [2]: Use compression
+
+| Solver | PioSOLVER<br/>2.0.8 | GTO+<br/>v1.4.1 | WASM [1] | WASM [2] | Native [1] | Native [2] |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Time (Target = 0.5%)** | 23.36 s | 14.15 s | 32.28 s | 38.46 s | 19.05 s | 25.93 s |
+| **Time (Target = 0.3%)** | 28.68 s | 19.87 s | 40.09 s | 47.94 s | 23.22 s | 32.26 s |
+| **Time (Target = 0.1%)** | 61.13 s | 42.66 s | 71.40 s | 85.32 s | 40.94 s | 57.34 s |
+| **Memory usage** | 634 MB | 705 MB | 1.21 GB | 640 MB | 1.22 GB | 659 MB |
+
 ### Results
 
-A comparison of the obtained results is as follows (target exploitability = 0.1%).
+A comparison of the obtained results is as follows (target exploitability is set to 0.1%).
 We can see that PioSOLVER, GTO+, and WASM Postflop return nearly identical results.
 
 | PioSOLVER | GTO+ | WASM Postflop |

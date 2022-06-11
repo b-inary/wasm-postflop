@@ -95,7 +95,8 @@
 
     <div
       v-if="
-        actionList.length === 0 || actionList.slice(-1)[0].type === 'Player'
+        actionList.length === 0 ||
+        actionList[actionList.length - 1].type === 'Player'
       "
     >
       <div class="flex mt-5 h-[30.25rem] items-start">
@@ -248,7 +249,8 @@
           :key="rank"
           :class="
             'm-1 ' +
-            (actionList.slice(-1)[0].actions[56 - 4 * rank - suit].isTerminal
+            (actionList[actionList.length - 1].actions[56 - 4 * rank - suit]
+              .isTerminal
               ? 'opacity-40 cursor-default'
               : '')
           "
@@ -422,7 +424,7 @@ export default defineComponent({
         });
 
         if (turn.value === -1) {
-          actionList.value.slice(-1)[0].type = "Turn";
+          actionList.value[actionList.value.length - 1].type = "Turn";
         }
 
         return;
@@ -523,7 +525,7 @@ export default defineComponent({
       }));
 
       for (let i = 0; i < numActions; ++i) {
-        const action = actionList.value.slice(-1)[0].actions[i];
+        const action = actionList.value[actionList.value.length - 1].actions[i];
         if (action.isTerminal) continue;
         let invalid = true;
         for (let j = 0; j < cards.length; ++j) {
@@ -636,7 +638,7 @@ export default defineComponent({
 
     const nextActionsStr = computed(() => {
       if (actionList.value.length === 0) return [];
-      const lastItem = actionList.value.slice(-1)[0];
+      const lastItem = actionList.value[actionList.value.length - 1];
       if (lastItem.type === "Player") {
         return lastItem.actions.map((a) => a.str);
       } else {
@@ -649,7 +651,7 @@ export default defineComponent({
       if (actions.length === 0) return [];
 
       const ret = [];
-      const subtract = actions.slice(-1)[0] === "Check" ? 1 : 2;
+      const subtract = actions[actions.length - 1] === "Check" ? 1 : 2;
 
       for (let i = 0; i < actions.length; ++i) {
         let color;

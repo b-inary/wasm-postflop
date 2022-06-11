@@ -17,8 +17,8 @@
       program
     </li>
     <li>
-      <span class="font-bold">Works inside your browser</span>: no need to
-      install anything
+      <span class="font-bold">Works on web browsers</span>: no need to install
+      anything
     </li>
     <li>
       <span class="font-bold">Sufficiently fast</span>: supports multithreading
@@ -56,14 +56,18 @@
     </li>
     <li>Mobile use is not considered</li>
     <li>
-      This is a hobby project in the alpha stage; there are no guarantees, and
-      only minimal functionality is provided
+      This is an alpha-stage hobby project; it has minimal functionality, and
+      there are no guarantees
     </li>
   </ul>
 
   <p class="mt-4 underline">Change log:</p>
 
   <ul class="mt-4 ml-8 list-disc">
+    <li>
+      <span class="font-bold">2022-06-11</span>: Save/Load ranges and
+      configurations
+    </li>
     <li>
       <span class="font-bold">2022-06-03</span>: Added equity calculation
       feature
