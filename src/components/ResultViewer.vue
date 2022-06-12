@@ -101,7 +101,7 @@
         actionList[actionList.length - 1].type === 'Player'
       "
     >
-      <div class="flex mt-5 h-[30.25rem] items-start">
+      <div class="flex mt-5 items-start">
         <div class="shrink-0">
           <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
             <tr v-for="row in 13" :key="row" class="h-9">
@@ -134,10 +134,20 @@
               </td>
             </tr>
           </table>
+
+          <div class="mt-4">
+            Player: {{ nodeInformation.player === 0 ? "OOP" : "IP" }} / Pot:
+            {{ nodeInformation.pot }} / Stack: {{ nodeInformation.stack }}
+            {{
+              nodeInformation.toCall
+                ? " / To Call: " + nodeInformation.toCall
+                : ""
+            }}
+          </div>
         </div>
 
         <div
-          class="ml-5 max-h-full border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll"
+          class="ml-5 max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll"
         >
           <table class="relative divide-y divide-gray-300">
             <thead class="sticky top-0 bg-gray-100 shadow">
@@ -233,14 +243,6 @@
             </tfoot>
           </table>
         </div>
-      </div>
-
-      <div class="mt-1">
-        Player: {{ nodeInformation.player === 0 ? "OOP" : "IP" }} / Pot:
-        {{ nodeInformation.pot }} / Stack: {{ nodeInformation.stack }}
-        {{
-          nodeInformation.toCall ? " / To Call: " + nodeInformation.toCall : ""
-        }}
       </div>
     </div>
 
@@ -363,7 +365,7 @@ export default defineComponent({
       if (num >= 0.9995) {
         return "100%";
       } else {
-        return (100 * num).toFixed(1) + "%";
+        return Math.max(100 * num, 0).toFixed(1) + "%";
       }
     };
 

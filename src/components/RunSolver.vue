@@ -93,7 +93,7 @@
         type="number"
         :class="
           'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (targetExploitability < 0
+          (targetExploitability <= 0
             ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
             : '')
         "
@@ -127,7 +127,7 @@
         :disabled="
           store.hasSolverRun ||
           memoryUsageCompressed > maxMemoryUsage ||
-          targetExploitability < 0 ||
+          targetExploitability <= 0 ||
           maxIterations < 1 ||
           maxIterations % 1 !== 0
         "
@@ -484,7 +484,7 @@ export default defineComponent({
         ++currentIteration.value;
 
         if (currentIteration.value % 10 === 0 || terminateFlag.value) {
-          exploitability.value = await handler.exploitability();
+          exploitability.value = Math.max(await handler.exploitability(), 0);
           if (exploitability.value <= target || terminateFlag.value) {
             break;
           }

@@ -54,16 +54,16 @@ We experimented on a Windows 10 PC with a Ryzen 7 3700X CPU (16 threads; PioSOLV
 WASM Postflop was executed on Google Chrome 102.
 Since the solver engine of WASM Postflop is written in Rust, we also tested it as a native WSL2 application.
 
-WASM Postflop is the slowest, but it is not so inferior to commercial solvers despite being a web application.
+WASM Postflop is slower than Pio CFR and GTO+, but it is not so inferior to these commercial solvers despite being a web application.
 
-[1]: No compression / [2]: Use compression
+[1]: Pio CFR / [2]: Original Pio algorithm / [3]: No compression / [4]: Use compression
 
-| Solver | PioSOLVER<br/>2.0.8 | GTO+<br/>v1.4.1 | WASM [1] | WASM [2] | Native [1] | Native [2] |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target = 0.5%)** | 23.36 s | 14.15 s | 32.28 s | 38.46 s | 19.05 s | 25.93 s |
-| **Time (Target = 0.3%)** | 28.68 s | 19.87 s | 40.09 s | 47.94 s | 23.22 s | 32.26 s |
-| **Time (Target = 0.1%)** | 61.13 s | 42.66 s | 71.40 s | 85.32 s | 40.94 s | 57.34 s |
-| **Memory usage** | 634 MB | 705 MB | 1.21 GB | 640 MB | 1.22 GB | 659 MB |
+| Solver | PioSOLVER<br/>2.0.8 [1] | PioSOLVER<br/>2.0.8 [2] | GTO+<br/>v1.4.1 | WASM<br/>[3] | WASM<br/>[4] | Native<br/>[3] | Native<br/>[4] |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Time (Target = 0.5%)** | 23.36 s | 31.23 s | 14.15 s | 32.28 s | 38.46 s | 19.05 s | 25.93 s |
+| **Time (Target = 0.3%)** | 28.68 s | 43.87 s | 19.87 s | 40.09 s | 47.94 s | 23.22 s | 32.26 s |
+| **Time (Target = 0.1%)** | 61.13 s | 110.47 s | 42.66 s | 71.40 s | 85.32 s | 40.94 s | 57.34 s |
+| **Memory usage** | 1.41 GB | 634 MB | 705 MB | 1.21 GB | 640 MB | 1.22 GB | 659 MB |
 
 ### Results
 
