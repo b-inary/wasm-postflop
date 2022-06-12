@@ -157,9 +157,12 @@
                   :key="text"
                   scope="col"
                   :class="
-                    'py-[0.3125rem] whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
-                    (text === 'Hand' ? 'text-center ' : '') +
-                    (text === 'Weight' ? 'px-1.5' : 'px-2.5')
+                    'py-[0.3125rem] px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                    (text === 'Hand'
+                      ? 'min-w-[5rem]'
+                      : text === 'EV'
+                      ? 'min-w-[3.4rem]'
+                      : 'min-w-[3.7rem]')
                   "
                   @click="sortBy(text)"
                 >
