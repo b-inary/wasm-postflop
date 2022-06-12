@@ -93,6 +93,6 @@ export default defineComponent({
 
 <style scoped>
 .side-bar-item {
-  @apply block mx-2 my-1 px-2.5 py-1.5 border-[3px] rounded-xl text-left cursor-pointer select-none;
+  @apply block mx-2 my-1 px-2.5 py-1.5 border-[3px] rounded-xl text-left select-none;
 }
 </style>

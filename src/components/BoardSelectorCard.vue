@@ -1,7 +1,7 @@
 <template>
   <button
     :class="
-      'relative w-10 h-14 rounded-lg border shadow cursor-pointer select-none ' +
+      'relative w-10 h-14 rounded-lg border shadow select-none ' +
       (isSelected
         ? 'bg-yellow-300 ring-1 ring-red-600 border-red-600'
         : 'bg-white border-black')

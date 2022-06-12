@@ -22,8 +22,8 @@
           :class="
             'my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
             (actionList.length === 1
-              ? 'ring-1 ring-red-600 border-red-600'
-              : 'border-black cursor-pointer')
+              ? 'ring-1 ring-red-600 border-red-600 cursor-default'
+              : 'border-black')
           "
           @click="moveResult(0, 0)"
         >
@@ -52,7 +52,7 @@
               (item.depth === actionList.length - 1
                 ? 'ring-1 ring-red-600 border-red-600 '
                 : 'border-black ') +
-              (item.depth >= actionList.length - 1 ? '' : 'cursor-pointer')
+              (item.depth >= actionList.length - 1 ? 'cursor-default' : '')
             "
             @click="moveResult(item.depth, item.selectedIndex)"
           >
@@ -80,9 +80,9 @@
                 ? 'opacity-40 '
                 : '') +
               (action.isSelected && item.depth === actionList.length - 1
-                ? 'ring-1 ring-red-600 border-red-600 '
+                ? 'ring-1 ring-red-600 border-red-600 cursor-default '
                 : 'border-black ' +
-                  (action.isTerminal ? '' : 'cursor-pointer ')) +
+                  (action.isTerminal ? 'cursor-default ' : '')) +
               (item.depth === actionList.length
                 ? actionColorByStr[action.str]
                 : 'bg-white')
