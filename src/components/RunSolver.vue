@@ -191,8 +191,8 @@ const browser = detect();
 const isSafari = browser && (browser.name === "safari" || browser.os === "iOS");
 
 function checkConfig(config: ReturnType<typeof useConfigStore>): string | null {
-  if (config.board.length !== 3) {
-    return "Board must consist of exactly three cards";
+  if (config.board.length < 3) {
+    return "Board must consist of at least three cards";
   }
 
   if (config.startingPot <= 0) {

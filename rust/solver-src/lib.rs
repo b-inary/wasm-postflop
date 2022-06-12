@@ -42,7 +42,7 @@ impl GameManager {
         &mut self,
         oop_range: &[f32],
         ip_range: &[f32],
-        flop: &[u8],
+        board: &[u8],
         starting_pot: i32,
         effective_stack: i32,
         oop_flop_bet: &[f32],
@@ -58,9 +58,20 @@ impl GameManager {
         ip_river_bet: &[f32],
         ip_river_raise: &[f32],
         add_all_in_threshold: f32,
-        replace_all_in_threshold: f32,
+        force_all_in_threshold: f32,
         adjust_last_two_bet_sizes: bool,
     ) -> Option<String> {
+        let turn = if board.len() >= 4 {
+            board[3]
+        } else {
+            NOT_DEALT
+        };
+        let river = if board.len() == 5 {
+            board[4]
+        } else {
+            NOT_DEALT
+        };
+
         let convert_bet_sizes = |sizes: &[f32]| {
             sizes
                 .iter()
@@ -79,7 +90,9 @@ impl GameManager {
         };
 
         let config = GameConfig {
-            flop: flop.try_into().unwrap(),
+            flop: board[..3].try_into().unwrap(),
+            turn,
+            river,
             starting_pot,
             effective_stack,
             range: [
@@ -99,7 +112,7 @@ impl GameManager {
                 bet_sizes(ip_river_bet, ip_river_raise),
             ],
             add_all_in_threshold,
-            replace_all_in_threshold,
+            force_all_in_threshold,
             adjust_last_two_bet_sizes,
         };
 
@@ -140,6 +153,12 @@ impl GameManager {
 
         self.node = &*self.game.root();
         self.board = self.game.config().flop.to_vec();
+        if self.game.config().turn != NOT_DEALT {
+            self.board.push(self.game.config().turn);
+        }
+        if self.game.config().river != NOT_DEALT {
+            self.board.push(self.game.config().river);
+        }
         self.turn_swapped_suit = None;
         self.turn_swap = std::ptr::null();
         self.river_swap = std::ptr::null();
@@ -156,6 +175,12 @@ impl GameManager {
     pub fn apply_history(&mut self, history: &[u32]) {
         self.node = &*self.game.root();
         self.board = self.game.config().flop.to_vec();
+        if self.game.config().turn != NOT_DEALT {
+            self.board.push(self.game.config().turn);
+        }
+        if self.game.config().river != NOT_DEALT {
+            self.board.push(self.game.config().river);
+        }
         self.turn_swapped_suit = None;
         self.turn_swap = std::ptr::null();
         self.river_swap = std::ptr::null();

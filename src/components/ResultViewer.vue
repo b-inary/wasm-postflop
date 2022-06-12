@@ -27,7 +27,9 @@
           "
           @click="moveResult(0, 0)"
         >
-          <span class="inline-block mr-2 underline">Flop</span>
+          <span class="inline-block mr-2 underline">
+            {{ ["Flop", "Turn", "River"][board.length - 3] }}
+          </span>
           <span
             v-for="item in board.map(cardText)"
             :key="item.rank + item.suit"
@@ -347,12 +349,12 @@ export default defineComponent({
 
     const board = computed(() => savedConfig.board);
 
-    const turn = computed(() => {
+    const dealtTurn = computed(() => {
       const item = actionList.value.find((item) => item.type === "Turn");
       return item?.selectedIndex ?? -1;
     });
 
-    const river = computed(() => {
+    const dealtRiver = computed(() => {
       const item = actionList.value.find((item) => item.type === "River");
       return item?.selectedIndex ?? -1;
     });
@@ -423,7 +425,7 @@ export default defineComponent({
           })),
         });
 
-        if (turn.value === -1) {
+        if (dealtTurn.value === -1 && board.value.length === 3) {
           actionList.value[actionList.value.length - 1].type = "Turn";
         }
 
@@ -505,8 +507,8 @@ export default defineComponent({
       }
 
       let factor = store.normalizer;
-      if (turn.value !== -1) factor *= 45;
-      if (river.value !== -1) factor *= 44;
+      if (dealtTurn.value !== -1) factor *= 45;
+      if (dealtRiver.value !== -1) factor *= 44;
 
       result.value = Array.from({ length: cards.length }, (_, i) => ({
         card1: cards[i] >> 8,
@@ -696,11 +698,11 @@ export default defineComponent({
             const c2 = r2 * 4 + s2;
             if (
               savedConfig.board.indexOf(c1) === -1 &&
-              turn.value !== c1 &&
-              river.value !== c1 &&
+              dealtTurn.value !== c1 &&
+              dealtRiver.value !== c1 &&
               savedConfig.board.indexOf(c2) === -1 &&
-              turn.value !== c2 &&
-              river.value !== c2
+              dealtTurn.value !== c2 &&
+              dealtRiver.value !== c2
             ) {
               denom += 1;
             }
