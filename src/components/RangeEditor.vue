@@ -190,7 +190,7 @@ export default defineComponent({
         }
       }
 
-      const errorString = range.from_string(rangeText.value);
+      const errorString = range.from_string(trimmed);
 
       if (errorString) {
         rangeTextError.value = errorString;
