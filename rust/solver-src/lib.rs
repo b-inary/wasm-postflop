@@ -434,7 +434,7 @@ impl GameManager {
         let player = node.player();
         let num_actions = node.num_actions();
         let num_private_hands = self.game.num_private_hands(player);
-        if !self.game.is_compression_enabled() {
+        let mut ret = if !self.game.is_compression_enabled() {
             if num_actions == 1 {
                 node.strategy().to_vec()
             } else {
@@ -453,7 +453,15 @@ impl GameManager {
                     .map(|&x| x as f32 * decoder)
                     .collect()
             }
+        };
+        for swap in &[self.river_swap, self.turn_swap] {
+            if !swap.is_null() {
+                for &(i, j) in unsafe { &(**swap)[player] } {
+                    ret.swap(i, j);
+                }
+            }
         }
+        ret
     }
 
     fn get_strategy(&self) -> Vec<f32> {
