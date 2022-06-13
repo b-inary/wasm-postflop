@@ -70,7 +70,7 @@
       store-name="ranges"
       :index="player"
       :value="rangeText"
-      :allow-save="rangeText !== ''"
+      :allow-save="rangeText !== '' && rangeTextError === ''"
       @load-item="loadRange"
     />
   </div>
