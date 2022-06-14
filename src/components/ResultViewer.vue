@@ -112,7 +112,7 @@
                   'relative w-10 border-black select-none ' +
                   (row === col ? 'border-2' : 'border')
                 "
-                @mouseover="onMouseOver(row, col)"
+                @mouseenter="onMouseEnter(row, col)"
               >
                 <div
                   class="absolute bottom-0 left-0 w-full"
@@ -146,18 +146,24 @@
           </div>
         </div>
 
+        <!--
+          "will-change-transform" somehow resolves Google Chrome scrolling issue
+          (But the issue revives when DevTools is open)
+        -->
         <div
-          class="ml-5 max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll"
+          ref="resultDetail"
+          class="ml-5 max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll will-change-transform"
+          @scroll.passive="onTableScroll"
         >
-          <table class="relative divide-y divide-gray-300">
+          <table class="align-middle divide-y divide-gray-300">
             <thead class="sticky top-0 bg-gray-100 shadow">
-              <tr>
+              <tr :style="{ height: 'calc(2rem + 1px)' }">
                 <th
                   v-for="text in headers"
                   :key="text"
                   scope="col"
                   :class="
-                    'py-[0.3125rem] px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                    'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
                     (text === 'Hand'
                       ? 'min-w-[5rem]'
                       : text === 'EV'
@@ -183,12 +189,25 @@
             </thead>
 
             <tbody class="bg-white divide-y divide-gray-300">
+              <!-- Top empty row -->
               <tr
-                v-for="item in resultSorted"
+                v-if="emptyBufferTop > 0"
+                :style="{
+                  '--empty-buffer-top': emptyBufferTop,
+                  height: 'calc(var(--empty-buffer-top) * (2rem + 1px))',
+                }"
+              >
+                <td :colspan="headers.length"></td>
+              </tr>
+
+              <!-- Body -->
+              <tr
+                v-for="item in resultRendered"
                 :key="item.card1 + '-' + item.card2"
                 class="text-right text-sm"
+                :style="{ height: 'calc(2rem + 1px)' }"
               >
-                <td class="px-2.5 py-[0.3125rem] text-center">
+                <td class="px-2.5 text-center">
                   <template
                     v-for="card in [item.card1, item.card2].map(cardText)"
                     :key="card.rank + card.suit"
@@ -198,47 +217,54 @@
                     </span>
                   </template>
                 </td>
-                <td class="px-2.5 py-[0.3125rem]">
+                <td class="px-2.5">
                   {{ percentStr(item.weight) }}
                 </td>
-                <td class="px-2.5 py-[0.3125rem]">
+                <td class="px-2.5">
                   {{ percentStr(item.equity) }}
                 </td>
-                <td class="px-2.5 py-[0.3125rem]">
+                <td class="px-2.5">
                   {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
                 </td>
-                <td
-                  v-for="i in item.strategy.length"
-                  :key="i"
-                  class="px-2.5 py-[0.3125rem]"
-                >
+                <td v-for="i in item.strategy.length" :key="i" class="px-2.5">
                   {{ percentStr(item.strategy[i - 1]) }}
                 </td>
+              </tr>
+
+              <!-- Bottom empty row -->
+              <tr
+                v-if="emptyBufferBottom > 0"
+                :style="{
+                  '--empty-buffer-bottom': emptyBufferBottom,
+                  height: 'calc(var(--empty-buffer-bottom) * (2rem + 1px))',
+                }"
+              >
+                <td :colspan="headers.length"></td>
               </tr>
             </tbody>
 
             <tfoot class="sticky bottom-0 font-bold bg-white shadow">
-              <tr class="text-right text-sm">
-                <th
-                  scope="col"
-                  class="px-2.5 py-[0.3125rem] text-center underline"
-                >
+              <tr
+                class="text-right text-sm"
+                :style="{ height: 'calc(2rem + 1px)' }"
+              >
+                <th scope="col" class="px-2.5 text-center underline">
                   {{ hoveredCellText }}
                 </th>
-                <th scope="col" class="px-2.5 py-[0.3125rem]">
+                <th scope="col" class="px-2.5">
                   {{ resultAverage.combos }}
                 </th>
-                <th scope="col" class="px-2.5 py-[0.3125rem]">
+                <th scope="col" class="px-2.5">
                   {{ resultAverage.equity }}
                 </th>
-                <th scope="col" class="px-2.5 py-[0.3125rem]">
+                <th scope="col" class="px-2.5">
                   {{ resultAverage.expectedValue }}
                 </th>
                 <th
                   v-for="i in resultAverage.strategy.length"
                   :key="i"
                   scope="col"
-                  class="px-2.5 py-[0.3125rem]"
+                  class="px-2.5"
                 >
                   {{ resultAverage.strategy[i - 1] }}
                 </th>
@@ -270,11 +296,21 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 import { cardText, useStore, useSavedConfigStore } from "../store";
 import * as GlobalWorker from "../global-worker";
 
 import BoardSelectorCard from "./BoardSelectorCard.vue";
+
+type Result = {
+  card1: number;
+  card2: number;
+  weight: number;
+  weightNormalized: number;
+  equity: number;
+  expectedValue: number;
+  strategy: number[];
+};
 
 const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
 
@@ -288,6 +324,7 @@ export default defineComponent({
     const savedConfig = useSavedConfigStore();
 
     const resultNav = ref(null as HTMLDivElement | null);
+    const resultDetail = ref(null as HTMLDivElement | null);
 
     const isSolverFinished = ref(false);
     const handCards = ref([new Uint16Array(), new Uint16Array()]);
@@ -306,17 +343,7 @@ export default defineComponent({
       }[]
     );
 
-    const result = ref(
-      [] as {
-        card1: number;
-        card2: number;
-        weight: number;
-        weightNormalized: number;
-        equity: number;
-        expectedValue: number;
-        strategy: number[];
-      }[]
-    );
+    const result = ref([] as Result[]);
 
     const resultCell = ref(
       [] as {
@@ -347,7 +374,7 @@ export default defineComponent({
         if ((isSolverFinished.value = store.isSolverFinished)) {
           await updateResult(0, true);
         } else {
-          await clearResult();
+          clearResult();
         }
       }
     });
@@ -381,14 +408,14 @@ export default defineComponent({
     };
 
     const sortBy = (key: string) => {
-      if (sortKey.value.key === key) {
-        sortKey.value.order = sortKey.value.order === "asc" ? "desc" : "asc";
-      } else {
-        sortKey.value = { key, order: "desc" };
-      }
+      const order: Order =
+        key === sortKey.value.key && sortKey.value.order === "desc"
+          ? "asc"
+          : "desc";
+      sortKey.value = { key, order };
     };
 
-    const clearResult = async () => {
+    const clearResult = () => {
       handCards.value = [new Uint16Array(), new Uint16Array()];
       actionList.value = [];
       result.value = [];
@@ -763,7 +790,7 @@ export default defineComponent({
       return "";
     };
 
-    const onMouseOver = (row: number, col: number) => {
+    const onMouseEnter = (row: number, col: number) => {
       hoveredCell.value = { row, col };
     };
 
@@ -789,33 +816,63 @@ export default defineComponent({
       return ["Hand", "Weight", "EQ", "EV"].concat(nextActionsStr.value);
     });
 
-    const resultFiltered = computed(() => {
-      const { row, col } = hoveredCell.value;
-      const idx = (row - 1) * 13 + col - 1;
-      if (
-        idx < 0 ||
-        resultCell.value.length === 0 ||
-        resultCell.value[idx].count === 0
-      ) {
-        return result.value.filter(
-          (r) => r.weightNormalized > 0 && r.weight >= 0.05 / 100
-        );
-      }
-      const r1 = 13 - Math.min(row, col);
-      const r2 = 13 - Math.max(row, col);
-      const isSuited = row < col;
-      return result.value.filter((r) => {
-        return (
-          r.weightNormalized > 0 &&
-          r.weight >= 0.05 / 100 &&
-          Math.floor(r.card1 / 4) === r1 &&
-          Math.floor(r.card2 / 4) === r2 &&
-          (r.card1 % 4 === r.card2 % 4) === isSuited
-        );
-      });
+    const resultFiltered = ref([] as Result[]);
+    const resultSorted = ref([] as Result[]);
+    const resultAverage = ref({
+      combos: "-",
+      equity: "-",
+      expectedValue: "-",
+      strategy: [] as string[],
     });
 
-    const resultSorted = computed(() => {
+    const resultRendered = ref([] as Result[]);
+    const bufferUnit = 13;
+    const emptyBufferTop = ref(0);
+    const emptyBufferBottom = computed(() =>
+      Math.max(
+        resultFiltered.value.length - emptyBufferTop.value - 3 * bufferUnit,
+        0
+      )
+    );
+
+    watch([hoveredCell, result, resultCell], (newValues, prevValues) => {
+      const [hoveredCell, result, resultCell] = newValues;
+      const [prevHoveredCell, prevResult, prevResultCell] = prevValues;
+
+      if (resultCell.length === 0) return;
+
+      const { row, col } = hoveredCell;
+      const idx = (row - 1) * 13 + col - 1;
+      const showAll = idx < 0 || resultCell[idx].count === 0;
+
+      // skip recalculation if possible
+      if (result === prevResult && resultCell === prevResultCell) {
+        const { row: prevRow, col: prevCol } = prevHoveredCell;
+        const prevIdx = (prevRow - 1) * 13 + prevCol - 1;
+        const prevShowAll = prevIdx < 0 || resultCell[prevIdx].count === 0;
+        if (showAll && prevShowAll) return;
+      }
+
+      if (showAll) {
+        resultFiltered.value = result.filter(
+          (r) => r.weightNormalized > 0 && r.weight >= 0.05 / 100
+        );
+      } else {
+        const r1 = 13 - Math.min(row, col);
+        const r2 = 13 - Math.max(row, col);
+        const isSuited = row < col;
+        resultFiltered.value = result.filter(
+          (r) =>
+            Math.floor(r.card1 / 4) === r1 &&
+            Math.floor(r.card2 / 4) === r2 &&
+            (r.card1 % 4 === r.card2 % 4) === isSuited &&
+            r.weightNormalized > 0 &&
+            r.weight >= 0.05 / 100
+        );
+      }
+    });
+
+    watch([resultFiltered, sortKey], () => {
       const rankComparator = (
         a1: number,
         a2: number,
@@ -843,7 +900,7 @@ export default defineComponent({
 
       const round = (x: number) => Math.round(10 * x);
 
-      return [...resultFiltered.value].sort((a, b) => {
+      resultSorted.value = [...resultFiltered.value].sort((a, b) => {
         const coef = sortKey.value.order === "asc" ? 1 : -1;
         if (sortKey.value.key === "Hand") {
           return rankComparator(
@@ -884,24 +941,31 @@ export default defineComponent({
           }
         }
       });
+
+      // scroll to top
+      resultRendered.value = resultSorted.value.slice(0, 3 * bufferUnit);
+      emptyBufferTop.value = 0;
+      if (resultDetail.value) {
+        resultDetail.value.scrollTop = 0;
+      }
     });
 
-    const resultAverage = computed(() => {
-      const result = resultFiltered.value;
-      if (result.length === 0) {
-        return {
+    watch(resultFiltered, () => {
+      if (resultFiltered.value.length === 0) {
+        resultAverage.value = {
           combos: "-",
           equity: "-",
           expectedValue: "-",
           strategy: nextActionsStr.value.map(() => "-"),
         };
+        return;
       }
       let weightSum = 0;
       let combos = 0;
       let equity = 0;
       let expectedValue = 0;
       const strategy = nextActionsStr.value.map(() => 0);
-      for (const r of result) {
+      for (const r of resultFiltered.value) {
         weightSum += r.weightNormalized;
         combos += r.weight;
         equity += r.equity * r.weightNormalized;
@@ -910,7 +974,7 @@ export default defineComponent({
           strategy[i] += r.strategy[i] * r.weightNormalized;
         }
       }
-      return {
+      resultAverage.value = {
         combos: combos.toFixed(1),
         equity: percentStr(equity / weightSum),
         expectedValue: trimMinusZero((expectedValue / weightSum).toFixed(1)),
@@ -918,10 +982,50 @@ export default defineComponent({
       };
     });
 
+    const rem = Number(
+      window
+        .getComputedStyle(document.documentElement)
+        .getPropertyValue("font-size")
+        .replace("px", "")
+    );
+
+    const rowHeight = 2 * rem + 1;
+
+    let ticking = false;
+
+    const onTableScroll = () => {
+      if (ticking) return;
+      ticking = true;
+
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (!resultDetail.value) return;
+        const { scrollTop } = resultDetail.value;
+        const topIndex = scrollTop / rowHeight;
+        let rerender = false;
+        if (topIndex < emptyBufferTop.value) {
+          rerender = true;
+          emptyBufferTop.value = Math.floor(topIndex / bufferUnit) * bufferUnit;
+        } else if (topIndex > emptyBufferTop.value + 2 * bufferUnit) {
+          rerender = true;
+          emptyBufferTop.value =
+            (Math.floor(topIndex / bufferUnit) - 1) * bufferUnit;
+        }
+        if (rerender) {
+          resultRendered.value = resultSorted.value.slice(
+            emptyBufferTop.value,
+            emptyBufferTop.value + 3 * bufferUnit
+          );
+        }
+      });
+    };
+
     return {
       store,
       cardText,
       resultNav,
+      resultDetail,
+      nodeInformation,
       board,
       actionList,
       sortKey,
@@ -934,13 +1038,15 @@ export default defineComponent({
       cellItems,
       cellText,
       cellAuxText,
-      onMouseOver,
+      onMouseEnter,
       onMouseLeave,
       hoveredCellText,
       headers,
-      resultSorted,
       resultAverage,
-      nodeInformation,
+      resultRendered,
+      emptyBufferTop,
+      emptyBufferBottom,
+      onTableScroll,
     };
   },
 });

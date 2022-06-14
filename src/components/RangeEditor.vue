@@ -12,7 +12,7 @@
             "
             @mousedown="dragStart(row, col)"
             @mouseup="dragEnd"
-            @mouseover="mouseOver(row, col)"
+            @mouseenter="mouseEnter(row, col)"
           >
             <div
               class="absolute bottom-0 left-0 w-full bg-yellow-300"
@@ -219,7 +219,7 @@ export default defineComponent({
       draggingMode = "none";
     };
 
-    const mouseOver = (row: number, col: number) => {
+    const mouseEnter = (row: number, col: number) => {
       if (draggingMode === "enabling") {
         update(row, col, weight.value);
       } else if (draggingMode === "disabling") {
@@ -259,7 +259,7 @@ export default defineComponent({
       onRangeTextChange,
       dragStart,
       dragEnd,
-      mouseOver,
+      mouseEnter,
       weightPercent,
       onWeightChange,
       clearRange,
