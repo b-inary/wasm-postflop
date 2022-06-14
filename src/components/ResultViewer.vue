@@ -1001,7 +1001,7 @@ export default defineComponent({
         ticking = false;
         if (!resultDetail.value) return;
         const { scrollTop } = resultDetail.value;
-        const topIndex = scrollTop / rowHeight;
+        const topIndex = Math.max(scrollTop / rowHeight, 0);
         let rerender = false;
         if (topIndex < emptyBufferTop.value) {
           rerender = true;
