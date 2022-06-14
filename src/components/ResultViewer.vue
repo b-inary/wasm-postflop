@@ -451,8 +451,8 @@ export default defineComponent({
       });
 
       let player = 0;
-      let pot = [0, 0];
       let lastBet = 0;
+      const pot = [0, 0];
 
       for (let i = 0; i < actionList.value.length - 1; ++i) {
         const item = actionList.value[i];
@@ -900,7 +900,7 @@ export default defineComponent({
       let combos = 0;
       let equity = 0;
       let expectedValue = 0;
-      let strategy = nextActionsStr.value.map(() => 0);
+      const strategy = nextActionsStr.value.map(() => 0);
       for (const r of result) {
         weightSum += r.weightNormalized;
         combos += r.weight;
