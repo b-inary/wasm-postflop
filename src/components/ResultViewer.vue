@@ -16,7 +16,7 @@
   </div>
 
   <div v-else>
-    <div ref="resultNav" class="flex pl-0.5 overflow-x-auto">
+    <div ref="divResultNav" class="flex pl-0.5 overflow-x-auto">
       <div class="flex flex-col items-start">
         <button
           :class="
@@ -151,7 +151,7 @@
           (But the issue revives when DevTools is open)
         -->
         <div
-          ref="resultDetail"
+          ref="divResultDetail"
           class="ml-5 max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll will-change-transform"
           @scroll.passive="onTableScroll"
         >
@@ -323,8 +323,8 @@ export default defineComponent({
     const store = useStore();
     const savedConfig = useSavedConfigStore();
 
-    const resultNav = ref(null as HTMLDivElement | null);
-    const resultDetail = ref(null as HTMLDivElement | null);
+    const divResultNav = ref(null as HTMLDivElement | null);
+    const divResultDetail = ref(null as HTMLDivElement | null);
 
     const isSolverFinished = ref(false);
     const handCards = ref([new Uint16Array(), new Uint16Array()]);
@@ -533,8 +533,8 @@ export default defineComponent({
       const equity = results.subarray(3 * cards.length, 4 * cards.length);
       const strategy = results.subarray(4 * cards.length);
 
-      if (resultNav.value) {
-        const div = resultNav.value;
+      if (divResultNav.value) {
+        const div = divResultNav.value;
         div.scrollLeft = div.scrollWidth - div.clientWidth;
       }
 
@@ -832,6 +832,7 @@ export default defineComponent({
       () => resultFiltered.value.length - emptyBufferTop.value - 5 * bufferUnit
     );
 
+    // update resultFiltered
     watch([hoveredCell, result, resultCell], (newValues, prevValues) => {
       const [hoveredCell, result, resultCell] = newValues;
       const [prevHoveredCell, prevResult, prevResultCell] = prevValues;
@@ -869,6 +870,7 @@ export default defineComponent({
       }
     });
 
+    // update resultSorted
     watch([resultFiltered, sortKey], () => {
       const rankComparator = (
         a1: number,
@@ -942,11 +944,12 @@ export default defineComponent({
       // scroll to top
       emptyBufferTop.value = -2 * bufferUnit;
       resultRendered.value = resultSorted.value.slice(0, 3 * bufferUnit);
-      if (resultDetail.value) {
-        resultDetail.value.scrollTop = 0;
+      if (divResultDetail.value) {
+        divResultDetail.value.scrollTop = 0;
       }
     });
 
+    // update resultAverage
     watch(resultFiltered, () => {
       if (resultFiltered.value.length === 0) {
         resultAverage.value = {
@@ -990,26 +993,27 @@ export default defineComponent({
 
     let ticking = false;
 
+    // update resultRendered
     const onTableScroll = () => {
       if (ticking) return;
       ticking = true;
 
       requestAnimationFrame(() => {
         ticking = false;
-        if (!resultDetail.value) return;
-        const { scrollTop } = resultDetail.value;
+        if (!divResultDetail.value) return;
+        const { scrollTop } = divResultDetail.value;
         const topIndex = Math.max(scrollTop / rowHeight, 0);
-        let rerender = false;
+        let update = false;
         if (topIndex < emptyBufferTop.value + bufferUnit) {
-          rerender = true;
+          update = true;
           emptyBufferTop.value =
             (Math.floor(topIndex / bufferUnit) - 1) * bufferUnit;
         } else if (topIndex > emptyBufferTop.value + 3 * bufferUnit) {
-          rerender = true;
+          update = true;
           emptyBufferTop.value =
             (Math.floor(topIndex / bufferUnit) - 2) * bufferUnit;
         }
-        if (rerender) {
+        if (update) {
           resultRendered.value = resultSorted.value.slice(
             Math.max(emptyBufferTop.value, 0),
             emptyBufferTop.value + 5 * bufferUnit
@@ -1021,8 +1025,8 @@ export default defineComponent({
     return {
       store,
       cardText,
-      resultNav,
-      resultDetail,
+      divResultNav,
+      divResultDetail,
       nodeInformation,
       board,
       actionList,

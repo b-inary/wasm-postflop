@@ -375,6 +375,9 @@ impl GameManager {
                         mask &= board_mask | oop_mask | ip_mask;
                     }
                 }
+                if mask == board_mask {
+                    break;
+                }
             }
         }
 
