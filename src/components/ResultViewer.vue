@@ -827,12 +827,9 @@ export default defineComponent({
 
     const resultRendered = ref([] as Result[]);
     const bufferUnit = 13;
-    const emptyBufferTop = ref(0);
-    const emptyBufferBottom = computed(() =>
-      Math.max(
-        resultFiltered.value.length - emptyBufferTop.value - 3 * bufferUnit,
-        0
-      )
+    const emptyBufferTop = ref(-2 * bufferUnit);
+    const emptyBufferBottom = computed(
+      () => resultFiltered.value.length - emptyBufferTop.value - 5 * bufferUnit
     );
 
     watch([hoveredCell, result, resultCell], (newValues, prevValues) => {
@@ -943,8 +940,8 @@ export default defineComponent({
       });
 
       // scroll to top
+      emptyBufferTop.value = -2 * bufferUnit;
       resultRendered.value = resultSorted.value.slice(0, 3 * bufferUnit);
-      emptyBufferTop.value = 0;
       if (resultDetail.value) {
         resultDetail.value.scrollTop = 0;
       }
@@ -1003,18 +1000,19 @@ export default defineComponent({
         const { scrollTop } = resultDetail.value;
         const topIndex = Math.max(scrollTop / rowHeight, 0);
         let rerender = false;
-        if (topIndex < emptyBufferTop.value) {
-          rerender = true;
-          emptyBufferTop.value = Math.floor(topIndex / bufferUnit) * bufferUnit;
-        } else if (topIndex > emptyBufferTop.value + 2 * bufferUnit) {
+        if (topIndex < emptyBufferTop.value + bufferUnit) {
           rerender = true;
           emptyBufferTop.value =
             (Math.floor(topIndex / bufferUnit) - 1) * bufferUnit;
+        } else if (topIndex > emptyBufferTop.value + 3 * bufferUnit) {
+          rerender = true;
+          emptyBufferTop.value =
+            (Math.floor(topIndex / bufferUnit) - 2) * bufferUnit;
         }
         if (rerender) {
           resultRendered.value = resultSorted.value.slice(
-            emptyBufferTop.value,
-            emptyBufferTop.value + 3 * bufferUnit
+            Math.max(emptyBufferTop.value, 0),
+            emptyBufferTop.value + 5 * bufferUnit
           );
         }
       });
