@@ -30,19 +30,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "holdem-hand-evaluator"
-version = "0.1.0"
-source = "git+https://github.com/b-inary/holdem-hand-evaluator#d7b2a5bba4015f96855d5cd66d21f781d3cbcf9b"
-dependencies = [
- "holdem-hand-evaluator-assets",
-]
-
-[[package]]
-name = "holdem-hand-evaluator-assets"
-version = "0.1.0"
-source = "git+https://github.com/b-inary/holdem-hand-evaluator#d7b2a5bba4015f96855d5cd66d21f781d3cbcf9b"
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -81,9 +68,8 @@ checksum = "7709cef83f0c1f58f666e746a08b21e0085f7440fa6a29cc194d68aac97a4225"
 [[package]]
 name = "postflop-solver"
 version = "0.1.0"
-source = "git+https://github.com/b-inary/postflop-solver#845e00f72438e024b2afb3d01700a8e47d788bc7"
+source = "git+https://github.com/b-inary/postflop-solver#e652e7809a221fa984a4379459adb0cbefdd7227"
 dependencies = [
- "holdem-hand-evaluator",
  "num-traits",
  "once_cell",
  "regex",

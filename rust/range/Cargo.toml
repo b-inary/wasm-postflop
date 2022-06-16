@@ -9,7 +9,7 @@ license = "AGPL-3.0-or-later"
 crate-type = ["cdylib"]
 
 [dependencies]
-postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features = ["custom_alloc"], default-features = false }
+postflop-solver = { git = "https://github.com/b-inary/postflop-solver", default-features = false }
 wasm-bindgen = "0.2"
 
 [profile.release]
