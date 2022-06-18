@@ -183,7 +183,13 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import * as GlobalWorker from "../global-worker";
-import { useStore, useConfigStore, saveConfig } from "../store";
+import {
+  useStore,
+  useConfigStore,
+  useTmpConfigStore,
+  saveConfig,
+  saveConfigTmp,
+} from "../store";
 import { detect } from "detect-browser";
 
 const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024;
@@ -290,6 +296,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const config = useConfigStore();
+    const tmpConfig = useTmpConfigStore();
 
     const numThreads = ref((!isSafari && navigator.hardwareConcurrency) || 1);
     const targetExploitability = ref(0.3);
@@ -379,6 +386,7 @@ export default defineComponent({
         return;
       }
 
+      saveConfigTmp();
       isTreeBuilding.value = true;
       treeStatus.value = "Building tree...";
 
@@ -386,26 +394,26 @@ export default defineComponent({
       const handler = await GlobalWorker.getHandler();
 
       const errorString = await handler.init(
-        config.rangeRaw[0],
-        config.rangeRaw[1],
-        new Uint8Array(config.board),
-        config.startingPot,
-        config.effectiveStack,
-        new Float32Array(config.oopFlopBet),
-        new Float32Array(config.oopFlopRaise),
-        new Float32Array(config.oopTurnBet),
-        new Float32Array(config.oopTurnRaise),
-        new Float32Array(config.oopRiverBet),
-        new Float32Array(config.oopRiverRaise),
-        new Float32Array(config.ipFlopBet),
-        new Float32Array(config.ipFlopRaise),
-        new Float32Array(config.ipTurnBet),
-        new Float32Array(config.ipTurnRaise),
-        new Float32Array(config.ipRiverBet),
-        new Float32Array(config.ipRiverRaise),
-        config.addAllInThreshold / 100,
-        config.forceAllInThreshold / 100,
-        config.adjustLastTwoBetSizes
+        tmpConfig.rangeRaw[0],
+        tmpConfig.rangeRaw[1],
+        new Uint8Array(tmpConfig.board),
+        tmpConfig.startingPot,
+        tmpConfig.effectiveStack,
+        new Float32Array(tmpConfig.oopFlopBet),
+        new Float32Array(tmpConfig.oopFlopRaise),
+        new Float32Array(tmpConfig.oopTurnBet),
+        new Float32Array(tmpConfig.oopTurnRaise),
+        new Float32Array(tmpConfig.oopRiverBet),
+        new Float32Array(tmpConfig.oopRiverRaise),
+        new Float32Array(tmpConfig.ipFlopBet),
+        new Float32Array(tmpConfig.ipFlopRaise),
+        new Float32Array(tmpConfig.ipTurnBet),
+        new Float32Array(tmpConfig.ipTurnRaise),
+        new Float32Array(tmpConfig.ipRiverBet),
+        new Float32Array(tmpConfig.ipRiverRaise),
+        tmpConfig.addAllInThreshold / 100,
+        tmpConfig.forceAllInThreshold / 100,
+        tmpConfig.adjustLastTwoBetSizes
       );
 
       if (errorString) {

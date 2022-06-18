@@ -84,14 +84,14 @@ function parseBetSizes(
   }
 }
 
-export function saveConfig() {
+export function saveConfigTmp() {
   const config = useConfigStore();
-  const savedConfig = useSavedConfigStore();
+  const tmpConfig = useTmpConfigStore();
 
-  savedConfig.rangeRaw[0].set(config.rangeRaw[0]);
-  savedConfig.rangeRaw[1].set(config.rangeRaw[1]);
+  tmpConfig.rangeRaw[0].set(config.rangeRaw[0]);
+  tmpConfig.rangeRaw[1].set(config.rangeRaw[1]);
 
-  savedConfig.$patch({
+  tmpConfig.$patch({
     board: [...config.board],
     startingPot: config.startingPot,
     effectiveStack: config.effectiveStack,
@@ -110,6 +110,35 @@ export function saveConfig() {
     addAllInThreshold: config.addAllInThreshold,
     forceAllInThreshold: config.forceAllInThreshold,
     adjustLastTwoBetSizes: config.adjustLastTwoBetSizes,
+  });
+}
+
+export function saveConfig() {
+  const tmpConfig = useTmpConfigStore();
+  const savedConfig = useSavedConfigStore();
+
+  savedConfig.rangeRaw[0].set(tmpConfig.rangeRaw[0]);
+  savedConfig.rangeRaw[1].set(tmpConfig.rangeRaw[1]);
+
+  savedConfig.$patch({
+    board: tmpConfig.board,
+    startingPot: tmpConfig.startingPot,
+    effectiveStack: tmpConfig.effectiveStack,
+    oopFlopBet: tmpConfig.oopFlopBet,
+    oopFlopRaise: tmpConfig.oopFlopRaise,
+    oopTurnBet: tmpConfig.oopTurnBet,
+    oopTurnRaise: tmpConfig.oopTurnRaise,
+    oopRiverBet: tmpConfig.oopRiverBet,
+    oopRiverRaise: tmpConfig.oopRiverRaise,
+    ipFlopBet: tmpConfig.ipFlopBet,
+    ipFlopRaise: tmpConfig.ipFlopRaise,
+    ipTurnBet: tmpConfig.ipTurnBet,
+    ipTurnRaise: tmpConfig.ipTurnRaise,
+    ipRiverBet: tmpConfig.ipRiverBet,
+    ipRiverRaise: tmpConfig.ipRiverRaise,
+    addAllInThreshold: tmpConfig.addAllInThreshold,
+    forceAllInThreshold: tmpConfig.forceAllInThreshold,
+    adjustLastTwoBetSizes: tmpConfig.adjustLastTwoBetSizes,
   });
 }
 
@@ -179,6 +208,33 @@ export const useConfigStore = defineStore("config", {
     ipRiverBet: (state) => parseBetSizes(state.ipRiverBetStr, false),
     ipRiverRaise: (state) => parseBetSizes(state.ipRiverRaiseStr, true),
   },
+});
+
+export const useTmpConfigStore = defineStore("tmpConfig", {
+  state: () => ({
+    rangeRaw: [
+      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
+      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
+    ],
+    board: [] as number[],
+    startingPot: 0,
+    effectiveStack: 0,
+    oopFlopBet: [] as number[],
+    oopFlopRaise: [] as number[],
+    oopTurnBet: [] as number[],
+    oopTurnRaise: [] as number[],
+    oopRiverBet: [] as number[],
+    oopRiverRaise: [] as number[],
+    ipFlopBet: [] as number[],
+    ipFlopRaise: [] as number[],
+    ipTurnBet: [] as number[],
+    ipTurnRaise: [] as number[],
+    ipRiverBet: [] as number[],
+    ipRiverRaise: [] as number[],
+    addAllInThreshold: 0,
+    forceAllInThreshold: 0,
+    adjustLastTwoBetSizes: true,
+  }),
 });
 
 export const useSavedConfigStore = defineStore("savedConfig", {
