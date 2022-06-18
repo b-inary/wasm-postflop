@@ -95,7 +95,7 @@ dependencies = [
 
 [[package]]
 name = "range"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "postflop-solver",
  "wasm-bindgen",
