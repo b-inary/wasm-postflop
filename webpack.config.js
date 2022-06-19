@@ -46,6 +46,7 @@ const config = {
     new CopyWebpackPlugin({
       patterns: [
         { from: "public/_headers" },
+        { from: "public/favicon.png" },
         { from: "private", noErrorOnMissing: true },
       ],
     }),
