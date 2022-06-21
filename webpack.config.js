@@ -5,10 +5,8 @@ const HTMLWebpackPlugin = require("html-webpack-plugin");
 const MiniCSSExtractPlugin = require("mini-css-extract-plugin");
 const { VueLoaderPlugin } = require("vue-loader");
 
-/**
- * @type {import("webpack").Configuration}
- */
-const config = {
+/** @type {import("webpack").Configuration} */
+module.exports = {
   mode: "production",
   entry: "./src/index.ts",
   output: {
@@ -43,14 +41,8 @@ const config = {
   resolve: { extensions: [".js", ".ts", ".vue"] },
   plugins: [
     new CleanWebpackPlugin(),
-    new CopyWebpackPlugin({
-      patterns: [
-        { from: "public/_headers" },
-        { from: "public/favicon.png" },
-        { from: "private", noErrorOnMissing: true },
-      ],
-    }),
-    new HTMLWebpackPlugin({ template: "public/index.html" }),
+    new CopyWebpackPlugin({ patterns: [{ from: "public" }] }),
+    new HTMLWebpackPlugin({ template: "index.html" }),
     new MiniCSSExtractPlugin({ filename: "[contenthash].css" }),
     new VueLoaderPlugin(),
   ],
@@ -58,5 +50,3 @@ const config = {
     asyncWebAssembly: true,
   },
 };
-
-module.exports = config;
