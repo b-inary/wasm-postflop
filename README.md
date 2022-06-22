@@ -45,26 +45,25 @@ This project intends to make the GTO solver more easily accessible to a broader 
 
 ## Comparison
 
-We tested [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and WASM Postflop with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
+We tested [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), WASM Postflop, and [Desktop Postflop] with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
 
 [PioSOLVER Free]: https://www.piosolver.com/
 [GTO+]: https://www.gtoplus.com/
+[Desktop Postflop]: https://github.com/b-inary/desktop-postflop
 
 ### Execution time and memory usage
 
 We experimented on a Windows 10 PC with a Ryzen 7 3700X CPU (16 threads; PioSOLVER Free is limited to 6 threads).
-WASM Postflop was executed on Google Chrome 102.
-Since the solver engine of WASM Postflop is written in Rust, we also tested it as a native WSL2 application.
-
+WASM Postflop was executed on Google Chrome 103.
 WASM Postflop is slower than Pio CFR and GTO+, but it is not so inferior to these commercial solvers despite being a web application.
 
 [1]: Pio CFR / [2]: Original Pio algorithm / [3]: No compression / [4]: Use compression
 
-| Solver | PioSOLVER<br/>2.0.8 [1] | PioSOLVER<br/>2.0.8 [2] | GTO+<br/>v1.4.1 | WASM<br/>[3] | WASM<br/>[4] | Native<br/>[3] | Native<br/>[4] |
+| Solver | PioSOLVER<br/>2.0.8 [1] | PioSOLVER<br/>2.0.8 [2] | GTO+<br/>v1.4.1 | WASM<br/>[3] | WASM<br/>[4] | Desktop<br/>v0.0.2 [3] | Desktop<br/>v0.0.2 [4] |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target = 0.5%)** | 23.36 s | 31.23 s | 14.15 s | 32.28 s | 38.46 s | 19.05 s | 25.93 s |
-| **Time (Target = 0.3%)** | 28.68 s | 43.87 s | 19.87 s | 40.09 s | 47.94 s | 23.22 s | 32.26 s |
-| **Time (Target = 0.1%)** | 61.13 s | 110.47 s | 42.66 s | 71.40 s | 85.32 s | 40.94 s | 57.34 s |
+| **Time (Target = 0.5%)** | 23.36 s | 31.23 s | 14.15 s | 31.90 s | 37.96 s | 16.23 s | 18.41 s |
+| **Time (Target = 0.3%)** | 28.68 s | 43.87 s | 19.87 s | 39.57 s | 47.39 s | 20.21 s | 22.82 s |
+| **Time (Target = 0.1%)** | 61.13 s | 110.47 s | 42.66 s | 70.98 s | 84.81 s | 36.22 s | 40.53 s |
 | **Memory usage** | 1.41 GB | 634 MB | 705 MB | 1.21 GB | 640 MB | 1.22 GB | 659 MB |
 
 ### Results
