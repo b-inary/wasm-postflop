@@ -65,6 +65,13 @@
 
   <ul class="mt-4 ml-8 list-disc">
     <li>
+      <span class="font-bold">2022-06-22</span>:
+      <a href="https://github.com/b-inary/desktop-postflop" class="link"
+        >Desktop Postflop</a
+      >
+      is out! Faster computation, no memory limitation.
+    </li>
+    <li>
       <span class="font-bold">2022-06-11</span>: Save/Load ranges and
       configurations
     </li>
