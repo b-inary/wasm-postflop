@@ -68,7 +68,7 @@ checksum = "7709cef83f0c1f58f666e746a08b21e0085f7440fa6a29cc194d68aac97a4225"
 [[package]]
 name = "postflop-solver"
 version = "0.1.0"
-source = "git+https://github.com/b-inary/postflop-solver#4f165786394d57beb72761001790bb117c40e03f"
+source = "git+https://github.com/b-inary/postflop-solver#1ea7f2b02705b737871c940c80dc80d9982cdadc"
 dependencies = [
  "num-traits",
  "once_cell",

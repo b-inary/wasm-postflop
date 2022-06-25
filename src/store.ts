@@ -149,7 +149,6 @@ export const useStore = defineStore("app", {
     isSolverPaused: false,
     isSolverFinished: false,
     isFinalizing: false,
-    normalizer: 0,
   }),
 
   getters: {

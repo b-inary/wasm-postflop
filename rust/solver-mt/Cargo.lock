@@ -66,9 +66,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-utils"
-version = "0.8.9"
+version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ff1f980957787286a554052d03c7aee98d99cc32e09f6d45f0a814133c87978"
+checksum = "7d82ee10ce34d7bc12c2122495e7593a9c41347ecdd64185af4ecf72cb1a7f83"
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -162,7 +162,7 @@ checksum = "7709cef83f0c1f58f666e746a08b21e0085f7440fa6a29cc194d68aac97a4225"
 [[package]]
 name = "postflop-solver"
 version = "0.1.0"
-source = "git+https://github.com/b-inary/postflop-solver#4f165786394d57beb72761001790bb117c40e03f"
+source = "git+https://github.com/b-inary/postflop-solver#1ea7f2b02705b737871c940c80dc80d9982cdadc"
 dependencies = [
  "num-traits",
  "once_cell",

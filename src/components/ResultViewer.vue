@@ -326,6 +326,7 @@ export default defineComponent({
     const divResultNav = ref(null as HTMLDivElement | null);
     const divResultDetail = ref(null as HTMLDivElement | null);
 
+    let isLocked = false;
     const isSolverFinished = ref(false);
     const handCards = ref([new Uint16Array(), new Uint16Array()]);
 
@@ -372,6 +373,7 @@ export default defineComponent({
     store.$subscribe(async (_, store) => {
       if (store.isSolverFinished !== isSolverFinished.value) {
         if ((isSolverFinished.value = store.isSolverFinished)) {
+          isLocked = true;
           await updateResult(0, true);
         } else {
           clearResult();
@@ -438,12 +440,12 @@ export default defineComponent({
         }
       }
 
-      const nextActions = (await handler.getActions()).split("/");
+      const nextActions = (await handler.availableActions()).split("/");
       const numActions = nextActions.length;
       const isChance = nextActions[0] === "Chance";
 
       if (isChance) {
-        const isPossibleChance = await handler.isPossibleChance();
+        const possibleCards = await handler.possibleCards();
 
         actionList.value.splice(depth, actionList.value.length, {
           type: "River",
@@ -453,7 +455,7 @@ export default defineComponent({
             index: i,
             str: i.toString(),
             isSelected: false,
-            isTerminal: !isPossibleChance[i],
+            isTerminal: !(possibleCards & (1n << BigInt(i))),
           })),
         });
 
@@ -461,6 +463,7 @@ export default defineComponent({
           actionList.value[actionList.value.length - 1].type = "Turn";
         }
 
+        isLocked = false;
         return;
       }
 
@@ -538,20 +541,13 @@ export default defineComponent({
         div.scrollLeft = div.scrollWidth - div.clientWidth;
       }
 
-      let factor = store.normalizer;
-      if (dealtTurn.value !== -1) factor *= 45;
-      if (dealtRiver.value !== -1) factor *= 44;
-
       result.value = Array.from({ length: cards.length }, (_, i) => ({
         card1: cards[i] >> 8,
         card2: cards[i] & 0xff,
         weight: weights[i],
         weightNormalized: weightsNormalized[i],
-        equity: (equity[i] / weightsNormalized[i]) * factor + 0.5,
-        expectedValue:
-          (expectedValues[i] / weightsNormalized[i]) * factor +
-          savedConfig.startingPot / 2 +
-          pot[currentPlayer],
+        equity: equity[i],
+        expectedValue: expectedValues[i],
         strategy: Array.from(
           { length: numActions },
           (_, j) => strategy[j * cards.length + i]
@@ -611,8 +607,8 @@ export default defineComponent({
           weightSumCell[idx] += weights[i];
           weightNormalizedSumCell[idx] += weightsNormalized[i];
           countCell[idx] += 1;
-          equitySumCell[idx] += equity[i] * factor;
-          expectedValueSumCell[idx] += expectedValues[i] * factor;
+          equitySumCell[idx] += weightsNormalized[i] * equity[i];
+          expectedValueSumCell[idx] += weightsNormalized[i] * expectedValues[i];
           for (let j = 0; j < numActions; ++j) {
             const s = weightsNormalized[i] * result.value[i].strategy[j];
             strategySumCell[idx][j] += s;
@@ -624,24 +620,28 @@ export default defineComponent({
       resultCell.value = Array.from({ length: 13 * 13 }, (_, i) => ({
         weight: weightSumCell[i],
         count: countCell[i],
-        equity: equitySumCell[i] / weightNormalizedSumCell[i] + 0.5,
-        expectedValue:
-          expectedValueSumCell[i] / weightNormalizedSumCell[i] +
-          savedConfig.startingPot / 2 +
-          pot[currentPlayer],
+        equity: equitySumCell[i] / weightNormalizedSumCell[i],
+        expectedValue: expectedValueSumCell[i] / weightNormalizedSumCell[i],
         strategy: Array.from(
           { length: numActions },
           (_, j) => strategySumCell[i][j] / weightNormalizedSumCell[i]
         ),
       }));
+
+      isLocked = false;
     };
 
     const moveResult = async (depth: number, index: number) => {
-      if (depth === 0) {
-        if (actionList.value.length === 1) return;
-      } else if (index === -1) {
+      if (
+        isLocked ||
+        index === -1 ||
+        (depth === 0 && actionList.value.length === 1)
+      )
         return;
-      } else {
+
+      isLocked = true;
+
+      if (depth > 0) {
         const item = actionList.value[depth - 1];
         const selectedIndex = item.actions.findIndex((a) => a.index === index);
         if (
@@ -649,6 +649,7 @@ export default defineComponent({
           (item.selectedIndex === selectedIndex &&
             depth === actionList.value.length - 1)
         ) {
+          isLocked = false;
           return;
         }
         item.selectedIndex = selectedIndex;

@@ -94,16 +94,16 @@ function createHandler(mod: Mod) {
       this.game.apply_history(history);
     },
 
-    getActions() {
-      return this.game.get_actions();
+    availableActions() {
+      return this.game.available_actions();
     },
 
     isTerminalAction() {
       return this.game.is_terminal_action();
     },
 
-    isPossibleChance() {
-      return this.game.is_possible_chance();
+    possibleCards() {
+      return this.game.possible_cards();
     },
 
     currentPlayer() {

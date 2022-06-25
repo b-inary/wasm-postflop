@@ -502,7 +502,7 @@ export default defineComponent({
       store.isSolverRunning = false;
       store.isFinalizing = true;
 
-      store.normalizer = await handler.finalize();
+      await handler.finalize();
 
       store.isFinalizing = false;
       store.isSolverFinished = true;
