@@ -476,7 +476,7 @@ export default defineComponent({
           index: i,
           str: nextActions[i],
           isSelected: false,
-          isTerminal: !!isTerminalAction[i],
+          isTerminal: !!(isTerminalAction & (1 << i)),
         })).reverse(),
       });
 

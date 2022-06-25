@@ -169,12 +169,12 @@ impl GameManager {
         }
     }
 
-    pub fn is_terminal_action(&self) -> Box<[u8]> {
+    pub fn is_terminal_action(&self) -> u32 {
         self.game
             .is_terminal_action()
             .iter()
-            .map(|&x| x as u8)
-            .collect()
+            .enumerate()
+            .fold(0, |acc, (i, &x)| acc | (x as u32) << i)
     }
 
     pub fn possible_cards(&self) -> u64 {

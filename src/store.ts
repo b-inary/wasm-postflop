@@ -70,6 +70,7 @@ function parseBetSizes(
   const sizes = split.map((s) => parseNumber(s.trim()));
 
   if (
+    sizes.length > 10 ||
     sizes.some(
       (s) =>
         Number.isNaN(s) ||

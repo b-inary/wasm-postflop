@@ -59,7 +59,7 @@ WASM Postflop is slower than Pio CFR and GTO+, but it is not so inferior to thes
 
 [1]: Pio CFR / [2]: Original Pio algorithm / [3]: No compression / [4]: Use compression
 
-| Solver | PioSOLVER<br/>2.0.8 [1] | PioSOLVER<br/>2.0.8 [2] | GTO+<br/>v1.4.1 | WASM<br/>[3] | WASM<br/>[4] | Desktop<br/>v0.0.2 [3] | Desktop<br/>v0.0.2 [4] |
+| Solver | PioSOLVER<br/>2.0.8 [1] | PioSOLVER<br/>2.0.8 [2] | GTO+<br/>v1.4.1 | WASM<br/>[3] | WASM<br/>[4] | Desktop<br/>[3] | Desktop<br/>[4] |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Time (Target = 0.5%)** | 23.36 s | 31.23 s | 14.15 s | 31.90 s | 37.96 s | 16.23 s | 18.41 s |
 | **Time (Target = 0.3%)** | 28.68 s | 43.87 s | 19.87 s | 39.57 s | 47.39 s | 20.21 s | 22.82 s |
