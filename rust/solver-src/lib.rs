@@ -190,13 +190,8 @@ impl GameManager {
         self.game
             .weights(player)
             .iter()
+            .chain(self.game.normalized_weights(player).iter())
             .cloned()
-            .chain(
-                self.game
-                    .normalized_weights(player)
-                    .iter()
-                    .map(|&x| x as f32),
-            )
             .chain(self.game.expected_values().into_iter())
             .chain(self.game.equity().into_iter())
             .chain(self.game.strategy().into_iter())
