@@ -111,7 +111,9 @@
         type="number"
         :class="
           'w-[5.5rem] ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (maxIterations < 0 || maxIterations % 1 !== 0
+          (maxIterations < 0 ||
+          maxIterations % 1 !== 0 ||
+          maxIterations > 100000
             ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
             : '')
         "
@@ -129,7 +131,8 @@
           memoryUsageCompressed > maxMemoryUsage ||
           targetExploitability <= 0 ||
           maxIterations < 0 ||
-          maxIterations % 1 !== 0
+          maxIterations % 1 !== 0 ||
+          maxIterations > 100000
         "
         @click="runSolver"
       >
@@ -150,7 +153,17 @@
       >
         Pause
       </button>
-      <button v-else class="button button-green" @click="resumeSolver">
+      <button
+        v-else
+        class="button button-green"
+        :disabled="
+          targetExploitability <= 0 ||
+          maxIterations < 0 ||
+          maxIterations % 1 !== 0 ||
+          maxIterations > 100000
+        "
+        @click="resumeSolver"
+      >
         Resume
       </button>
     </p>

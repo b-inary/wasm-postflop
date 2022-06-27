@@ -22,9 +22,10 @@
           :class="
             'my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
             (actionList.length === 1
-              ? 'ring-1 ring-red-600 border-red-600 cursor-default'
+              ? 'ring-1 ring-red-600 border-red-600'
               : 'border-black')
           "
+          :disabled="actionList.length === 1"
           @click="moveResult(0, 0)"
         >
           <span class="inline-block mr-2 underline">
@@ -50,10 +51,10 @@
             :class="
               'my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
               (item.depth === actionList.length - 1
-                ? 'ring-1 ring-red-600 border-red-600 '
-                : 'border-black ') +
-              (item.depth >= actionList.length - 1 ? 'cursor-default' : '')
+                ? 'ring-1 ring-red-600 border-red-600'
+                : 'border-black')
             "
+            :disabled="item.depth >= actionList.length - 1"
             @click="moveResult(item.depth, item.selectedIndex)"
           >
             <span class="inline-block mr-2 underline">
@@ -80,12 +81,15 @@
                 ? 'opacity-40 '
                 : '') +
               (action.isSelected && item.depth === actionList.length - 1
-                ? 'ring-1 ring-red-600 border-red-600 cursor-default '
-                : 'border-black ' +
-                  (action.isTerminal ? 'cursor-default ' : '')) +
+                ? 'ring-1 ring-red-600 border-red-600 '
+                : 'border-black ') +
               (item.depth === actionList.length
                 ? actionColorByStr[action.str]
                 : 'bg-white')
+            "
+            :disabled="
+              (action.isSelected && item.depth === actionList.length - 1) ||
+              action.isTerminal
             "
             @click="moveResult(item.depth, action.index)"
           >
@@ -280,14 +284,12 @@
         <board-selector-card
           v-for="rank in 13"
           :key="rank"
-          :class="
-            'm-1 ' +
-            (actionList[actionList.length - 1].actions[56 - 4 * rank - suit]
-              .isTerminal
-              ? 'opacity-40 cursor-default'
-              : '')
-          "
+          class="m-1 disabled:opacity-40"
           :card-id="56 - 4 * rank - suit"
+          :disabled="
+            actionList[actionList.length - 1].actions[56 - 4 * rank - suit]
+              .isTerminal
+          "
           @click="moveResult(actionList.length, 56 - 4 * rank - suit)"
         />
       </div>
