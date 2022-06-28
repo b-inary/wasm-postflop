@@ -293,13 +293,13 @@
             v-model="config.addAllInThreshold"
             type="number"
             :class="
-              'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-              (config.addAllInThreshold < 0 || config.addAllInThreshold > 10000
+              'w-[5.25rem] ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+              (config.addAllInThreshold < 0 || config.addAllInThreshold > 100000
                 ? 'input-error'
                 : '')
             "
             min="0"
-            max="1000"
+            max="100000"
           />
           % of pot
         </p>
@@ -310,14 +310,14 @@
             v-model="config.forceAllInThreshold"
             type="number"
             :class="
-              'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+              'w-[5.25rem] ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
               (config.forceAllInThreshold < 0 ||
-              config.forceAllInThreshold > 10000
+              config.forceAllInThreshold > 100000
                 ? 'input-error'
                 : '')
             "
             min="0"
-            max="100"
+            max="100000"
           />
           % of pot
         </p>
@@ -336,7 +336,7 @@
     </div>
 
     <db-item-picker
-      class="shrink mt-2 ml-7"
+      class="shrink mt-2 ml-6"
       store-name="configurations"
       :value="dbValue"
       :allow-save="allowSave"
@@ -463,9 +463,9 @@ export default defineComponent({
         !isOopError.value &&
         !isIpError.value &&
         config.addAllInThreshold >= 0 &&
-        config.addAllInThreshold <= 10000 &&
+        config.addAllInThreshold <= 100000 &&
         config.forceAllInThreshold >= 0 &&
-        config.forceAllInThreshold <= 10000
+        config.forceAllInThreshold <= 100000
     );
 
     const loadConfig = (value: ConfigValue) => {

@@ -290,7 +290,7 @@ function checkConfig(config: ReturnType<typeof useConfigStore>): string | null {
     return "Invalid add all-in threshold";
   }
 
-  if (config.addAllInThreshold > 10000) {
+  if (config.addAllInThreshold > 100000) {
     return "Add all-in threshold is too large";
   }
 
@@ -298,7 +298,7 @@ function checkConfig(config: ReturnType<typeof useConfigStore>): string | null {
     return "Invalid force all-in threshold";
   }
 
-  if (config.forceAllInThreshold > 10000) {
+  if (config.forceAllInThreshold > 100000) {
     return "Force all-in threshold is too large";
   }
 

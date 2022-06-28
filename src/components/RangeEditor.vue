@@ -80,7 +80,7 @@
     <input
       v-model="weight"
       type="range"
-      class="ml-4 w-40 align-middle"
+      class="ml-3 w-40 align-middle"
       min="0"
       max="100"
       step="5"
