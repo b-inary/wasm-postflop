@@ -45,7 +45,7 @@ This project intends to make the GTO solver more easily accessible to a broader 
 
 ## Comparison
 
-We tested [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), WASM Postflop, and [Desktop Postflop] with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
+We tested WASM Postflop, [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and [Desktop Postflop] with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
 
 [PioSOLVER Free]: https://www.piosolver.com/
 [GTO+]: https://www.gtoplus.com/
@@ -55,33 +55,48 @@ We tested [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), WASM Postflop, and [Desktop
 
 We experimented on a Windows 10 PC with a Ryzen 7 3700X CPU (16 threads; PioSOLVER Free is limited to 6 threads).
 WASM Postflop was executed on Google Chrome 103.
-WASM Postflop is slower than Pio CFR and GTO+, but it is not so inferior to these commercial solvers despite being a web application.
 
-[1]: Pio CFR / [2]: Original Pio algorithm / [3]: No compression / [4]: Use compression
+Pio CFR, GTO+, and Desktop Postflop had similar execution times.
+WASM Postflop was about 2x slower than these implementations.
+We consider that 2x overhead is acceptable for casual use.
+However, if you do not think so, please consider trying Desktop Postflop.
 
-| Solver | PioSOLVER<br/>2.0.8 [1] | PioSOLVER<br/>2.0.8 [2] | GTO+<br/>v1.4.1 | WASM<br/>[3] | WASM<br/>[4] | Desktop<br/>[3] | Desktop<br/>[4] |
+[1]: No compression / [2]: Use compression / [3]: Pio CFR / [4]: Original Pio algorithm
+
+- **6 threads**
+
+| Solver | WASM<br/>[1] | WASM<br/>[2] | PioSOLVER<br/>2.0.8 [3] | PioSOLVER<br/>2.0.8 [4] | GTO+<br/>v1.4.1 | Desktop<br/>[1] | Desktop<br/>[2] |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target = 0.5%)** | 23.36 s | 31.23 s | 14.15 s | 31.90 s | 37.96 s | 16.23 s | 18.41 s |
-| **Time (Target = 0.3%)** | 28.68 s | 43.87 s | 19.87 s | 39.57 s | 47.39 s | 20.21 s | 22.82 s |
-| **Time (Target = 0.1%)** | 61.13 s | 110.47 s | 42.66 s | 70.98 s | 84.81 s | 36.22 s | 40.53 s |
-| **Memory usage** | 1.41 GB | 634 MB | 705 MB | 1.21 GB | 640 MB | 1.22 GB | 659 MB |
+| **Time (Target = 0.5%)** | **52.0 s** | **62.9 s** | 23.4 s | 30.4 s | *22.0 s* | 25.6 s | 28.7 s |
+| **Time (Target = 0.3%)** | **64.8 s** | **77.6 s** | *28.7 s* | 42.5 s | 31.4 s | 31.3 s | 35.9 s |
+| **Time (Target = 0.1%)** | **116.7 s** | **137.0 s** | 61.1 s | 108.9 s | 67.7 s | *56.9 s* | 63.9 s |
+| **Memory usage** | **1.20 GB** | **631 MB** | 1.41 GB | 634 MB | 705 MB | 1.22 GB | 651 MB |
+
+- **16 threads**
+
+| Solver | WASM<br/>[1] | WASM<br/>[2] | GTO+<br/>v1.4.1 | Desktop<br/>[1] | Desktop<br/>[2] |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| **Time (Target = 0.5%)** | **31.9 s** | **37.9 s** | *13.9 s* | 16.1 s | 17.9 s |
+| **Time (Target = 0.3%)** | **39.5 s** | **47.0 s** | *19.7 s* | 20.1 s | 22.2 s |
+| **Time (Target = 0.1%)** | **70.2 s** | **84.0 s** | 41.7 s | *35.7 s* | 39.5 s |
+| **Memory usage** | **1.21 GB** | **640 MB** | 705 MB | 1.22 GB | 659 MB |
 
 ### Results
 
 A comparison of the obtained results is as follows (target exploitability is set to 0.1%).
-We can see that PioSOLVER, GTO+, and WASM Postflop return nearly identical results.
+We can see that WASM Postflop, PioSOLVER, and GTO+ return nearly identical results.
 
-| PioSOLVER | GTO+ | WASM Postflop |
+| WASM Postflop | PioSOLVER | GTO+ |
 | --- | --- | --- |
-| ![PioSOLVER results](comparison_pio.png) | ![GTO+ results](comparison_gtoplus.png) | ![WASM Postflop results](comparison_wasm.png) |
+| ![WASM Postflop results](comparison_wasm.png) | ![PioSOLVER results](comparison_pio.png) | ![GTO+ results](comparison_gtoplus.png) |
 
 **Summary for those who do not want to compare images:**
 
-| Solver | PioSOLVER | GTO+ | WASM Postflop |
+| Solver | WASM | PioSOLVER | GTO+ |
 | :---: | :---: | :---: | :---: |
-| **Bet %** | 55.19% | 55.2% | 55.2% |
-| **Equity** | 55.347% | 55.35% | 55.3% |
-| **EV** | 105.11 | 105.115 | 105.1 |
+| **Bet %** | **55.2%** | 55.19% | 55.2% |
+| **Equity** | **55.3%** | 55.347% | 55.35% |
+| **EV** | **105.1** | 105.11 | 105.115 |
 
 ## Build
 
