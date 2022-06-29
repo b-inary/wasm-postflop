@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 postflop-solver = { git = "https://github.com/b-inary/postflop-solver", default-features = false }
-wasm-bindgen = "0.2"
+wasm-bindgen = "0.2.81"
 
 [profile.release]
 lto = "thin"

@@ -11,9 +11,9 @@ path = "../solver-src/lib.rs"
 
 [dependencies]
 postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features = ["custom-alloc", "rayon"], default-features = false }
-rayon = "1.5"
-wasm-bindgen = "0.2"
-wasm-bindgen-rayon = { version = "1.0", optional = true }
+rayon = "1.5.3"
+wasm-bindgen = "0.2.81"
+wasm-bindgen-rayon = { version = "1.0.3", optional = true }
 
 [features]
 default = ["wasm-bindgen-rayon"]
