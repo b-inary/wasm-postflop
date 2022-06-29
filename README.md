@@ -4,9 +4,9 @@
 
 Website: https://wasm-postflop.pages.dev/
 
-Desktop app **(new!)**: https://github.com/b-inary/desktop-postflop
-
-Solver engine repository: https://github.com/b-inary/postflop-solver
+**Related repositories**
+- Desktop application: https://github.com/b-inary/desktop-postflop
+- Solver engine: https://github.com/b-inary/postflop-solver
 
 ![Image](image.png)
 
