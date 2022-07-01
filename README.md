@@ -45,7 +45,7 @@ This project intends to make the GTO solver more easily accessible to a broader 
 
 ## Comparison
 
-We tested WASM Postflop, [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and [Desktop Postflop] with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
+We tested WASM Postflop, [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and [Desktop Postflop] (v0.1.1) with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
 
 [PioSOLVER Free]: https://www.piosolver.com/
 [GTO+]: https://www.gtoplus.com/
@@ -61,24 +61,24 @@ WASM Postflop was about 2x slower than these implementations.
 We consider that 2x overhead is acceptable for casual use.
 However, if you do not think so, please consider trying Desktop Postflop.
 
-[1]: No compression / [2]: Use compression / [3]: Pio CFR / [4]: Original Pio algorithm
+(1) No compression / (2) Use compression / (3) Pio CFR / (4) Original Pio algorithm
 
 - **6 threads**
 
-| Solver | WASM<br/>[1] | WASM<br/>[2] | PioSOLVER<br/>2.0.8 [3] | PioSOLVER<br/>2.0.8 [4] | GTO+<br/>v1.4.1 | Desktop<br/>[1] | Desktop<br/>[2] |
+| Solver | WASM<br/>(1) | WASM<br/>(2) | PioSOLVER<br/>(3) | PioSOLVER<br/>(4) | GTO+ | Desktop<br/>(1) | Desktop<br/>(2) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target = 0.5%)** | **52.0 s** | **62.9 s** | 23.4 s | 30.4 s | *22.0 s* | 25.6 s | 28.7 s |
-| **Time (Target = 0.3%)** | **64.8 s** | **77.6 s** | *28.7 s* | 42.5 s | 31.4 s | 31.3 s | 35.9 s |
-| **Time (Target = 0.1%)** | **116.7 s** | **137.0 s** | 61.1 s | 108.9 s | 67.7 s | *56.9 s* | 63.9 s |
+| **Time (Target = 0.5%)** | **52.0 s** | **62.9 s** | 23.4 s | 30.4 s | *22.0 s* | 25.0 s | 28.4 s |
+| **Time (Target = 0.3%)** | **64.8 s** | **77.6 s** | *28.7 s* | 42.5 s | 31.4 s | 30.7 s | 35.2 s |
+| **Time (Target = 0.1%)** | **116.7 s** | **137.0 s** | 61.1 s | 108.9 s | 67.7 s | *55.3 s* | 63.4 s |
 | **Memory usage** | **1.20 GB** | **631 MB** | 1.41 GB | 634 MB | 705 MB | 1.22 GB | 651 MB |
 
 - **16 threads**
 
-| Solver | WASM<br/>[1] | WASM<br/>[2] | GTO+<br/>v1.4.1 | Desktop<br/>[1] | Desktop<br/>[2] |
+| Solver | WASM<br/>(1) | WASM<br/>(2) | GTO+ | Desktop<br/>(1) | Desktop<br/>(2) |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target = 0.5%)** | **31.9 s** | **37.9 s** | *13.9 s* | 16.1 s | 17.9 s |
-| **Time (Target = 0.3%)** | **39.5 s** | **47.0 s** | *19.7 s* | 20.1 s | 22.2 s |
-| **Time (Target = 0.1%)** | **70.2 s** | **84.0 s** | 41.7 s | *35.7 s* | 39.5 s |
+| **Time (Target = 0.5%)** | **31.9 s** | **37.9 s** | *13.9 s* | 15.8 s | 17.7 s |
+| **Time (Target = 0.3%)** | **39.5 s** | **47.0 s** | *19.7 s* | *19.7 s* | 22.2 s |
+| **Time (Target = 0.1%)** | **70.2 s** | **84.0 s** | 41.7 s | *35.0 s* | 39.5 s |
 | **Memory usage** | **1.21 GB** | **640 MB** | 705 MB | 1.22 GB | 659 MB |
 
 ### Results

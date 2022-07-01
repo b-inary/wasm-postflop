@@ -65,11 +65,11 @@
 
   <ul class="mt-4 ml-8 list-disc">
     <li>
-      <span class="font-bold">2022-06-30</span>:
+      <span class="font-bold">2022-07-01</span>:
       <a href="https://github.com/b-inary/desktop-postflop" class="link"
         >Desktop Postflop</a
       >
-      v0.1.0 was released
+      v0.1.1 was released
     </li>
     <li>
       <span class="font-bold">2022-06-11</span>: Save/Load ranges and
