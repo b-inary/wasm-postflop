@@ -1,12 +1,10 @@
 <template>
-  <p class="text-xl font-bold">Welcome to WASM Postflop!</p>
-
-  <p class="mt-4">
-    <span class="font-bold">WASM Postflop</span> is a free and open-source
+  <p>
+    <span class="font-bold">WASM Postflop</span> is a free, open-source
     <span class="font-bold">GTO solver</span> that works on web browsers.<br />
     <span class="font-bold">WASM</span> stands for
     <a href="https://webassembly.org/" class="font-bold link">WebAssembly</a>.
-    It is relatively new technology that allows us to distribute a fast,
+    It is a relatively new technology that allows us to distribute a fast,
     portable, and secure program across the web.
   </p>
 
@@ -34,13 +32,13 @@
 
   <ul class="mt-4 ml-8 list-disc">
     <li>
-      <span class="font-bold underline">
-        Multithreading is not supported on iOS and Safari</span
+      <span class="font-bold underline"
+        >Multithreading is not supported on iOS and Safari</span
       >
       because nested workers are
-      <a href="https://bugs.webkit.org/show_bug.cgi?id=22723" class="link">
-        not implemented
-      </a>
+      <a href="https://bugs.webkit.org/show_bug.cgi?id=22723" class="link"
+        >not implemented</a
+      >
       <ul class="ml-8" style="list-style-type: circle">
         <li>
           If you are using macOS, please use other browsers such as Google
@@ -49,16 +47,12 @@
       </ul>
     </li>
     <li>
-      <span class="font-bold underline">
-        Available memory is limited to 4GB</span
+      <span class="font-bold underline"
+        >Available memory is limited to 4GB</span
       >
       due to the technical limitation of WebAssembly
     </li>
     <li>Mobile use is not considered</li>
-    <li>
-      This is an alpha-stage hobby project; it has minimal functionality, and
-      there are no guarantees
-    </li>
   </ul>
 
   <p class="mt-4 underline">Change log:</p>
@@ -66,7 +60,9 @@
   <ul class="mt-4 ml-8 list-disc">
     <li>
       <span class="font-bold">2022-07-01</span>:
-      <a href="https://github.com/b-inary/desktop-postflop" class="link"
+      <a
+        href="https://github.com/b-inary/desktop-postflop"
+        class="font-bold link"
         >Desktop Postflop</a
       >
       v0.1.1 was released
