@@ -94,9 +94,10 @@ We can see that WASM Postflop, PioSOLVER, and GTO+ return nearly identical resul
 | ![WASM Postflop results](comparison_wasm.png) | ![PioSOLVER results](comparison_pio.png) | ![GTO+ results](comparison_gtoplus.png) |
 
 Specific values of Bet %, equity, and EV are as follows.
-TexasSolver returned a different solution, but we cannot verify that this is one of the correct solutions because we cannot see the overall EV.
+TexasSolver returned a different solution, which is presumably incorrect.
+Either way, we cannot verify the correctness because we cannot see the overall EV in TexasSolver.
 
-| Solver | WASM | PioSOLVER | GTO+ | TexasSolver |
+| Solver | WASM | Pio | GTO+ | Texas |
 | :---: | :---: | :---: | :---: | :---: |
 | **Bet %** | **55.2%** | 55.19% | 55.2% | 63.0% |
 | **Equity** | **55.3%** | 55.347% | 55.35% | ? |
