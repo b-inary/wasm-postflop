@@ -45,11 +45,12 @@ This project intends to make the GTO solver more easily accessible to a broader 
 
 ## Comparison
 
-We tested WASM Postflop, [Desktop Postflop] (v0.1.1), [PioSOLVER Free] (2.0.8) and [GTO+] (v1.4.1) with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
+We tested WASM Postflop, [Desktop Postflop] (v0.1.1), [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and [TexasSolver] (v0.2.0) with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
 
 [Desktop Postflop]: https://github.com/b-inary/desktop-postflop
 [PioSOLVER Free]: https://www.piosolver.com/
 [GTO+]: https://www.gtoplus.com/
+[TexasSolver]: https://github.com/bupticybee/TexasSolver
 
 ### Execution time and memory usage
 
@@ -59,27 +60,29 @@ WASM Postflop was executed on Google Chrome 103.
 Desktop Postflop, Pio CFR, and GTO+ had similar execution times.
 WASM Postflop was about 2x slower than these implementations.
 We consider that 2x overhead is acceptable for casual use.
-However, if you do not think so, please consider trying Desktop Postflop, a port of WASM Postflop to a desktop application.
+However, if you do not think so, please consider trying Desktop Postflop, which is a port of WASM Postflop to a native desktop application.
+
+TexasSolver, another free and open-source solver, suffered from slow execution times and poor memory efficiency.
 
 (1) No compression / (2) Use compression / (3) Pio CFR / (4) Original Pio algorithm
 
 - **6 threads**
 
-| Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | PioSOLVER<br/>(3) | PioSOLVER<br/>(4) | GTO+ |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target = 0.5%)** | **52.0 s** | **62.9 s** | 25.0 s | 28.4 s | 23.4 s | 30.4 s | *22.0 s* |
-| **Time (Target = 0.3%)** | **64.8 s** | **77.6 s** | 30.7 s | 35.2 s | *28.7 s* | 42.5 s | 31.4 s |
-| **Time (Target = 0.1%)** | **116.7 s** | **137.0 s** | *55.3 s* | 63.4 s | 61.1 s | 108.9 s | 67.7 s |
-| **Memory usage** | **1.20 GB** | **631 MB** | 1.22 GB | 651 MB | 1.41 GB | 634 MB | 705 MB |
+| Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | Pio<br/>(3) | Pio<br/>(4) | GTO+ | Texas |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Time (Target: 0.5%)** | **52.0 s** | **62.9 s** | 25.0 s | 28.4 s | 23.4 s | 30.4 s | *22.0 s* | 103.5 s |
+| **Time (Target: 0.3%)** | **64.8 s** | **77.6 s** | 30.7 s | 35.2 s | *28.7 s* | 42.5 s | 31.4 s | 149.0 s |
+| **Time (Target: 0.1%)** | **116.7 s** | **137.0 s** | *55.3 s* | 63.4 s | 61.1 s | 108.9 s | 67.7 s | 285.9 s |
+| **Memory usage** | **1.20 GB** | **631 MB** | 1.22 GB | 651 MB | 1.41 GB | 634 MB | 705 MB | 2.84 GB |
 
 - **16 threads**
 
-| Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | GTO+ |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target = 0.5%)** | **31.9 s** | **37.9 s** | 15.8 s | 17.7 s | *13.9 s* |
-| **Time (Target = 0.3%)** | **39.5 s** | **47.0 s** | *19.7 s* | 22.2 s | *19.7 s* |
-| **Time (Target = 0.1%)** | **70.2 s** | **84.0 s** | *35.0 s* | 39.5 s | 41.7 s |
-| **Memory usage** | **1.21 GB** | **640 MB** | 1.22 GB | 659 MB | 705 MB |
+| Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | GTO+ | Texas |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Time (Target: 0.5%)** | **31.9 s** | **37.9 s** | 15.8 s | 17.7 s | *13.9 s* | 67.1 s |
+| **Time (Target: 0.3%)** | **39.5 s** | **47.0 s** | *19.7 s* | 22.2 s | *19.7 s* | 95.9 s |
+| **Time (Target: 0.1%)** | **70.2 s** | **84.0 s** | *35.0 s* | 39.5 s | 41.7 s | 182.6 s |
+| **Memory usage** | **1.21 GB** | **640 MB** | 1.22 GB | 659 MB | 705 MB | 2.84 GB |
 
 ### Results
 
@@ -90,13 +93,14 @@ We can see that WASM Postflop, PioSOLVER, and GTO+ return nearly identical resul
 | --- | --- | --- |
 | ![WASM Postflop results](comparison_wasm.png) | ![PioSOLVER results](comparison_pio.png) | ![GTO+ results](comparison_gtoplus.png) |
 
-**Summary for those who do not want to compare images:**
+Specific values of Bet %, equity, and EV are as follows.
+TexasSolver returned a different solution, but we cannot verify that this is one of the correct solutions because we cannot see the overall EV.
 
-| Solver | WASM | PioSOLVER | GTO+ |
-| :---: | :---: | :---: | :---: |
-| **Bet %** | **55.2%** | 55.19% | 55.2% |
-| **Equity** | **55.3%** | 55.347% | 55.35% |
-| **EV** | **105.1** | 105.11 | 105.115 |
+| Solver | WASM | PioSOLVER | GTO+ | TexasSolver |
+| :---: | :---: | :---: | :---: | :---: |
+| **Bet %** | **55.2%** | 55.19% | 55.2% | 63.0% |
+| **Equity** | **55.3%** | 55.347% | 55.35% | ? |
+| **EV** | **105.1** | 105.11 | 105.115 | ? |
 
 ## Build
 
