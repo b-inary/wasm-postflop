@@ -89,9 +89,9 @@ TexasSolver, another free and open-source solver, suffered from slow execution t
 A comparison of the obtained results is as follows (target exploitability is set to 0.1%).
 We can see that WASM Postflop, PioSOLVER, and GTO+ return nearly identical results.
 
-| WASM Postflop | PioSOLVER | GTO+ |
-| --- | --- | --- |
-| ![WASM Postflop results](comparison_wasm.png) | ![PioSOLVER results](comparison_pio.png) | ![GTO+ results](comparison_gtoplus.png) |
+| WASM Postflop | PioSOLVER | GTO+ | TexasSolver |
+| --- | --- | --- | --- |
+| ![WASM Postflop results](comparison_wasm.png) | ![PioSOLVER results](comparison_pio.png) | ![GTO+ results](comparison_gtoplus.png) | ![TexasSolver results](comparison_texas.png) |
 
 Specific values of Bet %, equity, and EV are as follows.
 TexasSolver returned a different solution, which is presumably incorrect.
