@@ -14,7 +14,8 @@ postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features
 wasm-bindgen = "0.2.81"
 
 [profile.release]
-lto = "thin"
+codegen-units = 1
+lto = true
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ["-O4"]
