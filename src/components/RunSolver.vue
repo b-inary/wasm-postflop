@@ -476,7 +476,9 @@ export default defineComponent({
       await handler.allocateMemory(isCompressionEnabled.value);
 
       currentIteration.value = 0;
-      exploitabilityUpdated = false;
+      exploitability.value = Math.max(await handler.exploitability(), 0);
+      exploitabilityUpdated = true;
+
       await resumeSolver();
     };
 
