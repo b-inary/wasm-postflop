@@ -84,7 +84,7 @@
                 ? 'ring-1 ring-red-600 border-red-600 '
                 : 'border-black ') +
               (item.depth === actionList.length
-                ? actionColorByStr[action.str]
+                ? actionColorByStr[action.str].bg
                 : 'bg-white')
             "
             :disabled="
@@ -157,7 +157,7 @@
             @scroll.passive="onTableScroll"
           >
             <table class="align-middle divide-y divide-gray-300">
-              <thead class="sticky top-0 bg-gray-100 shadow">
+              <thead class="sticky top-0 bg-gray-100 shadow z-10">
                 <tr :style="{ height: 'calc(2rem + 1px)' }">
                   <th
                     v-for="text in headers"
@@ -234,12 +234,27 @@
                   <td
                     v-for="i in item.strategy.length"
                     :key="i"
-                    class="px-2.5 leading-4"
+                    :class="
+                      'relative px-2.5 ' + (showActionEv ? 'leading-4' : '')
+                    "
                   >
                     {{ percentStr(item.strategy[i - 1]) }}
                     <span v-if="showActionEv" class="block text-xs">
                       ({{ trimMinusZero(item.actionEv[i - 1].toFixed(1)) }})
                     </span>
+                    <div
+                      class="absolute bottom-0 left-2.5 h-1 bg-gray-400"
+                      style="width: calc(100% - 1.25rem)"
+                    ></div>
+                    <div
+                      :class="
+                        'absolute bottom-0 left-2.5 h-1 ' +
+                        actionColor[i - 1].bar
+                      "
+                      :style="`width: calc((100% - 1.25rem) * ${
+                        item.strategy[i - 1]
+                      }`"
+                    ></div>
                   </td>
                 </tr>
 
@@ -292,6 +307,7 @@
                 v-model="showActionEv"
                 type="checkbox"
                 class="mr-1 align-middle rounded cursor-pointer"
+                @change.passive="onTableScroll"
               />
               Show action EV
             </label>
@@ -735,13 +751,15 @@ export default defineComponent({
       for (let i = 0; i < actions.length; ++i) {
         let color;
         if (actions[i] === "Fold") {
-          color = "bg-sky-300";
+          color = { bg: "bg-sky-300", bar: "bg-sky-400" };
         } else if (actions[i] === "Check" || actions[i] === "Call") {
-          color = "bg-green-300";
+          color = { bg: "bg-green-300", bar: "bg-green-400" };
         } else {
-          color = ["bg-amber-300", "bg-pink-300", "bg-violet-300"][
-            (actions.length - subtract - i - 1) % 3
-          ];
+          color = [
+            { bg: "bg-amber-300", bar: "bg-amber-400" },
+            { bg: "bg-pink-300", bar: "bg-pink-400" },
+            { bg: "bg-violet-300", bar: "bg-violet-400" },
+          ][(actions.length - subtract - i - 1) % 3];
         }
         ret.push(color);
       }
@@ -750,7 +768,7 @@ export default defineComponent({
     });
 
     const actionColorByStr = computed(() => {
-      const ret = {} as { [key: string]: string };
+      const ret = {} as { [key: string]: { bg: string; bar: string } };
       const actions = nextActionsStr.value;
       for (let i = 0; i < actions.length; ++i) {
         ret[actions[i]] = actionColor.value[i];
@@ -799,7 +817,7 @@ export default defineComponent({
         const left = strategy.slice(0, i).reduce((a, b) => a + b, 0);
         return {
           key: i,
-          class: actionColor.value[i],
+          class: actionColor.value[i].bg,
           style: {
             width: percentStr(1 - left),
             zIndex: i,
@@ -1081,6 +1099,7 @@ export default defineComponent({
       trimMinusZero,
       sortBy,
       moveResult,
+      actionColor,
       actionColorByStr,
       weightPercent,
       cellItems,
