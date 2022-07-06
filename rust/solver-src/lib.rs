@@ -192,8 +192,8 @@ impl GameManager {
             .iter()
             .chain(self.game.normalized_weights(player).iter())
             .cloned()
-            .chain(self.game.expected_values().into_iter())
-            .chain(self.game.equity().into_iter())
+            .chain(self.game.equity(player).into_iter())
+            .chain(self.game.expected_values_detail().into_iter())
             .chain(self.game.strategy().into_iter())
             .collect()
     }
