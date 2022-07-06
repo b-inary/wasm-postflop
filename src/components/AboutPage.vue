@@ -59,6 +59,10 @@
 
   <ul class="mt-4 ml-8 list-disc">
     <li>
+      <span class="font-bold">2022-07-07</span>: Added option to show EV of each
+      action
+    </li>
+    <li>
       <span class="font-bold">2022-07-01</span>:
       <a
         href="https://github.com/b-inary/desktop-postflop"
