@@ -28,6 +28,19 @@
     <a href="https://github.com/b-inary/wasm-postflop" class="link">GitHub</a>.
   </p>
 
+  <p class="mt-4 underline">See also:</p>
+
+  <ul class="mt-4 ml-8 list-disc">
+    <li>
+      <a
+        href="https://github.com/b-inary/desktop-postflop"
+        class="font-bold link"
+        >Desktop Postflop</a
+      >: A native desktop application for Windows. Faster and no memory
+      limitations.
+    </li>
+  </ul>
+
   <p class="mt-4 underline">Limitations:</p>
 
   <ul class="mt-4 ml-8 list-disc">
@@ -61,15 +74,6 @@
     <li>
       <span class="font-bold">2022-07-07</span>: Added option to show EV of each
       action
-    </li>
-    <li>
-      <span class="font-bold">2022-07-01</span>:
-      <a
-        href="https://github.com/b-inary/desktop-postflop"
-        class="font-bold link"
-        >Desktop Postflop</a
-      >
-      v0.1.1 was released
     </li>
     <li>
       <span class="font-bold">2022-06-11</span>: Save/Load ranges and
