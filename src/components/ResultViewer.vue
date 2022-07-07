@@ -150,10 +150,10 @@
           </div>
         </div>
 
-        <div class="ml-5">
+        <div class="pl-5 pb-1 overflow-x-auto">
           <div
             ref="divResultDetail"
-            class="max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll will-change-transform"
+            class="max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-y-scroll will-change-transform"
             @scroll.passive="onTableScroll"
           >
             <table class="align-middle divide-y divide-gray-300">
@@ -335,7 +335,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, watch } from "vue";
+import { computed, defineComponent, nextTick, ref, watch } from "vue";
 import { cardText, useStore, useSavedConfigStore } from "../store";
 import * as GlobalWorker from "../global-worker";
 
@@ -510,58 +510,8 @@ export default defineComponent({
         return;
       }
 
+      // obtain the current state
       const isTerminalAction = await handler.isTerminalAction();
-      actionList.value.splice(depth, actionList.value.length, {
-        type: "Player",
-        selectedIndex: -1,
-        depth: depth + 1,
-        actions: Array.from({ length: numActions }, (_, i) => ({
-          index: i,
-          str: nextActions[i],
-          isSelected: false,
-          isTerminal: !!(isTerminalAction & (1 << i)),
-        })).reverse(),
-      });
-
-      let player = 0;
-      let lastBet = 0;
-      const pot = [0, 0];
-
-      for (let i = 0; i < actionList.value.length - 1; ++i) {
-        const item = actionList.value[i];
-        if (item.type !== "Player") {
-          player = 0;
-          lastBet = 0;
-          continue;
-        }
-
-        const action = item.actions[item.selectedIndex];
-
-        if (action.str === "Call") {
-          pot[player] = pot[1 - player];
-        } else if (action.str.slice(0, 3) === "Bet") {
-          const bet = Number(action.str.slice(4));
-          pot[player] += bet;
-          lastBet = bet;
-        } else if (
-          action.str.slice(0, 5) === "Raise" ||
-          action.str.slice(0, 6) === "All-in"
-        ) {
-          const bet = Number(action.str.slice(6).trimStart());
-          const potDiff = pot[1 - player] - pot[player];
-          pot[player] += bet - lastBet + potDiff;
-          lastBet = bet;
-        }
-
-        player = 1 - player;
-      }
-
-      nodeInformation.value = {
-        player,
-        pot: savedConfig.startingPot + pot[0] + pot[1],
-        stack: savedConfig.effectiveStack - pot[player],
-        toCall: pot[1 - player] - pot[player],
-      };
 
       const currentPlayer = await handler.currentPlayer();
       const cards = handCards.value[currentPlayer];
@@ -579,11 +529,20 @@ export default defineComponent({
       );
       const strategy = results.subarray((3 + numActions) * cards.length);
 
-      if (divResultNav.value) {
-        const div = divResultNav.value;
-        div.scrollLeft = div.scrollWidth - div.clientWidth;
-      }
+      // update actionList
+      actionList.value.splice(depth, actionList.value.length, {
+        type: "Player",
+        selectedIndex: -1,
+        depth: depth + 1,
+        actions: Array.from({ length: numActions }, (_, i) => ({
+          index: i,
+          str: nextActions[i],
+          isSelected: false,
+          isTerminal: !!(isTerminalAction & (1 << i)),
+        })).reverse(),
+      });
 
+      // update result
       result.value = Array.from({ length: cards.length }, (_, i) => {
         const a = Array.from(
           { length: numActions },
@@ -609,6 +568,7 @@ export default defineComponent({
         };
       });
 
+      // update terminal action flag
       for (let i = 0; i < numActions; ++i) {
         const action = actionList.value[actionList.value.length - 1].actions[i];
         if (action.isTerminal) continue;
@@ -625,6 +585,7 @@ export default defineComponent({
         action.isTerminal = invalid;
       }
 
+      // update resultCell
       const weightSumCell = Array.from({ length: 13 * 13 }, () => 0);
       const weightNormalizedSumCell = Array.from({ length: 13 * 13 }, () => 0);
       const countCell = Array.from({ length: 13 * 13 }, () => 0);
@@ -687,6 +648,53 @@ export default defineComponent({
           (_, j) => strategySumCell[i][j] / weightNormalizedSumCell[i]
         ),
       }));
+
+      // update nodeInformation
+      let player = 0;
+      let lastBet = 0;
+      const pot = [0, 0];
+
+      for (let i = 0; i < actionList.value.length - 1; ++i) {
+        const item = actionList.value[i];
+        if (item.type !== "Player") {
+          player = 0;
+          lastBet = 0;
+          continue;
+        }
+
+        const action = item.actions[item.selectedIndex];
+
+        if (action.str === "Call") {
+          pot[player] = pot[1 - player];
+        } else if (action.str.slice(0, 3) === "Bet") {
+          const bet = Number(action.str.slice(4));
+          pot[player] += bet;
+          lastBet = bet;
+        } else if (
+          action.str.slice(0, 5) === "Raise" ||
+          action.str.slice(0, 6) === "All-in"
+        ) {
+          const bet = Number(action.str.slice(6).trimStart());
+          const potDiff = pot[1 - player] - pot[player];
+          pot[player] += bet - lastBet + potDiff;
+          lastBet = bet;
+        }
+
+        player = 1 - player;
+      }
+
+      nodeInformation.value = {
+        player,
+        pot: savedConfig.startingPot + pot[0] + pot[1],
+        stack: savedConfig.effectiveStack - pot[player],
+        toCall: pot[1 - player] - pot[player],
+      };
+
+      await nextTick();
+      if (divResultNav.value) {
+        const div = divResultNav.value;
+        div.scrollLeft = div.scrollWidth - div.clientWidth;
+      }
 
       isLocked = false;
     };
