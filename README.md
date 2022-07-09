@@ -45,7 +45,7 @@ This project intends to make the GTO solver more easily accessible to a broader 
 
 ## Comparison
 
-We tested WASM Postflop, [Desktop Postflop] (v0.1.3), [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and [TexasSolver] (v0.2.0) with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
+We tested WASM Postflop, [Desktop Postflop] (v0.1.4), [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and [TexasSolver] (v0.2.0) with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
 
 [Desktop Postflop]: https://github.com/b-inary/desktop-postflop
 [PioSOLVER Free]: https://www.piosolver.com/
