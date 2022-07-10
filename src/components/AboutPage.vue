@@ -72,6 +72,10 @@
 
   <ul class="mt-4 ml-8 list-disc">
     <li>
+      <span class="font-bold">2022-07-10</span>: Added turn/river statistics
+      feature
+    </li>
+    <li>
       <span class="font-bold">2022-07-07</span>: Added option to show EV of each
       action
     </li>
