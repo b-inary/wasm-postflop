@@ -137,15 +137,10 @@ impl GameManager {
 
     pub fn finalize(&mut self) {
         finalize(&mut self.game);
-        self.game.cache_normalized_weights();
     }
 
-    pub fn apply_history(&mut self, history: &[u32]) {
-        self.game.back_to_root();
-        for &action in history {
-            self.game.play(action as usize);
-        }
-        self.game.cache_normalized_weights();
+    pub fn apply_history(&mut self, history: &[usize]) {
+        self.game.apply_history(history);
     }
 
     pub fn available_actions(&self) -> String {
@@ -185,8 +180,9 @@ impl GameManager {
         self.game.current_player()
     }
 
-    pub fn get_results(&self) -> Box<[f32]> {
+    pub fn get_results(&mut self) -> Box<[f32]> {
         let player = self.current_player();
+        self.game.cache_normalized_weights();
         self.game
             .weights(player)
             .iter()
@@ -196,5 +192,45 @@ impl GameManager {
             .chain(self.game.expected_values_detail().into_iter())
             .chain(self.game.strategy().into_iter())
             .collect()
+    }
+
+    pub fn available_actions_after_chance(&mut self) -> String {
+        let history = self.game.history().to_vec();
+        let possible_cards = self.possible_cards();
+        let first_action = possible_cards.trailing_zeros() as usize;
+
+        self.game.play(first_action);
+        let ret = self.available_actions();
+        self.game.apply_history(&history);
+
+        ret
+    }
+
+    pub fn chance_report(&mut self) -> Box<[f32]> {
+        let history = self.game.history().to_vec();
+        let num_actions = self.available_actions_after_chance().split('/').count();
+        let num_private_hands = self.game.num_private_hands(0);
+
+        let possible_cards = self.possible_cards();
+        let mut result = vec![0.0; 52 * (num_actions + 2)];
+
+        for i in 0..52 {
+            if possible_cards & (1 << i) != 0 {
+                self.game.play(i);
+                self.game.cache_normalized_weights();
+                let weights = self.game.normalized_weights(0);
+                let node_strategy = self.game.strategy();
+                result[i] = compute_average(&self.game.equity(0), weights);
+                result[i + 52] = compute_average(&self.game.expected_values(), weights);
+                for j in 0..num_actions {
+                    let start = j * num_private_hands;
+                    let end = (j + 1) * num_private_hands;
+                    result[i + (j + 2) * 52] = compute_average(&node_strategy[start..end], weights);
+                }
+                self.game.apply_history(&history);
+            }
+        }
+
+        result.into_boxed_slice()
     }
 }

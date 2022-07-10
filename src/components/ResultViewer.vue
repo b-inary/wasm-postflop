@@ -104,212 +104,204 @@
         actionList.length > 0 &&
         actionList[actionList.length - 1].type === 'Player'
       "
+      class="flex mt-5 items-start"
     >
-      <div class="flex mt-5 items-start">
-        <div class="shrink-0">
-          <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
-            <tr v-for="row in 13" :key="row" class="h-9">
-              <td
-                v-for="col in 13"
-                :key="col"
-                :class="
-                  'relative w-10 border-black select-none ' +
-                  (row === col ? 'border-2' : 'border')
-                "
-                @mouseenter="onMouseEnter(row, col)"
+      <div class="shrink-0">
+        <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
+          <tr v-for="row in 13" :key="row" class="h-9">
+            <td
+              v-for="col in 13"
+              :key="col"
+              :class="
+                'relative w-10 border-black select-none ' +
+                (row === col ? 'border-2' : 'border')
+              "
+              @mouseenter="onMouseEnter(row, col)"
+            >
+              <div
+                class="absolute bottom-0 left-0 w-full"
+                :style="{ height: weightPercent(row, col) }"
               >
                 <div
-                  class="absolute bottom-0 left-0 w-full"
-                  :style="{ height: weightPercent(row, col) }"
-                >
-                  <div
-                    v-for="item in cellItems(row, col)"
-                    :key="item.key"
-                    :class="'absolute top-0 right-0 h-full ' + item.class"
-                    :style="item.style"
-                  ></div>
-                </div>
-                <div class="absolute -top-px left-px z-50 text-sm">
-                  {{ cellText(row, col) }}
-                </div>
-                <div class="absolute -bottom-px right-px z-50 text-sm">
-                  {{ cellAuxText(row, col) }}
-                </div>
-              </td>
-            </tr>
-          </table>
+                  v-for="item in cellItems(row, col)"
+                  :key="item.key"
+                  :class="'absolute top-0 right-0 h-full ' + item.class"
+                  :style="item.style"
+                ></div>
+              </div>
+              <div class="absolute -top-px left-px z-50 text-sm">
+                {{ cellText(row, col) }}
+              </div>
+              <div class="absolute -bottom-px right-px z-50 text-sm">
+                {{ cellAuxText(row, col) }}
+              </div>
+            </td>
+          </tr>
+        </table>
 
-          <div class="mt-4">
-            Player: {{ nodeInformation.player === 0 ? "OOP" : "IP" }} / Pot:
-            {{ nodeInformation.pot }} / Stack: {{ nodeInformation.stack }}
-            {{
-              nodeInformation.toCall
-                ? " / To Call: " + nodeInformation.toCall
-                : ""
-            }}
-          </div>
+        <div class="mt-4">
+          Player: {{ nodeInformation.player === 0 ? "OOP" : "IP" }} / Pot:
+          {{ nodeInformation.pot }} / Stack: {{ nodeInformation.stack }}
+          {{
+            nodeInformation.toCall
+              ? " / To Call: " + nodeInformation.toCall
+              : ""
+          }}
+        </div>
+      </div>
+
+      <div class="pl-5 pb-1 overflow-x-auto">
+        <div
+          ref="divResultDetail"
+          class="max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-y-scroll will-change-transform"
+          @scroll.passive="onTableScroll"
+        >
+          <table class="align-middle divide-y divide-gray-300">
+            <thead class="sticky top-0 bg-gray-100 shadow z-10">
+              <tr style="height: calc(2rem + 1px)">
+                <th
+                  v-for="text in headers"
+                  :key="text"
+                  scope="col"
+                  :class="
+                    'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                    (text === 'Hand'
+                      ? 'min-w-[4.9rem]'
+                      : text === 'EV'
+                      ? 'min-w-[3.3rem]'
+                      : 'min-w-[3.6rem]')
+                  "
+                  @click="sortBy(text)"
+                >
+                  <span
+                    v-if="text === sortKey.key"
+                    class="inline-block text-xs"
+                  >
+                    {{ sortKey.order === "asc" ? "▲" : "▼" }}
+                  </span>
+                  {{
+                    text
+                      .replace("Bet", "B")
+                      .replace("Raise", "R")
+                      .replace("All-in", "A")
+                  }}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody class="bg-white divide-y divide-gray-300">
+              <!-- Top empty row -->
+              <tr
+                v-if="emptyBufferTop > 0"
+                :style="{
+                  '--num-rows': emptyBufferTop,
+                  height: 'calc(var(--num-rows) * (2rem + 1px))',
+                }"
+              >
+                <td :colspan="headers.length"></td>
+              </tr>
+
+              <!-- Body -->
+              <tr
+                v-for="item in resultRendered"
+                :key="item.card1 + '-' + item.card2"
+                class="text-right text-sm"
+                style="height: calc(2rem + 1px)"
+              >
+                <td class="px-[0.5625rem] text-center">
+                  <template
+                    v-for="card in [item.card1, item.card2].map(cardText)"
+                    :key="card.rank + card.suit"
+                  >
+                    <span :class="card.colorClass">
+                      {{ card.rank + card.suit }}
+                    </span>
+                  </template>
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ percentStr(item.weight) }}
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ percentStr(item.equity) }}
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
+                </td>
+                <td
+                  v-for="i in item.strategy.length"
+                  :key="i"
+                  class="relative px-[0.5625rem]"
+                >
+                  <span v-if="!showActionEv">
+                    {{ percentStr(item.strategy[i - 1]) }}
+                  </span>
+                  <span v-else>
+                    {{ trimMinusZero(item.actionEv[i - 1].toFixed(1)) }}
+                  </span>
+                  <div
+                    class="absolute bottom-0 left-2 h-[0.3125rem] bg-gray-400"
+                    style="width: calc(100% - 1rem)"
+                  ></div>
+                  <div
+                    :class="
+                      'absolute bottom-0 left-2 h-[0.3125rem] ' +
+                      actionColor[i - 1].bar
+                    "
+                    :style="`width: calc((100% - 1rem) * ${
+                      item.strategy[i - 1]
+                    }`"
+                  ></div>
+                </td>
+              </tr>
+
+              <!-- Bottom empty row -->
+              <tr
+                v-if="emptyBufferBottom > 0"
+                :style="{
+                  '--num-rows': emptyBufferBottom,
+                  height: 'calc(var(--num-rows) * (2rem + 1px))',
+                }"
+              >
+                <td :colspan="headers.length"></td>
+              </tr>
+            </tbody>
+
+            <tfoot class="sticky bottom-0 font-bold bg-white shadow">
+              <tr class="text-right text-sm" style="height: calc(2rem + 1px)">
+                <th scope="col" class="px-[0.5625rem] text-center underline">
+                  {{ hoveredCellText }}
+                </th>
+                <th scope="col" class="px-[0.5625rem]">
+                  {{ resultAverage.combos }}
+                </th>
+                <th scope="col" class="px-[0.5625rem]">
+                  {{ resultAverage.equity }}
+                </th>
+                <th scope="col" class="px-[0.5625rem]">
+                  {{ resultAverage.expectedValue }}
+                </th>
+                <th
+                  v-for="i in resultAverage.strategy.length"
+                  :key="i"
+                  scope="col"
+                  class="px-[0.5625rem]"
+                >
+                  {{ resultAverage.strategy[i - 1] }}
+                </th>
+              </tr>
+            </tfoot>
+          </table>
         </div>
 
-        <div class="pl-5 pb-1 overflow-x-auto">
-          <div
-            ref="divResultDetail"
-            class="max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-y-scroll will-change-transform"
-            @scroll.passive="onTableScroll"
-          >
-            <table class="align-middle divide-y divide-gray-300">
-              <thead class="sticky top-0 bg-gray-100 shadow z-10">
-                <tr :style="{ height: 'calc(2rem + 1px)' }">
-                  <th
-                    v-for="text in headers"
-                    :key="text"
-                    scope="col"
-                    :class="
-                      'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
-                      (text === 'Hand'
-                        ? 'min-w-[4.9rem]'
-                        : text === 'EV'
-                        ? 'min-w-[3.3rem]'
-                        : 'min-w-[3.6rem]')
-                    "
-                    @click="sortBy(text)"
-                  >
-                    <span
-                      v-if="text === sortKey.key"
-                      class="inline-block text-xs"
-                    >
-                      {{ sortKey.order === "asc" ? "▲" : "▼" }}
-                    </span>
-                    {{
-                      text
-                        .replace("Bet", "B")
-                        .replace("Raise", "R")
-                        .replace("All-in", "A")
-                    }}
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody class="bg-white divide-y divide-gray-300">
-                <!-- Top empty row -->
-                <tr
-                  v-if="emptyBufferTop > 0"
-                  :style="{
-                    '--num-rows': emptyBufferTop,
-                    height: 'calc(var(--num-rows) * (2rem + 1px))',
-                  }"
-                >
-                  <td :colspan="headers.length"></td>
-                </tr>
-
-                <!-- Body -->
-                <tr
-                  v-for="item in resultRendered"
-                  :key="item.card1 + '-' + item.card2"
-                  class="text-right text-sm"
-                  style="height: calc(2rem + 1px)"
-                >
-                  <td class="px-[0.5625rem] text-center">
-                    <template
-                      v-for="card in [item.card1, item.card2].map(cardText)"
-                      :key="card.rank + card.suit"
-                    >
-                      <span :class="card.colorClass">
-                        {{ card.rank + card.suit }}
-                      </span>
-                    </template>
-                  </td>
-                  <td class="px-[0.5625rem]">
-                    {{ percentStr(item.weight) }}
-                  </td>
-                  <td class="px-[0.5625rem]">
-                    {{ percentStr(item.equity) }}
-                  </td>
-                  <td class="px-[0.5625rem]">
-                    {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
-                  </td>
-                  <td
-                    v-for="i in item.strategy.length"
-                    :key="i"
-                    :class="
-                      'relative px-[0.5625rem] ' +
-                      (showActionEv ? 'leading-4' : '')
-                    "
-                  >
-                    <span v-if="!showActionEv">
-                      {{ percentStr(item.strategy[i - 1]) }}
-                    </span>
-                    <span v-else>
-                      {{ trimMinusZero(item.actionEv[i - 1].toFixed(1)) }}
-                    </span>
-                    <div
-                      class="absolute bottom-0 left-2 h-[0.3125rem] bg-gray-400"
-                      style="width: calc(100% - 1rem)"
-                    ></div>
-                    <div
-                      :class="
-                        'absolute bottom-0 left-2 h-[0.3125rem] ' +
-                        actionColor[i - 1].bar
-                      "
-                      :style="`width: calc((100% - 1rem) * ${
-                        item.strategy[i - 1]
-                      }`"
-                    ></div>
-                  </td>
-                </tr>
-
-                <!-- Bottom empty row -->
-                <tr
-                  v-if="emptyBufferBottom > 0"
-                  :style="{
-                    '--num-rows': emptyBufferBottom,
-                    height: 'calc(var(--num-rows) * (2rem + 1px))',
-                  }"
-                >
-                  <td :colspan="headers.length"></td>
-                </tr>
-              </tbody>
-
-              <tfoot class="sticky bottom-0 font-bold bg-white shadow">
-                <tr
-                  class="text-right text-sm"
-                  :style="{ height: 'calc(2rem + 1px)' }"
-                >
-                  <th scope="col" class="px-[0.5625rem] text-center underline">
-                    {{ hoveredCellText }}
-                  </th>
-                  <th scope="col" class="px-[0.5625rem]">
-                    {{ resultAverage.combos }}
-                  </th>
-                  <th scope="col" class="px-[0.5625rem]">
-                    {{ resultAverage.equity }}
-                  </th>
-                  <th scope="col" class="px-[0.5625rem]">
-                    {{ resultAverage.expectedValue }}
-                  </th>
-                  <th
-                    v-for="i in resultAverage.strategy.length"
-                    :key="i"
-                    scope="col"
-                    class="px-[0.5625rem]"
-                  >
-                    {{ resultAverage.strategy[i - 1] }}
-                  </th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-
-          <div class="mt-4">
-            <label class="cursor-pointer">
-              <input
-                v-model="showActionEv"
-                type="checkbox"
-                class="mr-1 align-middle rounded cursor-pointer"
-                @change.passive="onTableScroll"
-              />
-              Show action EV
-            </label>
-          </div>
+        <div class="mt-4">
+          <label class="cursor-pointer">
+            <input
+              v-model="showActionEv"
+              type="checkbox"
+              class="mr-1 align-middle rounded cursor-pointer"
+            />
+            Show action EV
+          </label>
         </div>
       </div>
     </div>
@@ -319,20 +311,109 @@
         actionList.length > 0 &&
         actionList[actionList.length - 1].type !== 'Player'
       "
-      class="mt-5"
+      class="flex mt-5 items-start"
     >
-      <div v-for="suit in 4" :key="suit" class="flex">
-        <board-selector-card
-          v-for="rank in 13"
-          :key="rank"
-          class="m-1 disabled:opacity-40"
-          :card-id="56 - 4 * rank - suit"
-          :disabled="
-            actionList[actionList.length - 1].actions[56 - 4 * rank - suit]
-              .isTerminal
-          "
-          @click="moveResult(actionList.length, 56 - 4 * rank - suit)"
-        />
+      <div class="shrink-0">
+        <div v-for="suit in 4" :key="suit" class="flex">
+          <board-selector-card
+            v-for="rank in 13"
+            :key="rank"
+            class="m-1 disabled:opacity-40"
+            :card-id="56 - 4 * rank - suit"
+            :disabled="
+              actionList[actionList.length - 1].actions[56 - 4 * rank - suit]
+                .isTerminal
+            "
+            @click="moveResult(actionList.length, 56 - 4 * rank - suit)"
+          />
+        </div>
+
+        <div class="mt-4">
+          <label class="cursor-pointer">
+            <input
+              v-model="showOopStats"
+              type="checkbox"
+              class="mr-1 align-middle rounded cursor-pointer"
+            />
+            Show OOP statistics
+          </label>
+        </div>
+      </div>
+
+      <!-- Turn/River report -->
+      <div v-if="showOopStats" class="pl-5 pb-1 overflow-x-auto">
+        <span class="underline">OOP statistics:</span>
+        <div
+          class="mt-3 max-h-[24rem] border border-gray-500 rounded-md shadow overflow-y-scroll"
+        >
+          <table class="align-middle divide-y divide-gray-300">
+            <thead class="sticky top-0 bg-gray-100 shadow z-10">
+              <tr style="height: calc(2rem + 1px)">
+                <th
+                  v-for="text in headersChance"
+                  :key="text"
+                  scope="col"
+                  :class="
+                    'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                    (text === 'Card'
+                      ? 'min-w-[3.5rem]'
+                      : text === 'EV'
+                      ? 'min-w-[3.3rem]'
+                      : 'min-w-[3.6rem]')
+                  "
+                  @click="sortByChance(text)"
+                >
+                  <span
+                    v-if="text === sortKeyChance.key"
+                    class="inline-block text-xs"
+                  >
+                    {{ sortKeyChance.order === "asc" ? "▲" : "▼" }}
+                  </span>
+                  {{
+                    text
+                      .replace("Card", actionList[actionList.length - 1].type)
+                      .replace("Bet", "B")
+                      .replace("Raise", "R")
+                      .replace("All-in", "A")
+                  }}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody class="bg-white divide-y divide-gray-300">
+              <tr
+                v-for="item in resultChanceSorted"
+                :key="item.card"
+                class="text-right text-sm"
+                style="height: calc(2rem + 1px)"
+              >
+                <td class="px-[0.5625rem] text-center">
+                  <template
+                    v-for="card in [cardText(item.card)]"
+                    :key="card.rank + card.suit"
+                  >
+                    <span :class="card.colorClass">
+                      {{ card.rank + card.suit }}
+                    </span>
+                  </template>
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ percentStr(item.equity) }}
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
+                </td>
+                <td
+                  v-for="i in item.strategy.length"
+                  :key="i"
+                  class="px-[0.5625rem]"
+                >
+                  {{ percentStr(item.strategy[i - 1]) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -353,6 +434,13 @@ type Result = {
   equity: number;
   expectedValue: number;
   actionEv: number[];
+  strategy: number[];
+};
+
+type ResultChance = {
+  card: number;
+  equity: number;
+  expectedValue: number;
   strategy: number[];
 };
 
@@ -401,6 +489,8 @@ export default defineComponent({
       }[]
     );
 
+    const resultChance = ref([] as ResultChance[]);
+
     const nodeInformation = ref(
       {} as {
         player: number;
@@ -414,8 +504,12 @@ export default defineComponent({
 
     type Order = "asc" | "desc";
     const sortKey = ref({ key: "Hand", order: "desc" as Order });
+    const sortKeyChance = ref({ key: "Card", order: "desc" as Order });
 
     const showActionEv = ref(false);
+    const showOopStats = ref(false);
+
+    const chanceNextActions = ref([] as string[]);
 
     store.$subscribe(async (_, store) => {
       if (store.isSolverFinished !== isSolverFinished.value) {
@@ -464,11 +558,20 @@ export default defineComponent({
       sortKey.value = { key, order };
     };
 
+    const sortByChance = (key: string) => {
+      const order: Order =
+        key === sortKeyChance.value.key && sortKeyChance.value.order === "desc"
+          ? "asc"
+          : "desc";
+      sortKeyChance.value = { key, order };
+    };
+
     const clearResult = () => {
       handCards.value = [new Uint16Array(), new Uint16Array()];
       actionList.value = [];
       result.value = [];
       resultCell.value = [];
+      resultChance.value = [];
     };
 
     const updateResult = async (depth: number, isFirstCall: boolean) => {
@@ -493,7 +596,10 @@ export default defineComponent({
 
       if (isChance) {
         const possibleCards = await handler.possibleCards();
+        const next = (await handler.availableActionsAfterChance()).split("/");
+        const results = await handler.chanceReport();
 
+        // update actionList
         actionList.value.splice(depth, actionList.value.length, {
           type: "River",
           selectedIndex: -1,
@@ -510,7 +616,29 @@ export default defineComponent({
           actionList.value[actionList.value.length - 1].type = "Turn";
         }
 
-        isLocked = false;
+        // update resultChance
+        const numActions = next.length;
+        chanceNextActions.value = next.reverse();
+
+        const equity = results.subarray(0, 52);
+        const expectedValue = results.subarray(52, 52 * 2);
+        const strategy = results.subarray(52 * 2);
+
+        resultChance.value = [];
+        for (let i = 0; i < 52; ++i) {
+          if (!(possibleCards & (1n << BigInt(i)))) continue;
+          resultChance.value.push({
+            card: i,
+            equity: equity[i],
+            expectedValue: expectedValue[i],
+            strategy: Array.from(
+              { length: numActions },
+              (_, j) => strategy[i + j * 52]
+            ).reverse(),
+          });
+        }
+
+        updateResultFinal();
         return;
       }
 
@@ -700,7 +828,19 @@ export default defineComponent({
         div.scrollLeft = div.scrollWidth - div.clientWidth;
       }
 
+      updateResultFinal();
+    };
+
+    const updateResultFinal = () => {
       isLocked = false;
+
+      if (!["Hand", "Weight", "EQ", "EV"].includes(sortKey.value.key)) {
+        sortKey.value = { key: "Hand", order: "desc" };
+      }
+
+      if (!["Card", "EQ", "EV"].includes(sortKeyChance.value.key)) {
+        sortKeyChance.value = { key: "Card", order: "desc" };
+      }
     };
 
     const moveResult = async (depth: number, index: number) => {
@@ -733,10 +873,6 @@ export default defineComponent({
           .slice(0, depth)
           .map((item) => item.actions[item.selectedIndex].index)
       );
-
-      if (!["Hand", "Weight", "EQ", "EV"].includes(sortKey.value.key)) {
-        sortKey.value = { key: "Hand", order: "desc" };
-      }
 
       const handler = await GlobalWorker.getHandler();
       await handler.applyHistory(history);
@@ -891,6 +1027,10 @@ export default defineComponent({
       return ["Hand", "Weight", "EQ", "EV"].concat(nextActionsStr.value);
     });
 
+    const headersChance = computed(() => {
+      return ["Card", "EQ", "EV"].concat(chanceNextActions.value);
+    });
+
     const resultFiltered = ref([] as Result[]);
     const resultSorted = ref([] as Result[]);
     const resultAverage = ref({
@@ -972,10 +1112,10 @@ export default defineComponent({
         );
       };
 
+      const coef = sortKey.value.order === "asc" ? 1 : -1;
       const round = (x: number) => Math.round(10 * x);
 
       resultSorted.value = [...resultFiltered.value].sort((a, b) => {
-        const coef = sortKey.value.order === "asc" ? 1 : -1;
         if (sortKey.value.key === "Hand") {
           return rankComparator(
             a.card1,
@@ -1097,6 +1237,41 @@ export default defineComponent({
       });
     };
 
+    const resultChanceSorted = ref([] as ResultChance[]);
+
+    // update resultChanceSorted
+    watch([resultChance, sortKeyChance], () => {
+      const coef = sortKey.value.order === "asc" ? 1 : -1;
+      const round = (x: number) => Math.round(10 * x);
+
+      resultChanceSorted.value = [...resultChance.value].sort((a, b) => {
+        if (sortKeyChance.value.key === "Card") {
+          return coef * (a.card - b.card);
+        } else {
+          const fallback = b.card - a.card;
+          if (sortKeyChance.value.key === "EQ") {
+            return (
+              coef * (round(100 * a.equity) - round(100 * b.equity)) || fallback
+            );
+          } else if (sortKeyChance.value.key === "EV") {
+            return (
+              coef * (round(a.expectedValue) - round(b.expectedValue)) ||
+              fallback
+            );
+          } else {
+            const idx = chanceNextActions.value.indexOf(
+              sortKeyChance.value.key
+            );
+            return (
+              coef *
+                (round(100 * a.strategy[idx]) - round(100 * b.strategy[idx])) ||
+              fallback
+            );
+          }
+        }
+      });
+    });
+
     return {
       cardText,
       store,
@@ -1105,11 +1280,14 @@ export default defineComponent({
       actionList,
       nodeInformation,
       sortKey,
+      sortKeyChance,
       showActionEv,
+      showOopStats,
       board,
       percentStr,
       trimMinusZero,
       sortBy,
+      sortByChance,
       moveResult,
       actionColor,
       actionColorByStr,
@@ -1121,11 +1299,13 @@ export default defineComponent({
       onMouseLeave,
       hoveredCellText,
       headers,
+      headersChance,
       resultAverage,
       resultRendered,
       emptyBufferTop,
       emptyBufferBottom,
       onTableScroll,
+      resultChanceSorted,
     };
   },
 });

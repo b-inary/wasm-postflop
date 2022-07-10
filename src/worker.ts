@@ -113,6 +113,14 @@ function createHandler(mod: Mod) {
     getResults() {
       return this.game.get_results();
     },
+
+    availableActionsAfterChance() {
+      return this.game.available_actions_after_chance();
+    },
+
+    chanceReport() {
+      return this.game.chance_report();
+    },
   };
 }
 
