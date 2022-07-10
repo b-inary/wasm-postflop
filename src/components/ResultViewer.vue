@@ -1241,7 +1241,7 @@ export default defineComponent({
 
     // update resultChanceSorted
     watch([resultChance, sortKeyChance], () => {
-      const coef = sortKey.value.order === "asc" ? 1 : -1;
+      const coef = sortKeyChance.value.order === "asc" ? 1 : -1;
       const round = (x: number) => Math.round(10 * x);
 
       resultChanceSorted.value = [...resultChance.value].sort((a, b) => {
