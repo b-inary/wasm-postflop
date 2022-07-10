@@ -101,7 +101,7 @@
 
     <div
       v-if="
-        actionList.length === 0 ||
+        actionList.length > 0 &&
         actionList[actionList.length - 1].type === 'Player'
       "
     >
@@ -166,16 +166,16 @@
                     :class="
                       'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
                       (text === 'Hand'
-                        ? 'min-w-[5rem]'
+                        ? 'min-w-[4.9rem]'
                         : text === 'EV'
-                        ? 'min-w-[3.4rem]'
-                        : 'min-w-[3.7rem]')
+                        ? 'min-w-[3.3rem]'
+                        : 'min-w-[3.6rem]')
                     "
                     @click="sortBy(text)"
                   >
                     <span
                       v-if="text === sortKey.key"
-                      class="inline-block mr-0.5 text-xs"
+                      class="inline-block text-xs"
                     >
                       {{ sortKey.order === "asc" ? "▲" : "▼" }}
                     </span>
@@ -195,8 +195,7 @@
                   v-if="emptyBufferTop > 0"
                   :style="{
                     '--num-rows': emptyBufferTop,
-                    '--row-height': showActionEv ? '2.6rem' : '2rem',
-                    height: 'calc(var(--num-rows) * (var(--row-height) + 1px))',
+                    height: 'calc(var(--num-rows) * (2rem + 1px))',
                   }"
                 >
                   <td :colspan="headers.length"></td>
@@ -207,12 +206,9 @@
                   v-for="item in resultRendered"
                   :key="item.card1 + '-' + item.card2"
                   class="text-right text-sm"
-                  :style="{
-                    '--row-height': showActionEv ? '2.6rem' : '2rem',
-                    height: 'calc(var(--row-height) + 1px)',
-                  }"
+                  style="height: calc(2rem + 1px)"
                 >
-                  <td class="px-2.5 text-center">
+                  <td class="px-[0.5625rem] text-center">
                     <template
                       v-for="card in [item.card1, item.card2].map(cardText)"
                       :key="card.rank + card.suit"
@@ -222,36 +218,39 @@
                       </span>
                     </template>
                   </td>
-                  <td class="px-2.5">
+                  <td class="px-[0.5625rem]">
                     {{ percentStr(item.weight) }}
                   </td>
-                  <td class="px-2.5">
+                  <td class="px-[0.5625rem]">
                     {{ percentStr(item.equity) }}
                   </td>
-                  <td class="px-2.5">
+                  <td class="px-[0.5625rem]">
                     {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
                   </td>
                   <td
                     v-for="i in item.strategy.length"
                     :key="i"
                     :class="
-                      'relative px-2.5 ' + (showActionEv ? 'leading-4' : '')
+                      'relative px-[0.5625rem] ' +
+                      (showActionEv ? 'leading-4' : '')
                     "
                   >
-                    {{ percentStr(item.strategy[i - 1]) }}
-                    <span v-if="showActionEv" class="block text-xs">
-                      ({{ trimMinusZero(item.actionEv[i - 1].toFixed(1)) }})
+                    <span v-if="!showActionEv">
+                      {{ percentStr(item.strategy[i - 1]) }}
+                    </span>
+                    <span v-else>
+                      {{ trimMinusZero(item.actionEv[i - 1].toFixed(1)) }}
                     </span>
                     <div
-                      class="absolute bottom-0 left-2.5 h-1 bg-gray-400"
-                      style="width: calc(100% - 1.25rem)"
+                      class="absolute bottom-0 left-2 h-[0.3125rem] bg-gray-400"
+                      style="width: calc(100% - 1rem)"
                     ></div>
                     <div
                       :class="
-                        'absolute bottom-0 left-2.5 h-1 ' +
+                        'absolute bottom-0 left-2 h-[0.3125rem] ' +
                         actionColor[i - 1].bar
                       "
-                      :style="`width: calc((100% - 1.25rem) * ${
+                      :style="`width: calc((100% - 1rem) * ${
                         item.strategy[i - 1]
                       }`"
                     ></div>
@@ -263,8 +262,7 @@
                   v-if="emptyBufferBottom > 0"
                   :style="{
                     '--num-rows': emptyBufferBottom,
-                    '--row-height': showActionEv ? '2.6rem' : '2rem',
-                    height: 'calc(var(--num-rows) * (var(--row-height) + 1px))',
+                    height: 'calc(var(--num-rows) * (2rem + 1px))',
                   }"
                 >
                   <td :colspan="headers.length"></td>
@@ -276,23 +274,23 @@
                   class="text-right text-sm"
                   :style="{ height: 'calc(2rem + 1px)' }"
                 >
-                  <th scope="col" class="px-2.5 text-center underline">
+                  <th scope="col" class="px-[0.5625rem] text-center underline">
                     {{ hoveredCellText }}
                   </th>
-                  <th scope="col" class="px-2.5">
+                  <th scope="col" class="px-[0.5625rem]">
                     {{ resultAverage.combos }}
                   </th>
-                  <th scope="col" class="px-2.5">
+                  <th scope="col" class="px-[0.5625rem]">
                     {{ resultAverage.equity }}
                   </th>
-                  <th scope="col" class="px-2.5">
+                  <th scope="col" class="px-[0.5625rem]">
                     {{ resultAverage.expectedValue }}
                   </th>
                   <th
                     v-for="i in resultAverage.strategy.length"
                     :key="i"
                     scope="col"
-                    class="px-2.5"
+                    class="px-[0.5625rem]"
                   >
                     {{ resultAverage.strategy[i - 1] }}
                   </th>
@@ -316,7 +314,13 @@
       </div>
     </div>
 
-    <div v-else class="mt-5">
+    <div
+      v-else-if="
+        actionList.length > 0 &&
+        actionList[actionList.length - 1].type !== 'Player'
+      "
+      class="mt-5"
+    >
       <div v-for="suit in 4" :key="suit" class="flex">
         <board-selector-card
           v-for="rank in 13"
@@ -1060,7 +1064,7 @@ export default defineComponent({
         .replace("px", "")
     );
 
-    const rowHeight = computed(() => (showActionEv.value ? 2.6 : 2) * rem + 1);
+    const rowHeight = 2 * rem + 1;
 
     let ticking = false;
 
@@ -1073,7 +1077,7 @@ export default defineComponent({
         ticking = false;
         if (!divResultDetail.value) return;
         const { scrollTop } = divResultDetail.value;
-        const topIndex = Math.max(scrollTop / rowHeight.value, 0);
+        const topIndex = Math.max(scrollTop / rowHeight, 0);
         let update = false;
         if (topIndex < emptyBufferTop.value + bufferUnit) {
           update = true;
