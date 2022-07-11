@@ -1241,32 +1241,38 @@ export default defineComponent({
 
     // update resultChanceSorted
     watch([resultChance, sortKeyChance], () => {
+      const rankComparator = (a: number, b: number, order: Order) => {
+        const coef = order === "asc" ? 1 : -1;
+        const ar = Math.floor(a / 4);
+        const as = a % 4;
+        const br = Math.floor(b / 4);
+        const bs = b % 4;
+        return coef * (ar - br) || bs - as;
+      };
+
       const coef = sortKeyChance.value.order === "asc" ? 1 : -1;
       const round = (x: number) => Math.round(10 * x);
 
       resultChanceSorted.value = [...resultChance.value].sort((a, b) => {
         if (sortKeyChance.value.key === "Card") {
-          return coef * (a.card - b.card);
+          return rankComparator(a.card, b.card, sortKeyChance.value.order);
         } else {
-          const fallback = b.card - a.card;
+          const fallback = rankComparator(a.card, b.card, "desc");
           if (sortKeyChance.value.key === "EQ") {
-            return (
-              coef * (round(100 * a.equity) - round(100 * b.equity)) || fallback
-            );
+            const av = round(100 * a.equity);
+            const bv = round(100 * b.equity);
+            return coef * (av - bv) || fallback;
           } else if (sortKeyChance.value.key === "EV") {
-            return (
-              coef * (round(a.expectedValue) - round(b.expectedValue)) ||
-              fallback
-            );
+            const av = round(a.expectedValue);
+            const bv = round(b.expectedValue);
+            return coef * (av - bv) || fallback;
           } else {
             const idx = chanceNextActions.value.indexOf(
               sortKeyChance.value.key
             );
-            return (
-              coef *
-                (round(100 * a.strategy[idx]) - round(100 * b.strategy[idx])) ||
-              fallback
-            );
+            const av = round(100 * a.strategy[idx]);
+            const bv = round(100 * b.strategy[idx]);
+            return coef * (av - bv) || fallback;
           }
         }
       });
