@@ -441,9 +441,10 @@ export default defineComponent({
       memoryUsage.value = await handler.memoryUsage(false);
       memoryUsageCompressed.value = await handler.memoryUsage(true);
 
-      if (memoryUsage.value <= maxMemoryUsage) {
-        isCompressionEnabled.value = false;
-      } else if (memoryUsageCompressed.value <= maxMemoryUsage) {
+      if (
+        memoryUsage.value > maxMemoryUsage &&
+        memoryUsageCompressed.value <= maxMemoryUsage
+      ) {
         isCompressionEnabled.value = true;
       }
 
