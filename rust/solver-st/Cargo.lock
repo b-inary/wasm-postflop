@@ -96,7 +96,7 @@ checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
 
 [[package]]
 name = "solver"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "postflop-solver",
  "wasm-bindgen",
