@@ -45,7 +45,7 @@ This project intends to make the GTO solver more easily accessible to a broader 
 
 ## Comparison
 
-We tested WASM Postflop, [Desktop Postflop] (v0.1.4), [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and [TexasSolver] (v0.2.0) with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
+We tested WASM Postflop, [Desktop Postflop] (v0.1.6), [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and [TexasSolver] (v0.2.0) with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
 
 [Desktop Postflop]: https://github.com/b-inary/desktop-postflop
 [PioSOLVER Free]: https://www.piosolver.com/
@@ -70,19 +70,19 @@ TexasSolver, another free and open-source solver, suffered from slow execution t
 
 | Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | Pio<br/>(3) | Pio<br/>(4) | GTO+ | Texas |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target: 0.5%)** | **47.6 s** | **58.7 s** | *21.8 s* | 25.3 s | 23.4 s | 30.4 s | 22.0 s | 103.5 s |
-| **Time (Target: 0.3%)** | **59.4 s** | **73.3 s** | *27.1 s* | 31.4 s | 28.7 s | 42.5 s | 31.4 s | 149.0 s |
-| **Time (Target: 0.1%)** | **106.7 s** | **130.7 s** | *48.7 s* | 56.2 s | 61.1 s | 108.9 s | 67.7 s | 285.9 s |
-| **Memory usage** | **1.20 GB** | **630 MB** | 1.21 GB | 644 MB | 1.41 GB | 634 MB | 705 MB | 2.84 GB |
+| **Time (Target: 0.5%)** | **46.8 s** | **50.9 s** | *20.5 s* | 20.9 s | 23.4 s | 30.4 s | 22.0 s | 103.5 s |
+| **Time (Target: 0.3%)** | **58.3 s** | **63.4 s** | *25.4 s* | 26.0 s | 28.7 s | 42.5 s | 31.4 s | 149.0 s |
+| **Time (Target: 0.1%)** | **104.6 s** | **114.0 s** | *45.6 s* | 46.5 s | 61.1 s | 108.9 s | 67.7 s | 285.9 s |
+| **Memory usage** | **1.20 GB** | **634 MB** | 1.22 GB | 652 MB | 1.41 GB | 634 MB | 705 MB | 2.84 GB |
 
 - **16 threads**
 
 | Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | GTO+ | Texas |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target: 0.5%)** | **28.0 s** | **34.3 s** | *13.9 s* | 15.6 s | *13.9 s* | 67.1 s |
-| **Time (Target: 0.3%)** | **34.7 s** | **42.7 s** | *17.3 s* | 19.4 s | 19.7 s | 95.9 s |
-| **Time (Target: 0.1%)** | **62.0 s** | **76.3 s** | *31.0 s* | 34.9 s | 41.7 s | 182.6 s |
-| **Memory usage** | **1.20 GB** | **638 MB** | 1.22 GB | 653 MB | 705 MB | 2.84 GB |
+| **Time (Target: 0.5%)** | **27.2 s** | **30.2 s** | 13.1 s | *12.7 s* | 13.9 s | 67.1 s |
+| **Time (Target: 0.3%)** | **33.8 s** | **37.6 s** | 16.4 s | *15.8 s* | 19.7 s | 95.9 s |
+| **Time (Target: 0.1%)** | **60.2 s** | **67.0 s** | 29.1 s | *28.2 s* | 41.7 s | 182.6 s |
+| **Memory usage** | **1.21 GB** | **643 MB** | 1.23 GB | 660 MB | 705 MB | 2.84 GB |
 
 ### Results
 
