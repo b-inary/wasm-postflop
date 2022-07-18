@@ -18,13 +18,17 @@
               class="absolute bottom-0 left-0 w-full bg-yellow-300"
               :style="{ height: weightPercent(row, col) }"
             ></div>
-            <div class="absolute -top-px left-px z-10 text-sm">
+            <div
+              :class="
+                'absolute -top-px left-px z-10 text-sm ' +
+                (!hasWeight(row, col) ? 'text-gray-500' : '')
+              "
+            >
               {{ cellText(row, col) }}
             </div>
             <div class="absolute -bottom-px right-px z-10 text-sm">
               {{
-                weightPercent(row, col) === "0%" ||
-                weightPercent(row, col) === "100%"
+                !hasWeight(row, col) || isWeightFull(row, col)
                   ? ""
                   : weightPercent(row, col)
               }}
@@ -227,6 +231,14 @@ export default defineComponent({
       }
     };
 
+    const hasWeight = (row: number, col: number) => {
+      return rangeStore[13 * (row - 1) + col - 1] > 0;
+    };
+
+    const isWeightFull = (row: number, col: number) => {
+      return rangeStore[13 * (row - 1) + col - 1] === 100;
+    };
+
     const weightPercent = (row: number, col: number) => {
       return rangeStore[13 * (row - 1) + col - 1].toFixed(0) + "%";
     };
@@ -260,6 +272,8 @@ export default defineComponent({
       dragStart,
       dragEnd,
       mouseEnter,
+      hasWeight,
+      isWeightFull,
       weightPercent,
       onWeightChange,
       clearRange,

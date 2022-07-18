@@ -129,7 +129,12 @@
                   :style="item.style"
                 ></div>
               </div>
-              <div class="absolute -top-px left-px z-50 text-sm">
+              <div
+                :class="
+                  'absolute -top-px left-px z-50 text-sm ' +
+                  (!hasWeight(row, col) ? 'text-gray-500' : '')
+                "
+              >
                 {{ cellText(row, col) }}
               </div>
               <div class="absolute -bottom-px right-px z-50 text-sm">
@@ -924,6 +929,12 @@ export default defineComponent({
       return ret;
     });
 
+    const hasWeight = (row: number, col: number) => {
+      if (resultCell.value.length === 0) return false;
+      const idx = (row - 1) * 13 + col - 1;
+      return resultCell.value[idx].count > 0;
+    };
+
     const weightPercent = (row: number, col: number) => {
       if (resultCell.value.length === 0) return "0%";
 
@@ -1297,6 +1308,7 @@ export default defineComponent({
       moveResult,
       actionColor,
       actionColorByStr,
+      hasWeight,
       weightPercent,
       cellItems,
       cellText,
