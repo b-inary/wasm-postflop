@@ -38,6 +38,7 @@
             @blur="tryRename(item0)"
             @keydown.enter="tryRename(item0)"
             @keydown.escape="cancelRename(item0)"
+            @keydown.delete.stop
           />
 
           <!-- Group name -->
@@ -100,6 +101,7 @@
                   @blur="tryRename(item1)"
                   @keydown.enter="tryRename(item1)"
                   @keydown.escape="cancelRename(item1)"
+                  @keydown.delete.stop
                 />
 
                 <!-- Group name -->
@@ -165,6 +167,7 @@
                         @blur="tryRename(item2)"
                         @keydown.enter="tryRename(item2)"
                         @keydown.escape="cancelRename(item2)"
+                        @keydown.delete.stop
                       />
 
                       <!-- Group name -->
@@ -223,6 +226,7 @@
                             @blur="tryRename(item3)"
                             @keydown.enter="tryRename(item3)"
                             @keydown.escape="cancelRename(item3)"
+                            @keydown.delete.stop
                           />
 
                           <!-- Item name -->
@@ -263,6 +267,7 @@
                         @blur="tryRename(item2)"
                         @keydown.enter="tryRename(item2)"
                         @keydown.escape="cancelRename(item2)"
+                        @keydown.delete.stop
                       />
 
                       <!-- Item name -->
@@ -304,6 +309,7 @@
                   @blur="tryRename(item1)"
                   @keydown.enter="tryRename(item1)"
                   @keydown.escape="cancelRename(item1)"
+                  @keydown.delete.stop
                 />
 
                 <!-- Item name -->
@@ -344,6 +350,7 @@
             @blur="tryRename(item0)"
             @keydown.enter="tryRename(item0)"
             @keydown.escape="cancelRename(item0)"
+            @keydown.delete.stop
           />
 
           <!-- Item name -->
@@ -539,7 +546,11 @@ export default defineComponent({
       let items = data.value;
       for (let i = 0; i < path.length; ++i) {
         item = items.find((item) => item.path[i] === path[i]);
-        if (i < path.length - 1 && item?.isGroup) items = item.items;
+        if (item === undefined) return null;
+        if (i < path.length - 1) {
+          if (!item.isGroup) return null;
+          items = item.items;
+        }
       }
       return item ? { item, parentItems: items } : null;
     });
@@ -848,6 +859,13 @@ export default defineComponent({
     };
 
     const tryRename = async (item: Item | Group, newName?: string) => {
+      // existence check (`tryRename()` might be called when an item is deleted)
+      selectedValue.value = item.pathStr;
+      if (selectedItem.value === null) {
+        selectedValue.value = false;
+        return;
+      }
+
       const isUserAction = newName === undefined;
 
       if (newName === undefined) {
@@ -857,7 +875,6 @@ export default defineComponent({
         if (!isNameValid.value) {
           edittingName.value = "";
           if (item.path[item.path.length - 1] === "") {
-            selectedValue.value = item.pathStr;
             await deleteItem(false);
           }
           return;
@@ -876,7 +893,6 @@ export default defineComponent({
       if (item.path[depth] === newName) {
         if (isUserAction) {
           // give focus
-          selectedValue.value = item.pathStr;
           await nextTick();
           const name = `item-picker-${props.storeName}-${props.index}`;
           const checked = document.querySelector(
@@ -896,7 +912,6 @@ export default defineComponent({
         renameRecursive(item, newName, depth);
       }
 
-      selectedValue.value = item.pathStr;
       const parentItems = selectedItem.value?.parentItems;
       if (parentItems) {
         parentItems.sort(
