@@ -123,7 +123,8 @@ import DbItemPicker from "./DbItemPicker.vue";
 
 const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
 
-const comboPat = "(?:(?:[AKQJT2-9]{2}[os]?)|(?:(?:[AKQJT2-9][cdhs]){2}))";
+const rankPat = "[AaKkQqJjTt2-9]";
+const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
 const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
 const trimRegex = /\s*([-:,])\s*/g;
 const rangeRegex = new RegExp(

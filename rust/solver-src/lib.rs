@@ -84,8 +84,8 @@ impl GameManager {
             starting_pot,
             effective_stack,
             range: [
-                Range::from_raw_data(oop_range),
-                Range::from_raw_data(ip_range),
+                Range::from_raw_data(oop_range).unwrap(),
+                Range::from_raw_data(ip_range).unwrap(),
             ],
             flop_bet_sizes: [
                 bet_sizes(oop_flop_bet, oop_flop_raise),

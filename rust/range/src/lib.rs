@@ -23,16 +23,16 @@ impl RangeManager {
         let rank1 = 13 - row;
         let rank2 = 13 - col;
         if row == col {
-            self.range.set_weight_pair(rank1, weight).unwrap();
+            self.range.set_weight_pair(rank1, weight);
         } else if row < col {
-            self.range.set_weight_suited(rank1, rank2, weight).unwrap();
+            self.range.set_weight_suited(rank1, rank2, weight);
         } else {
-            self.range.set_weight_offsuit(rank1, rank2, weight).unwrap();
+            self.range.set_weight_offsuit(rank1, rank2, weight);
         }
     }
 
     pub fn from_string(&mut self, s: &str) -> Option<String> {
-        let result = Range::from_sanitized_ranges(s);
+        let result = Range::from_sanitized_str(s);
         if result.is_ok() {
             self.range = result.unwrap();
             return None;
