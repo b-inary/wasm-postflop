@@ -99,6 +99,8 @@ impl GameManager {
                 bet_sizes(oop_river_bet, oop_river_raise),
                 bet_sizes(ip_river_bet, ip_river_raise),
             ],
+            turn_donk_sizes: None,
+            river_donk_sizes: None,
             add_all_in_threshold,
             force_all_in_threshold,
             adjust_last_two_bet_sizes,
