@@ -108,13 +108,13 @@ Either way, we cannot verify the correctness because we cannot see the overall E
 ```sh
 $ # prerequisites
 $ rustup install nightly
-$ rustup component add rust-src --toolchain nightly
+$ rustup +nightly component add rust-src
 $ rustup target add wasm32-unknown-unknown
 $ cargo install wasm-pack
 $ npm install
 
 $ # build
-$ npm run wasm  # the latest version of binaryen (wasm-opt) may need to be installed
+$ npm run wasm
 $ npm run build
 
 $ # serve

@@ -586,7 +586,7 @@ export default defineComponent({
         const memory = await GlobalWorker.getMemory();
         const buffer = await memory.buffer;
         for (let player = 0; player < 2; ++player) {
-          const cardsBuffer = await handler.privateHandCards(player);
+          const cardsBuffer = await handler.privateCards(player);
           handCards.value[player] = new Uint16Array(
             buffer,
             cardsBuffer.ptr,

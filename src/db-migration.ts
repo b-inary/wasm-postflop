@@ -1,0 +1,73 @@
+export type ConfigValue1 = {
+  startingPot: number;
+  effectiveStack: number;
+  oopFlopBetStr: string;
+  oopFlopRaiseStr: string;
+  oopTurnBetStr: string;
+  oopTurnRaiseStr: string;
+  oopRiverBetStr: string;
+  oopRiverRaiseStr: string;
+  ipFlopBetStr: string;
+  ipFlopRaiseStr: string;
+  ipTurnBetStr: string;
+  ipTurnRaiseStr: string;
+  ipRiverBetStr: string;
+  ipRiverRaiseStr: string;
+  addAllInThreshold: number;
+  forceAllInThreshold: number;
+  adjustLastTwoBetSizes: number;
+};
+
+type ConfigValue2 = {
+  startingPot: number;
+  effectiveStack: number;
+  oopFlopBet: string;
+  oopFlopRaise: string;
+  oopTurnBet: string;
+  oopTurnRaise: string;
+  oopRiverBet: string;
+  oopRiverRaise: string;
+  ipFlopBet: string;
+  ipFlopRaise: string;
+  ipTurnBet: string;
+  ipTurnRaise: string;
+  ipRiverBet: string;
+  ipRiverRaise: string;
+  addAllInThreshold: number;
+  forceAllInThreshold: number;
+  mergingThreshold: number;
+  addedLines: string[];
+  removedLines: string[];
+};
+
+const migrateBetString1to2 = (s: string): string => {
+  if (s.includes(" ") && !s.includes(",")) {
+    return s.replace(" ", ", ");
+  } else {
+    return s;
+  }
+};
+
+export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
+  return {
+    startingPot: value.startingPot,
+    effectiveStack: value.effectiveStack,
+    oopFlopBet: migrateBetString1to2(value.oopFlopBetStr),
+    oopFlopRaise: migrateBetString1to2(value.oopFlopRaiseStr),
+    oopTurnBet: migrateBetString1to2(value.oopTurnBetStr),
+    oopTurnRaise: migrateBetString1to2(value.oopTurnRaiseStr),
+    oopRiverBet: migrateBetString1to2(value.oopRiverBetStr),
+    oopRiverRaise: migrateBetString1to2(value.oopRiverRaiseStr),
+    ipFlopBet: migrateBetString1to2(value.ipFlopBetStr),
+    ipFlopRaise: migrateBetString1to2(value.ipFlopRaiseStr),
+    ipTurnBet: migrateBetString1to2(value.ipTurnBetStr),
+    ipTurnRaise: migrateBetString1to2(value.ipTurnRaiseStr),
+    ipRiverBet: migrateBetString1to2(value.ipRiverBetStr),
+    ipRiverRaise: migrateBetString1to2(value.ipRiverRaiseStr),
+    addAllInThreshold: value.addAllInThreshold,
+    forceAllInThreshold: value.forceAllInThreshold,
+    mergingThreshold: 0,
+    addedLines: [],
+    removedLines: [],
+  };
+};

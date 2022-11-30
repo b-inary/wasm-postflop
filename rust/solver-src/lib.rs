@@ -31,86 +31,68 @@ impl GameManager {
         board: &[u8],
         starting_pot: i32,
         effective_stack: i32,
-        oop_flop_bet: &[f32],
-        oop_flop_raise: &[f32],
-        oop_turn_bet: &[f32],
-        oop_turn_raise: &[f32],
-        oop_river_bet: &[f32],
-        oop_river_raise: &[f32],
-        ip_flop_bet: &[f32],
-        ip_flop_raise: &[f32],
-        ip_turn_bet: &[f32],
-        ip_turn_raise: &[f32],
-        ip_river_bet: &[f32],
-        ip_river_raise: &[f32],
-        add_all_in_threshold: f32,
-        force_all_in_threshold: f32,
-        adjust_last_two_bet_sizes: bool,
+        oop_flop_bet: &str,
+        oop_flop_raise: &str,
+        oop_turn_bet: &str,
+        oop_turn_raise: &str,
+        oop_river_bet: &str,
+        oop_river_raise: &str,
+        ip_flop_bet: &str,
+        ip_flop_raise: &str,
+        ip_turn_bet: &str,
+        ip_turn_raise: &str,
+        ip_river_bet: &str,
+        ip_river_raise: &str,
+        add_allin_threshold: f32,
+        force_allin_threshold: f32,
+        merging_threshold: f32,
     ) -> Option<String> {
-        let turn = if board.len() >= 4 {
-            board[3]
-        } else {
-            NOT_DEALT
+        let (turn, river, state) = match board.len() {
+            3 => (NOT_DEALT, NOT_DEALT, BoardState::Flop),
+            4 => (board[3], NOT_DEALT, BoardState::Turn),
+            5 => (board[3], board[4], BoardState::River),
+            _ => return Some("Invalid board length".to_string()),
         };
 
-        let river = if board.len() == 5 {
-            board[4]
-        } else {
-            NOT_DEALT
-        };
-
-        let convert_bet_sizes = |sizes: &[f32]| {
-            sizes
-                .iter()
-                .map(|&x| {
-                    if x >= 0.0 {
-                        BetSize::PotRelative(x)
-                    } else {
-                        BetSize::LastBetRelative(-x)
-                    }
-                })
-                .collect()
-        };
-
-        let bet_sizes = |bet: &[f32], raise: &[f32]| BetSizeCandidates {
-            bet: convert_bet_sizes(bet),
-            raise: convert_bet_sizes(raise),
-        };
-
-        let config = GameConfig {
-            flop: board[..3].try_into().unwrap(),
-            turn,
-            river,
-            starting_pot,
-            effective_stack,
+        let card_config = CardConfig {
             range: [
                 Range::from_raw_data(oop_range).unwrap(),
                 Range::from_raw_data(ip_range).unwrap(),
             ],
+            flop: board[..3].try_into().unwrap(),
+            turn,
+            river,
+        };
+
+        let tree_config = TreeConfig {
+            initial_state: state,
+            starting_pot,
+            effective_stack,
             flop_bet_sizes: [
-                bet_sizes(oop_flop_bet, oop_flop_raise),
-                bet_sizes(ip_flop_bet, ip_flop_raise),
+                BetSizeCandidates::try_from((oop_flop_bet, oop_flop_raise)).unwrap(),
+                BetSizeCandidates::try_from((ip_flop_bet, ip_flop_raise)).unwrap(),
             ],
             turn_bet_sizes: [
-                bet_sizes(oop_turn_bet, oop_turn_raise),
-                bet_sizes(ip_turn_bet, ip_turn_raise),
+                BetSizeCandidates::try_from((oop_turn_bet, oop_turn_raise)).unwrap(),
+                BetSizeCandidates::try_from((ip_turn_bet, ip_turn_raise)).unwrap(),
             ],
             river_bet_sizes: [
-                bet_sizes(oop_river_bet, oop_river_raise),
-                bet_sizes(ip_river_bet, ip_river_raise),
+                BetSizeCandidates::try_from((oop_river_bet, oop_river_raise)).unwrap(),
+                BetSizeCandidates::try_from((ip_river_bet, ip_river_raise)).unwrap(),
             ],
             turn_donk_sizes: None,
             river_donk_sizes: None,
-            add_all_in_threshold,
-            force_all_in_threshold,
-            adjust_last_two_bet_sizes,
+            add_allin_threshold,
+            force_allin_threshold,
+            merging_threshold,
         };
 
-        self.game.update_config(&config).err()
+        let action_tree = ActionTree::with_config(tree_config).unwrap();
+        self.game.update_config(card_config, action_tree).err()
     }
 
-    pub fn private_hand_cards(&self, player: usize) -> ReadonlyBuffer {
-        let cards = self.game.private_hand_cards(player);
+    pub fn private_cards(&self, player: usize) -> ReadonlyBuffer {
+        let cards = self.game.private_cards(player);
         ReadonlyBuffer {
             pointer: cards.as_ptr() as *const u8,
             byte_length: cards.len() * 2,

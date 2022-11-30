@@ -12,7 +12,9 @@
 
   <div class="flex mt-4 mx-1 gap-3">
     <button class="button-blue" @click="config.board = []">Clear</button>
-    <button class="button-blue" @click="generateRandomBoard">Random</button>
+    <button class="button-blue" @click="generateRandomBoard">
+      Random flop
+    </button>
   </div>
 </template>
 

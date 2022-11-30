@@ -1,4 +1,5 @@
 import Dexie, { Table } from "dexie";
+import { ConfigValue1, migrateConfig1to2 } from "./db-migration";
 
 export type DbItem = {
   id?: number;
@@ -25,10 +26,27 @@ class WASMPostflopDB extends Dexie {
 
   public constructor() {
     super("WASMPostflopDB");
+
     this.version(1).stores({
       ranges: "++id, [name0+name1+name2+name3+isGroup]",
       configurations: "++id, [name0+name1+name2+name3+isGroup]",
     });
+
+    this.version(2)
+      .stores({
+        ranges: "++id, [name0+name1+name2+name3+isGroup]",
+        configurations: "++id, [name0+name1+name2+name3+isGroup]",
+      })
+      .upgrade((tx) => {
+        return tx
+          .table("configurations")
+          .toCollection()
+          .modify((item: DbItem | DbGroup) => {
+            if (!item.isGroup) {
+              item.value = migrateConfig1to2(item.value as ConfigValue1);
+            }
+          });
+      });
   }
 }
 

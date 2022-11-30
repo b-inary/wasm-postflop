@@ -9,7 +9,7 @@ jobs:
       - name: Prepare Rust environment
         run: |
           rustup install nightly
-          rustup component add rust-src --toolchain nightly
+          rustup +nightly component add rust-src
           rustup target add wasm32-unknown-unknown
           cargo install wasm-pack
           sudo apt-get install -y binaryen

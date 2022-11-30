@@ -22,21 +22,21 @@ function createHandler(mod: Mod) {
       flop: Uint8Array,
       startingPot: number,
       effectiveStack: number,
-      oopFlopBet: Float32Array,
-      oopFlopRaise: Float32Array,
-      oopTurnBet: Float32Array,
-      oopTurnRaise: Float32Array,
-      oopRiverBet: Float32Array,
-      oopRiverRaise: Float32Array,
-      ipFlopBet: Float32Array,
-      ipFlopRaise: Float32Array,
-      ipTurnBet: Float32Array,
-      ipTurnRaise: Float32Array,
-      ipRiverBet: Float32Array,
-      ipRiverRaise: Float32Array,
+      oopFlopBet: string,
+      oopFlopRaise: string,
+      oopTurnBet: string,
+      oopTurnRaise: string,
+      oopRiverBet: string,
+      oopRiverRaise: string,
+      ipFlopBet: string,
+      ipFlopRaise: string,
+      ipTurnBet: string,
+      ipTurnRaise: string,
+      ipRiverBet: string,
+      ipRiverRaise: string,
       addAllInThreshold: number,
       forceAllInThreshold: number,
-      adjustLastTwoBetSizes: boolean
+      mergingThreshold: number
     ) {
       return this.game.init(
         oopRange,
@@ -58,12 +58,12 @@ function createHandler(mod: Mod) {
         ipRiverRaise,
         addAllInThreshold,
         forceAllInThreshold,
-        adjustLastTwoBetSizes
+        mergingThreshold
       );
     },
 
-    privateHandCards(player: number) {
-      const ret = this.game.private_hand_cards(player);
+    privateCards(player: number) {
+      const ret = this.game.private_cards(player);
       return {
         ptr: ret.pointer,
         byteLength: ret.byte_length,

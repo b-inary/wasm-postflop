@@ -34,58 +34,120 @@ const suitClasses = [
   "text-black",
 ];
 
-export function cardText(card: number) {
+export const cardText = (card: number) => {
   return {
     rank: ranks[Math.floor(card / 4)],
     suit: suits[card % 4],
     colorClass: suitClasses[card % 4],
   };
-}
+};
 
-function parseNumber(s: string): number {
-  const numberRegex = /^(\d+\.?\d*|\.\d+)$/;
-  if (s.endsWith("x")) {
-    if (numberRegex.test(s.slice(0, -1))) {
-      return -Number(s.slice(0, -1));
-    } else {
-      return Number.NaN;
-    }
+const forbiddenChars = /[bo+-]/;
+
+const parseFloat = (s: string): number => {
+  if (forbiddenChars.test(s)) {
+    return Number.NaN;
   } else {
-    if (numberRegex.test(s)) {
-      return Number(s) / 100;
+    return Number(s);
+  }
+};
+
+export const sanitizeBetString = (
+  s: string,
+  is_raise: boolean
+): { s: string; valid: boolean } => {
+  const trimmed = s.trim();
+  if (trimmed === "") return { s: "", valid: true };
+
+  const split = trimmed.split(",");
+  const elements = split.map((s) => s.trim().toLowerCase());
+
+  if (elements[elements.length - 1] === "") {
+    elements.pop();
+  }
+
+  if (elements.length >= 32) {
+    return { s: "Too many specifications", valid: false };
+  }
+
+  let sanitized = "";
+
+  for (const e of elements) {
+    if (e === "") {
+      return { s: "Found empty string", valid: false };
+    } else if (e.endsWith("x")) {
+      // Previous bet relative
+      if (!is_raise) {
+        return {
+          s: `Multiplicative size is not allowed: ${e}`,
+          valid: false,
+        };
+      } else {
+        const float = parseFloat(e.slice(0, -1));
+        if (Number.isNaN(float)) {
+          return { s: `Invalid number: ${e}`, valid: false };
+        } else if (float <= 1.0) {
+          return { s: `Multiplier must be greater than 1: ${e}`, valid: false };
+        } else {
+          sanitized += `${float}x, `;
+        }
+      }
+    } else if (e.endsWith("c")) {
+      // Additive
+      const float = parseFloat(e.slice(0, -1));
+      if (Number.isNaN(float)) {
+        return { s: `Invalid number: ${e}`, valid: false };
+      } else if (float % 1 !== 0) {
+        return { s: `Addition size must be an integer: ${e}`, valid: false };
+      } else if (float > 100000) {
+        return { s: `Addition size too large: ${e}`, valid: false };
+      } else {
+        sanitized += `${float}c, `;
+      }
+    } else if (e.includes("e")) {
+      // Geometric
+      const split = e.split("e");
+      if (split.length !== 2) {
+        return { s: `Invalid geometric specification: ${e}`, valid: false };
+      }
+      const float1 = split[0] === "" ? null : parseFloat(split[0]);
+      const float2 = split[1] === "" ? null : parseFloat(split[1]);
+      if (float1 !== null) {
+        if (Number.isNaN(float1)) {
+          return { s: `Invalid number: ${e}`, valid: false };
+        } else if (float1 % 1 !== 0 || float1 === 0) {
+          return {
+            s: `Geometric size must be a positive integer: ${e}`,
+            valid: false,
+          };
+        } else if (float1 > 100) {
+          return { s: `Geometric size too large: ${e}`, valid: false };
+        }
+      }
+      if (float2 !== null && Number.isNaN(float2)) {
+        return { s: `Invalid number: ${e}`, valid: false };
+      }
+      sanitized += `${float1 ?? ""}e${float2 ?? ""}, `;
+    } else if (e === "a") {
+      // All-in
+      sanitized += "a, ";
     } else {
-      return Number.NaN;
+      // Pot relative
+      const float = parseFloat(e);
+      if (Number.isNaN(float)) {
+        return { s: `Invalid number: ${e}`, valid: false };
+      }
+      sanitized += `${float}, `;
     }
   }
-}
 
-function parseBetSizes(
-  sizesStr: string,
-  allowRelative: boolean
-): number[] | null {
-  const trimmed = sizesStr.trim();
-  if (trimmed === "") return [];
+  return {
+    s: sanitized.slice(0, -2),
+    valid: true,
+  };
+};
 
-  const split = trimmed.split(sizesStr.includes(",") ? "," : /\s+/);
-  const sizes = split.map((s) => parseNumber(s.trim()));
-
-  if (
-    sizes.length > 10 ||
-    sizes.some(
-      (s) =>
-        Number.isNaN(s) ||
-        s > 100 ||
-        s < -100 ||
-        (s < 0 && (!allowRelative || -1 <= s))
-    )
-  ) {
-    return null;
-  } else {
-    return sizes;
-  }
-}
-
-export function saveConfigTmp() {
+export const saveConfigTmp = () => {
   const config = useConfigStore();
   const tmpConfig = useTmpConfigStore();
 
@@ -96,25 +158,25 @@ export function saveConfigTmp() {
     board: [...config.board],
     startingPot: config.startingPot,
     effectiveStack: config.effectiveStack,
-    oopFlopBet: config.oopFlopBet ?? [],
-    oopFlopRaise: config.oopFlopRaise ?? [],
-    oopTurnBet: config.oopTurnBet ?? [],
-    oopTurnRaise: config.oopTurnRaise ?? [],
-    oopRiverBet: config.oopRiverBet ?? [],
-    oopRiverRaise: config.oopRiverRaise ?? [],
-    ipFlopBet: config.ipFlopBet ?? [],
-    ipFlopRaise: config.ipFlopRaise ?? [],
-    ipTurnBet: config.ipTurnBet ?? [],
-    ipTurnRaise: config.ipTurnRaise ?? [],
-    ipRiverBet: config.ipRiverBet ?? [],
-    ipRiverRaise: config.ipRiverRaise ?? [],
+    oopFlopBet: config.oopFlopBet,
+    oopFlopRaise: config.oopFlopRaise,
+    oopTurnBet: config.oopTurnBet,
+    oopTurnRaise: config.oopTurnRaise,
+    oopRiverBet: config.oopRiverBet,
+    oopRiverRaise: config.oopRiverRaise,
+    ipFlopBet: config.ipFlopBet,
+    ipFlopRaise: config.ipFlopRaise,
+    ipTurnBet: config.ipTurnBet,
+    ipTurnRaise: config.ipTurnRaise,
+    ipRiverBet: config.ipRiverBet,
+    ipRiverRaise: config.ipRiverRaise,
     addAllInThreshold: config.addAllInThreshold,
     forceAllInThreshold: config.forceAllInThreshold,
-    adjustLastTwoBetSizes: config.adjustLastTwoBetSizes,
+    mergingThreshold: config.mergingThreshold,
   });
-}
+};
 
-export function saveConfig() {
+export const saveConfig = () => {
   const tmpConfig = useTmpConfigStore();
   const savedConfig = useSavedConfigStore();
 
@@ -139,9 +201,9 @@ export function saveConfig() {
     ipRiverRaise: tmpConfig.ipRiverRaise,
     addAllInThreshold: tmpConfig.addAllInThreshold,
     forceAllInThreshold: tmpConfig.forceAllInThreshold,
-    adjustLastTwoBetSizes: tmpConfig.adjustLastTwoBetSizes,
+    mergingThreshold: tmpConfig.mergingThreshold,
   });
-}
+};
 
 export const useStore = defineStore("app", {
   state: () => ({
@@ -177,36 +239,36 @@ export const useConfigStore = defineStore("config", {
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
-    oopFlopBetStr: "",
-    oopFlopRaiseStr: "",
-    oopTurnBetStr: "",
-    oopTurnRaiseStr: "",
-    oopRiverBetStr: "",
-    oopRiverRaiseStr: "",
-    ipFlopBetStr: "",
-    ipFlopRaiseStr: "",
-    ipTurnBetStr: "",
-    ipTurnRaiseStr: "",
-    ipRiverBetStr: "",
-    ipRiverRaiseStr: "",
+    oopFlopBet: "",
+    oopFlopRaise: "",
+    oopTurnBet: "",
+    oopTurnRaise: "",
+    oopRiverBet: "",
+    oopRiverRaise: "",
+    ipFlopBet: "",
+    ipFlopRaise: "",
+    ipTurnBet: "",
+    ipTurnRaise: "",
+    ipRiverBet: "",
+    ipRiverRaise: "",
     addAllInThreshold: 0,
     forceAllInThreshold: 0,
-    adjustLastTwoBetSizes: true,
+    mergingThreshold: 0,
   }),
 
   getters: {
-    oopFlopBet: (state) => parseBetSizes(state.oopFlopBetStr, false),
-    oopFlopRaise: (state) => parseBetSizes(state.oopFlopRaiseStr, true),
-    oopTurnBet: (state) => parseBetSizes(state.oopTurnBetStr, false),
-    oopTurnRaise: (state) => parseBetSizes(state.oopTurnRaiseStr, true),
-    oopRiverBet: (state) => parseBetSizes(state.oopRiverBetStr, false),
-    oopRiverRaise: (state) => parseBetSizes(state.oopRiverRaiseStr, true),
-    ipFlopBet: (state) => parseBetSizes(state.ipFlopBetStr, false),
-    ipFlopRaise: (state) => parseBetSizes(state.ipFlopRaiseStr, true),
-    ipTurnBet: (state) => parseBetSizes(state.ipTurnBetStr, false),
-    ipTurnRaise: (state) => parseBetSizes(state.ipTurnRaiseStr, true),
-    ipRiverBet: (state) => parseBetSizes(state.ipRiverBetStr, false),
-    ipRiverRaise: (state) => parseBetSizes(state.ipRiverRaiseStr, true),
+    oopFlopBetSanitized: (s) => sanitizeBetString(s.oopFlopBet, false),
+    oopFlopRaiseSanitized: (s) => sanitizeBetString(s.oopFlopRaise, true),
+    oopTurnBetSanitized: (s) => sanitizeBetString(s.oopTurnBet, false),
+    oopTurnRaiseSanitized: (s) => sanitizeBetString(s.oopTurnRaise, true),
+    oopRiverBetSanitized: (s) => sanitizeBetString(s.oopRiverBet, false),
+    oopRiverRaiseSanitized: (s) => sanitizeBetString(s.oopRiverRaise, true),
+    ipFlopBetSanitized: (s) => sanitizeBetString(s.ipFlopBet, false),
+    ipFlopRaiseSanitized: (s) => sanitizeBetString(s.ipFlopRaise, true),
+    ipTurnBetSanitized: (s) => sanitizeBetString(s.ipTurnBet, false),
+    ipTurnRaiseSanitized: (s) => sanitizeBetString(s.ipTurnRaise, true),
+    ipRiverBetSanitized: (s) => sanitizeBetString(s.ipRiverBet, false),
+    ipRiverRaiseSanitized: (s) => sanitizeBetString(s.ipRiverRaise, true),
   },
 });
 
@@ -219,21 +281,21 @@ export const useTmpConfigStore = defineStore("tmpConfig", {
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
-    oopFlopBet: [] as number[],
-    oopFlopRaise: [] as number[],
-    oopTurnBet: [] as number[],
-    oopTurnRaise: [] as number[],
-    oopRiverBet: [] as number[],
-    oopRiverRaise: [] as number[],
-    ipFlopBet: [] as number[],
-    ipFlopRaise: [] as number[],
-    ipTurnBet: [] as number[],
-    ipTurnRaise: [] as number[],
-    ipRiverBet: [] as number[],
-    ipRiverRaise: [] as number[],
+    oopFlopBet: "",
+    oopFlopRaise: "",
+    oopTurnBet: "",
+    oopTurnRaise: "",
+    oopRiverBet: "",
+    oopRiverRaise: "",
+    ipFlopBet: "",
+    ipFlopRaise: "",
+    ipTurnBet: "",
+    ipTurnRaise: "",
+    ipRiverBet: "",
+    ipRiverRaise: "",
     addAllInThreshold: 0,
     forceAllInThreshold: 0,
-    adjustLastTwoBetSizes: true,
+    mergingThreshold: 0,
   }),
 });
 
@@ -246,20 +308,20 @@ export const useSavedConfigStore = defineStore("savedConfig", {
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
-    oopFlopBet: [] as number[],
-    oopFlopRaise: [] as number[],
-    oopTurnBet: [] as number[],
-    oopTurnRaise: [] as number[],
-    oopRiverBet: [] as number[],
-    oopRiverRaise: [] as number[],
-    ipFlopBet: [] as number[],
-    ipFlopRaise: [] as number[],
-    ipTurnBet: [] as number[],
-    ipTurnRaise: [] as number[],
-    ipRiverBet: [] as number[],
-    ipRiverRaise: [] as number[],
+    oopFlopBet: "",
+    oopFlopRaise: "",
+    oopTurnBet: "",
+    oopTurnRaise: "",
+    oopRiverBet: "",
+    oopRiverRaise: "",
+    ipFlopBet: "",
+    ipFlopRaise: "",
+    ipTurnBet: "",
+    ipTurnRaise: "",
+    ipRiverBet: "",
+    ipRiverRaise: "",
     addAllInThreshold: 0,
     forceAllInThreshold: 0,
-    adjustLastTwoBetSizes: true,
+    mergingThreshold: 0,
   }),
 });
