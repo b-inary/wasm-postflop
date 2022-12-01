@@ -261,6 +261,15 @@ const checkConfig = (
     }
   }
 
+  if (config.donkOption) {
+    if (!config.oopTurnDonkSanitized.valid) {
+      return `OOP turn donk: ${config.oopTurnDonkSanitized.s}`;
+    }
+    if (!config.oopRiverDonkSanitized.valid) {
+      return `OOP river donk: ${config.oopRiverDonkSanitized.s}`;
+    }
+  }
+
   if (config.addAllInThreshold < 0) {
     return "Invalid add all-in threshold";
   }
@@ -277,13 +286,10 @@ const checkConfig = (
 };
 
 const convertBetString = (s: string): string => {
+  if (s === "") return s;
   return s
-    .split(",")
-    .map((x) => {
-      const trimmed = x.trim();
-      const lastChar = trimmed[trimmed.length - 1];
-      return "acex".includes(lastChar) ? trimmed : trimmed + "%";
-    })
+    .split(", ")
+    .map((e) => ("acex".includes(e[e.length - 1]) ? e : e + "%"))
     .join(",");
 };
 
@@ -377,12 +383,15 @@ export default defineComponent({
         new Uint8Array(tmpConfig.board),
         tmpConfig.startingPot,
         tmpConfig.effectiveStack,
+        tmpConfig.donkOption,
         convertBetString(tmpConfig.oopFlopBet),
         convertBetString(tmpConfig.oopFlopRaise),
         convertBetString(tmpConfig.oopTurnBet),
         convertBetString(tmpConfig.oopTurnRaise),
+        convertBetString(tmpConfig.oopTurnDonk),
         convertBetString(tmpConfig.oopRiverBet),
         convertBetString(tmpConfig.oopRiverRaise),
+        convertBetString(tmpConfig.oopRiverDonk),
         convertBetString(tmpConfig.ipFlopBet),
         convertBetString(tmpConfig.ipFlopRaise),
         convertBetString(tmpConfig.ipTurnBet),

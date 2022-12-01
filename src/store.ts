@@ -42,7 +42,7 @@ export const cardText = (card: number) => {
   };
 };
 
-const forbiddenChars = /[bo+-]/;
+const forbiddenChars = /[beox+-]/;
 
 const parseFloat = (s: string): number => {
   if (forbiddenChars.test(s)) {
@@ -73,6 +73,9 @@ export const sanitizeBetString = (
   let sanitized = "";
 
   for (const e of elements) {
+    if (sanitized !== "") {
+      sanitized += ", ";
+    }
     if (e === "") {
       return { s: "Found empty string", valid: false };
     } else if (e.endsWith("x")) {
@@ -89,7 +92,7 @@ export const sanitizeBetString = (
         } else if (float <= 1.0) {
           return { s: `Multiplier must be greater than 1: ${e}`, valid: false };
         } else {
-          sanitized += `${float}x, `;
+          sanitized += `${float}x`;
         }
       }
     } else if (e.endsWith("c")) {
@@ -102,7 +105,7 @@ export const sanitizeBetString = (
       } else if (float > 100000) {
         return { s: `Addition size too large: ${e}`, valid: false };
       } else {
-        sanitized += `${float}c, `;
+        sanitized += `${float}c`;
       }
     } else if (e.includes("e")) {
       // Geometric
@@ -127,24 +130,21 @@ export const sanitizeBetString = (
       if (float2 !== null && Number.isNaN(float2)) {
         return { s: `Invalid number: ${e}`, valid: false };
       }
-      sanitized += `${float1 ?? ""}e${float2 ?? ""}, `;
+      sanitized += `${float1 ?? ""}e${float2 ?? ""}`;
     } else if (e === "a") {
       // All-in
-      sanitized += "a, ";
+      sanitized += "a";
     } else {
       // Pot relative
       const float = parseFloat(e);
       if (Number.isNaN(float)) {
         return { s: `Invalid number: ${e}`, valid: false };
       }
-      sanitized += `${float}, `;
+      sanitized += `${float}`;
     }
   }
 
-  return {
-    s: sanitized.slice(0, -2),
-    valid: true,
-  };
+  return { s: sanitized, valid: true };
 };
 
 export const saveConfigTmp = () => {
@@ -158,12 +158,15 @@ export const saveConfigTmp = () => {
     board: [...config.board],
     startingPot: config.startingPot,
     effectiveStack: config.effectiveStack,
+    donkOption: config.donkOption,
     oopFlopBet: config.oopFlopBet,
     oopFlopRaise: config.oopFlopRaise,
     oopTurnBet: config.oopTurnBet,
     oopTurnRaise: config.oopTurnRaise,
+    oopTurnDonk: config.oopTurnDonk,
     oopRiverBet: config.oopRiverBet,
     oopRiverRaise: config.oopRiverRaise,
+    oopRiverDonk: config.oopRiverDonk,
     ipFlopBet: config.ipFlopBet,
     ipFlopRaise: config.ipFlopRaise,
     ipTurnBet: config.ipTurnBet,
@@ -187,12 +190,15 @@ export const saveConfig = () => {
     board: tmpConfig.board,
     startingPot: tmpConfig.startingPot,
     effectiveStack: tmpConfig.effectiveStack,
+    donkOption: tmpConfig.donkOption,
     oopFlopBet: tmpConfig.oopFlopBet,
     oopFlopRaise: tmpConfig.oopFlopRaise,
     oopTurnBet: tmpConfig.oopTurnBet,
     oopTurnRaise: tmpConfig.oopTurnRaise,
+    oopTurnDonk: tmpConfig.oopTurnDonk,
     oopRiverBet: tmpConfig.oopRiverBet,
     oopRiverRaise: tmpConfig.oopRiverRaise,
+    oopRiverDonk: tmpConfig.oopRiverDonk,
     ipFlopBet: tmpConfig.ipFlopBet,
     ipFlopRaise: tmpConfig.ipFlopRaise,
     ipTurnBet: tmpConfig.ipTurnBet,
@@ -239,12 +245,15 @@ export const useConfigStore = defineStore("config", {
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
+    donkOption: false,
     oopFlopBet: "",
     oopFlopRaise: "",
     oopTurnBet: "",
     oopTurnRaise: "",
+    oopTurnDonk: "",
     oopRiverBet: "",
     oopRiverRaise: "",
+    oopRiverDonk: "",
     ipFlopBet: "",
     ipFlopRaise: "",
     ipTurnBet: "",
@@ -261,8 +270,10 @@ export const useConfigStore = defineStore("config", {
     oopFlopRaiseSanitized: (s) => sanitizeBetString(s.oopFlopRaise, true),
     oopTurnBetSanitized: (s) => sanitizeBetString(s.oopTurnBet, false),
     oopTurnRaiseSanitized: (s) => sanitizeBetString(s.oopTurnRaise, true),
+    oopTurnDonkSanitized: (s) => sanitizeBetString(s.oopTurnDonk, false),
     oopRiverBetSanitized: (s) => sanitizeBetString(s.oopRiverBet, false),
     oopRiverRaiseSanitized: (s) => sanitizeBetString(s.oopRiverRaise, true),
+    oopRiverDonkSanitized: (s) => sanitizeBetString(s.oopRiverDonk, false),
     ipFlopBetSanitized: (s) => sanitizeBetString(s.ipFlopBet, false),
     ipFlopRaiseSanitized: (s) => sanitizeBetString(s.ipFlopRaise, true),
     ipTurnBetSanitized: (s) => sanitizeBetString(s.ipTurnBet, false),
@@ -281,12 +292,15 @@ export const useTmpConfigStore = defineStore("tmpConfig", {
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
+    donkOption: false,
     oopFlopBet: "",
     oopFlopRaise: "",
     oopTurnBet: "",
     oopTurnRaise: "",
+    oopTurnDonk: "",
     oopRiverBet: "",
     oopRiverRaise: "",
+    oopRiverDonk: "",
     ipFlopBet: "",
     ipFlopRaise: "",
     ipTurnBet: "",
@@ -308,12 +322,15 @@ export const useSavedConfigStore = defineStore("savedConfig", {
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
+    donkOption: false,
     oopFlopBet: "",
     oopFlopRaise: "",
     oopTurnBet: "",
     oopTurnRaise: "",
+    oopTurnDonk: "",
     oopRiverBet: "",
     oopRiverRaise: "",
+    oopRiverDonk: "",
     ipFlopBet: "",
     ipFlopRaise: "",
     ipTurnBet: "",

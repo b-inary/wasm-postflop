@@ -21,12 +21,15 @@ export type ConfigValue1 = {
 type ConfigValue2 = {
   startingPot: number;
   effectiveStack: number;
+  donkOption: number;
   oopFlopBet: string;
   oopFlopRaise: string;
   oopTurnBet: string;
   oopTurnRaise: string;
+  oopTurnDonk: string;
   oopRiverBet: string;
   oopRiverRaise: string;
+  oopRiverDonk: string;
   ipFlopBet: string;
   ipFlopRaise: string;
   ipTurnBet: string;
@@ -36,8 +39,8 @@ type ConfigValue2 = {
   addAllInThreshold: number;
   forceAllInThreshold: number;
   mergingThreshold: number;
-  addedLines: string[];
-  removedLines: string[];
+  addedLines: string;
+  removedLines: string;
 };
 
 const migrateBetString1to2 = (s: string): string => {
@@ -52,12 +55,15 @@ export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
   return {
     startingPot: value.startingPot,
     effectiveStack: value.effectiveStack,
+    donkOption: 0,
     oopFlopBet: migrateBetString1to2(value.oopFlopBetStr),
     oopFlopRaise: migrateBetString1to2(value.oopFlopRaiseStr),
     oopTurnBet: migrateBetString1to2(value.oopTurnBetStr),
     oopTurnRaise: migrateBetString1to2(value.oopTurnRaiseStr),
+    oopTurnDonk: "",
     oopRiverBet: migrateBetString1to2(value.oopRiverBetStr),
     oopRiverRaise: migrateBetString1to2(value.oopRiverRaiseStr),
+    oopRiverDonk: "",
     ipFlopBet: migrateBetString1to2(value.ipFlopBetStr),
     ipFlopRaise: migrateBetString1to2(value.ipFlopRaiseStr),
     ipTurnBet: migrateBetString1to2(value.ipTurnBetStr),
@@ -67,7 +73,7 @@ export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
     addAllInThreshold: value.addAllInThreshold,
     forceAllInThreshold: value.forceAllInThreshold,
     mergingThreshold: 0,
-    addedLines: [],
-    removedLines: [],
+    addedLines: "",
+    removedLines: "",
   };
 };

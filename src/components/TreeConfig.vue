@@ -40,7 +40,17 @@
       </div>
 
       <div class="mt-6">
-        <p class="font-bold">OOP bet sizes</p>
+        <p>
+          <span class="font-bold">OOP bet sizes</span>
+          <label class="inline-block ml-8 cursor-pointer">
+            <input
+              v-model="config.donkOption"
+              type="checkbox"
+              class="mr-1 align-middle rounded cursor-pointer"
+            />
+            Use different sizes for donk bets
+          </label>
+        </p>
         <div class="flex flex-row">
           <div>
             <p class="my-1 underline">Flop</p>
@@ -112,6 +122,22 @@
               />
               %
             </p>
+            <p v-if="config.donkOption" class="my-1">
+              <span class="inline-block w-14">Donk:</span>
+              <input
+                v-model="config.oopTurnDonk"
+                type="text"
+                :class="
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopTurnDonkSanitized.valid ? 'input-error' : '')
+                "
+                @change="
+                  config.oopTurnDonkSanitized.valid &&
+                    (config.oopTurnDonk = config.oopTurnDonkSanitized.s)
+                "
+              />
+              %
+            </p>
           </div>
 
           <div class="ml-5">
@@ -144,6 +170,22 @@
                 @change="
                   config.oopRiverRaiseSanitized.valid &&
                     (config.oopRiverRaise = config.oopRiverRaiseSanitized.s)
+                "
+              />
+              %
+            </p>
+            <p v-if="config.donkOption" class="my-1">
+              <span class="inline-block w-14">Donk:</span>
+              <input
+                v-model="config.oopRiverDonk"
+                type="text"
+                :class="
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopRiverDonkSanitized.valid ? 'input-error' : '')
+                "
+                @change="
+                  config.oopRiverDonkSanitized.valid &&
+                    (config.oopRiverDonk = config.oopRiverDonkSanitized.s)
                 "
               />
               %
@@ -351,12 +393,15 @@ import DbItemPicker from "./DbItemPicker.vue";
 type ConfigValue = {
   startingPot: number;
   effectiveStack: number;
+  donkOption: number;
   oopFlopBet: string;
   oopFlopRaise: string;
   oopTurnBet: string;
   oopTurnRaise: string;
+  oopTurnDonk: string;
   oopRiverBet: string;
   oopRiverRaise: string;
+  oopRiverDonk: string;
   ipFlopBet: string;
   ipFlopRaise: string;
   ipTurnBet: string;
@@ -366,8 +411,8 @@ type ConfigValue = {
   addAllInThreshold: number;
   forceAllInThreshold: number;
   mergingThreshold: number;
-  addedLines: string[];
-  removedLines: string[];
+  addedLines: string;
+  removedLines: string;
 };
 
 export default defineComponent({
@@ -384,8 +429,10 @@ export default defineComponent({
         !config.oopFlopRaiseSanitized.valid ||
         !config.oopTurnBetSanitized.valid ||
         !config.oopTurnRaiseSanitized.valid ||
+        !config.oopTurnDonkSanitized.valid ||
         !config.oopRiverBetSanitized.valid ||
-        !config.oopRiverRaiseSanitized.valid
+        !config.oopRiverRaiseSanitized.valid ||
+        !config.oopRiverDonkSanitized.valid
       );
     });
 
@@ -422,12 +469,15 @@ export default defineComponent({
       (): ConfigValue => ({
         startingPot: config.startingPot,
         effectiveStack: config.effectiveStack,
+        donkOption: Number(config.donkOption),
         oopFlopBet: config.oopFlopBet,
         oopFlopRaise: config.oopFlopRaise,
         oopTurnBet: config.oopTurnBet,
         oopTurnRaise: config.oopTurnRaise,
+        oopTurnDonk: config.donkOption ? config.oopTurnDonk : "",
         oopRiverBet: config.oopRiverBet,
         oopRiverRaise: config.oopRiverRaise,
+        oopRiverDonk: config.donkOption ? config.oopRiverDonk : "",
         ipFlopBet: config.ipFlopBet,
         ipFlopRaise: config.ipFlopRaise,
         ipTurnBet: config.ipTurnBet,
@@ -437,8 +487,8 @@ export default defineComponent({
         addAllInThreshold: config.addAllInThreshold,
         forceAllInThreshold: config.forceAllInThreshold,
         mergingThreshold: config.mergingThreshold,
-        addedLines: [],
-        removedLines: [],
+        addedLines: "",
+        removedLines: "",
       })
     );
 
@@ -460,12 +510,15 @@ export default defineComponent({
     const loadConfig = (value: ConfigValue) => {
       config.startingPot = value.startingPot;
       config.effectiveStack = value.effectiveStack;
+      config.donkOption = Boolean(value.donkOption);
       config.oopFlopBet = value.oopFlopBet;
       config.oopFlopRaise = value.oopFlopRaise;
       config.oopTurnBet = value.oopTurnBet;
       config.oopTurnRaise = value.oopTurnRaise;
+      config.oopTurnDonk = value.oopTurnDonk;
       config.oopRiverBet = value.oopRiverBet;
       config.oopRiverRaise = value.oopRiverRaise;
+      config.oopRiverDonk = value.oopRiverDonk;
       config.ipFlopBet = value.ipFlopBet;
       config.ipFlopRaise = value.ipFlopRaise;
       config.ipTurnBet = value.ipTurnBet;
