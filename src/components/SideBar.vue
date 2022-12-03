@@ -8,14 +8,14 @@
     </button>
 
     <button :class="itemStyle('OOPRange')" @click="store.mainView = 'OOPRange'">
-      Range 1 (OOP)
+      OOP Range
       <span class="flex my-2 justify-center">
         <range-mini-viewer :player="0" />
       </span>
     </button>
 
     <button :class="itemStyle('IPRange')" @click="store.mainView = 'IPRange'">
-      Range 2 (IP)
+      IP Range
       <span class="flex my-2 justify-center">
         <range-mini-viewer :player="1" />
       </span>

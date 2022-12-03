@@ -1,5 +1,5 @@
 <template>
-  <div class="flex mt-2">
+  <div class="flex mt-1">
     <div class="shrink-0 ml-1">
       <table class="bg-gray-200 shadow" @mouseleave="dragEnd">
         <tr v-for="row in 13" :key="row" class="h-9">
