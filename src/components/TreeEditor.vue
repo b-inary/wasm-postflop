@@ -121,7 +121,13 @@
   </div>
 
   <div class="flex my-5 gap-3">
-    <button class="button-base button-blue" @click="saveEdit">Save Edit</button>
+    <button
+      class="button-base button-blue"
+      :disabled="invalidLinesArray.length > 0"
+      @click="saveEdit"
+    >
+      Save Edit
+    </button>
     <button class="button-base button-red" @click="cancelEdit">Cancel</button>
   </div>
 

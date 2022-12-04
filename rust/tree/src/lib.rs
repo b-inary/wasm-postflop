@@ -184,6 +184,7 @@ impl TreeManager {
         self.tree
             .invalid_terminals()
             .iter()
+            .rev()
             .map(|l| encode_line(l))
             .collect::<Vec<_>>()
             .join(",")

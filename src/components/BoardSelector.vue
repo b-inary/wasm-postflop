@@ -27,7 +27,7 @@
     class="mt-5 text-red-600"
   >
     <span class="font-bold underline">Warning:</span>
-    Editted tree assumes a {{ config.expectedBoardLength }}-card board.
+    Edited tree assumes a {{ config.expectedBoardLength }}-card board.
   </div>
 </template>
 
