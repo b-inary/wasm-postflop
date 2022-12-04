@@ -89,14 +89,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 
 [[package]]
-name = "solver"
-version = "0.1.4"
-dependencies = [
- "postflop-solver",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "syn"
 version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -105,6 +97,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "tree"
+version = "0.1.4"
+dependencies = [
+ "postflop-solver",
+ "wasm-bindgen",
 ]
 
 [[package]]

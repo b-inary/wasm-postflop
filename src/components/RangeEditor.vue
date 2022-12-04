@@ -52,13 +52,7 @@
             @change="onRangeTextChange"
           />
 
-          <button
-            :class="
-              'rounded-lg shadow-sm ml-6 px-3.5 py-1.5 text-white text-sm font-medium ' +
-              'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
-            "
-            @click="clearRange"
-          >
+          <button class="ml-6 button-base button-blue" @click="clearRange">
             Clear
           </button>
         </div>

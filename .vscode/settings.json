@@ -2,6 +2,7 @@
   "css.lint.unknownAtRules": "ignore",
   "rust-analyzer.linkedProjects": [
     "rust/range/Cargo.toml",
-    "rust/solver-mt/Cargo.toml"
+    "rust/solver-mt/Cargo.toml",
+    "rust/tree/Cargo.toml"
   ]
 }

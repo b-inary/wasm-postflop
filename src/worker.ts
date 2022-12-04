@@ -39,7 +39,9 @@ function createHandler(mod: Mod) {
       ipRiverRaise: string,
       addAllInThreshold: number,
       forceAllInThreshold: number,
-      mergingThreshold: number
+      mergingThreshold: number,
+      addedLines: string,
+      removedLines: string
     ) {
       return this.game.init(
         oopRange,
@@ -64,7 +66,9 @@ function createHandler(mod: Mod) {
         ipRiverRaise,
         addAllInThreshold,
         forceAllInThreshold,
-        mergingThreshold
+        mergingThreshold,
+        addedLines,
+        removedLines
       );
     },
 

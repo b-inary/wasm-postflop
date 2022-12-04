@@ -1,394 +1,478 @@
 <template>
-  <div class="flex">
-    <div class="shrink-0">
-      <div>
-        <p class="my-1">
-          <span class="inline-block w-[7.5rem]">Starting pot:</span>
-          <input
-            v-model="config.startingPot"
-            type="number"
-            :class="
-              'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
-              (config.startingPot <= 0 ||
-              config.startingPot > 100000 ||
-              config.startingPot % 1 !== 0
-                ? 'input-error'
-                : '')
-            "
-            min="0"
-            max="100000"
-          />
-        </p>
-
-        <p class="my-1">
-          <span class="inline-block w-[7.5rem]">Effective stack:</span>
-          <input
-            v-model="config.effectiveStack"
-            type="number"
-            :class="
-              'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
-              (config.effectiveStack <= 0 ||
-              config.effectiveStack > 100000 ||
-              config.effectiveStack % 1 !== 0
-                ? 'input-error'
-                : '')
-            "
-            min="0"
-            max="100000"
-          />
-        </p>
-      </div>
-
-      <div class="mt-6">
-        <p>
-          <span class="font-bold">OOP bet sizes</span>
-          <label class="inline-block ml-8 cursor-pointer">
+  <div v-if="!isEditMode">
+    <div class="flex">
+      <div class="shrink-0">
+        <div class="flex my-1">
+          <div>
+            Starting pot:
             <input
-              v-model="config.donkOption"
-              type="checkbox"
-              class="mr-1 align-middle rounded cursor-pointer"
+              v-model="config.startingPot"
+              type="number"
+              :class="
+                'ml-2 w-24 px-2 py-1 rounded-lg text-sm text-center ' +
+                (config.startingPot <= 0 ||
+                config.startingPot > 100000 ||
+                config.startingPot % 1 !== 0
+                  ? 'input-error'
+                  : '')
+              "
+              :disabled="hasEdit"
+              min="0"
+              max="100000"
             />
-            Use different sizes for donk bets
-          </label>
-        </p>
-        <div class="flex flex-row">
+          </div>
+
+          <div class="ml-5">
+            Effective stack:
+            <input
+              v-model="config.effectiveStack"
+              type="number"
+              :class="
+                'ml-2 w-24 px-2 py-1 rounded-lg text-sm text-center ' +
+                (config.effectiveStack <= 0 ||
+                config.effectiveStack > 100000 ||
+                config.effectiveStack % 1 !== 0
+                  ? 'input-error'
+                  : '')
+              "
+              :disabled="hasEdit"
+              min="0"
+              max="100000"
+            />
+          </div>
+
+          <div class="flex-grow"></div>
+
+          <button class="button-base button-blue" @click="clearConfig">
+            Clear
+          </button>
+        </div>
+
+        <div class="mt-6">
+          <p>
+            <span class="font-bold">OOP bet sizes</span>
+            <label class="inline-block ml-8">
+              <input
+                v-model="config.donkOption"
+                type="checkbox"
+                class="mr-1 align-middle rounded cursor-pointer peer"
+                :disabled="hasEdit"
+              />
+              <span class="cursor-pointer peer-disabled:cursor-not-allowed">
+                Use different sizes for donk bets
+              </span>
+            </label>
+          </p>
+          <div class="flex flex-row">
+            <div>
+              <p class="my-1 underline">Flop</p>
+              <p class="my-1">
+                <span class="inline-block w-14">Bet:</span>
+                <input
+                  v-model="config.oopFlopBet"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.oopFlopBetSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.oopFlopBetSanitized.valid &&
+                      (config.oopFlopBet = config.oopFlopBetSanitized.s)
+                  "
+                />
+                %
+              </p>
+              <p class="my-1">
+                <span class="inline-block w-14">Raise:</span>
+                <input
+                  v-model="config.oopFlopRaise"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.oopFlopRaiseSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.oopFlopRaiseSanitized.valid &&
+                      (config.oopFlopRaise = config.oopFlopRaiseSanitized.s)
+                  "
+                />
+                %
+              </p>
+            </div>
+
+            <div class="ml-5">
+              <p class="my-1 underline">Turn</p>
+              <p class="my-1">
+                <span class="inline-block w-14">Bet:</span>
+                <input
+                  v-model="config.oopTurnBet"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.oopTurnBetSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.oopTurnBetSanitized.valid &&
+                      (config.oopTurnBet = config.oopTurnBetSanitized.s)
+                  "
+                />
+                %
+              </p>
+              <p class="my-1">
+                <span class="inline-block w-14">Raise:</span>
+                <input
+                  v-model="config.oopTurnRaise"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.oopTurnRaiseSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.oopTurnRaiseSanitized.valid &&
+                      (config.oopTurnRaise = config.oopTurnRaiseSanitized.s)
+                  "
+                />
+                %
+              </p>
+              <p v-if="config.donkOption" class="my-1">
+                <span class="inline-block w-14">Donk:</span>
+                <input
+                  v-model="config.oopTurnDonk"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.oopTurnDonkSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.oopTurnDonkSanitized.valid &&
+                      (config.oopTurnDonk = config.oopTurnDonkSanitized.s)
+                  "
+                />
+                %
+              </p>
+            </div>
+
+            <div class="ml-5">
+              <p class="my-1 underline">River</p>
+              <p class="my-1">
+                <span class="inline-block w-14">Bet:</span>
+                <input
+                  v-model="config.oopRiverBet"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.oopRiverBetSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.oopRiverBetSanitized.valid &&
+                      (config.oopRiverBet = config.oopRiverBetSanitized.s)
+                  "
+                />
+                %
+              </p>
+              <p class="my-1">
+                <span class="inline-block w-14">Raise:</span>
+                <input
+                  v-model="config.oopRiverRaise"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.oopRiverRaiseSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.oopRiverRaiseSanitized.valid &&
+                      (config.oopRiverRaise = config.oopRiverRaiseSanitized.s)
+                  "
+                />
+                %
+              </p>
+              <p v-if="config.donkOption" class="my-1">
+                <span class="inline-block w-14">Donk:</span>
+                <input
+                  v-model="config.oopRiverDonk"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.oopRiverDonkSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.oopRiverDonkSanitized.valid &&
+                      (config.oopRiverDonk = config.oopRiverDonkSanitized.s)
+                  "
+                />
+                %
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex">
+            <p class="mt-6 font-bold">IP bet sizes</p>
+            <div class="flex flex-grow items-center justify-center gap-6">
+              <button
+                class="mt-3 button-base button-blue button-arrow"
+                :disabled="isIpError || hasEdit"
+                @click="ipToOop"
+              >
+                ↑
+              </button>
+              <button
+                class="mt-3 button-base button-blue button-arrow"
+                :disabled="isOopError || hasEdit"
+                @click="oopToIp"
+              >
+                ↓
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-row">
+            <div>
+              <p class="my-1 underline">Flop</p>
+              <p class="my-1">
+                <span class="inline-block w-14">Bet:</span>
+                <input
+                  v-model="config.ipFlopBet"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.ipFlopBetSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.ipFlopBetSanitized.valid &&
+                      (config.ipFlopBet = config.ipFlopBetSanitized.s)
+                  "
+                />
+                %
+              </p>
+              <p class="my-1">
+                <span class="inline-block w-14">Raise:</span>
+                <input
+                  v-model="config.ipFlopRaise"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.ipFlopRaiseSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.ipFlopRaiseSanitized.valid &&
+                      (config.ipFlopRaise = config.ipFlopRaiseSanitized.s)
+                  "
+                />
+                %
+              </p>
+            </div>
+
+            <div class="ml-5">
+              <p class="my-1 underline">Turn</p>
+              <p class="my-1">
+                <span class="inline-block w-14">Bet:</span>
+                <input
+                  v-model="config.ipTurnBet"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.ipTurnBetSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.ipTurnBetSanitized.valid &&
+                      (config.ipTurnBet = config.ipTurnBetSanitized.s)
+                  "
+                />
+                %
+              </p>
+              <p class="my-1">
+                <span class="inline-block w-14">Raise:</span>
+                <input
+                  v-model="config.ipTurnRaise"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.ipTurnRaiseSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.ipTurnRaiseSanitized.valid &&
+                      (config.ipTurnRaise = config.ipTurnRaiseSanitized.s)
+                  "
+                />
+                %
+              </p>
+            </div>
+
+            <div class="ml-5">
+              <p class="my-1 underline">River</p>
+              <p class="my-1">
+                <span class="inline-block w-14">Bet:</span>
+                <input
+                  v-model="config.ipRiverBet"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.ipRiverBetSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.ipRiverBetSanitized.valid &&
+                      (config.ipRiverBet = config.ipRiverBetSanitized.s)
+                  "
+                />
+                %
+              </p>
+              <p class="my-1">
+                <span class="inline-block w-14">Raise:</span>
+                <input
+                  v-model="config.ipRiverRaise"
+                  type="text"
+                  :class="
+                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    (!config.ipRiverRaiseSanitized.valid ? 'input-error' : '')
+                  "
+                  :disabled="hasEdit"
+                  @change="
+                    config.ipRiverRaiseSanitized.valid &&
+                      (config.ipRiverRaise = config.ipRiverRaiseSanitized.s)
+                  "
+                />
+                %
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex mt-6 gap-4">
           <div>
-            <p class="my-1 underline">Flop</p>
             <p class="my-1">
-              <span class="inline-block w-14">Bet:</span>
+              <span class="inline-block w-40">Add all-in threshold:</span>
               <input
-                v-model="config.oopFlopBet"
-                type="text"
+                v-model="config.addAllInThreshold"
+                type="number"
                 :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.oopFlopBetSanitized.valid ? 'input-error' : '')
+                  'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+                  (config.addAllInThreshold < 0 ? 'input-error' : '')
                 "
-                @change="
-                  config.oopFlopBetSanitized.valid &&
-                    (config.oopFlopBet = config.oopFlopBetSanitized.s)
-                "
+                :disabled="hasEdit"
+                min="0"
+                max="10000000"
               />
               %
             </p>
+
             <p class="my-1">
-              <span class="inline-block w-14">Raise:</span>
+              <span class="inline-block w-40">Force all-in threshold:</span>
               <input
-                v-model="config.oopFlopRaise"
-                type="text"
+                v-model="config.forceAllInThreshold"
+                type="number"
                 :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.oopFlopRaiseSanitized.valid ? 'input-error' : '')
+                  'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+                  (config.forceAllInThreshold < 0 ? 'input-error' : '')
                 "
-                @change="
-                  config.oopFlopRaiseSanitized.valid &&
-                    (config.oopFlopRaise = config.oopFlopRaiseSanitized.s)
+                :disabled="hasEdit"
+                min="0"
+                max="10000000"
+              />
+              %
+            </p>
+
+            <p class="my-1">
+              <span class="inline-block w-40">Merging threshold:</span>
+              <input
+                v-model="config.mergingThreshold"
+                type="number"
+                :class="
+                  'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+                  (config.mergingThreshold < 0 ? 'input-error' : '')
                 "
+                :disabled="hasEdit"
+                min="0"
+                max="10000000"
               />
               %
             </p>
           </div>
 
-          <div class="ml-5">
-            <p class="my-1 underline">Turn</p>
-            <p class="my-1">
-              <span class="inline-block w-14">Bet:</span>
-              <input
-                v-model="config.oopTurnBet"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.oopTurnBetSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.oopTurnBetSanitized.valid &&
-                    (config.oopTurnBet = config.oopTurnBetSanitized.s)
-                "
-              />
-              %
-            </p>
-            <p class="my-1">
-              <span class="inline-block w-14">Raise:</span>
-              <input
-                v-model="config.oopTurnRaise"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.oopTurnRaiseSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.oopTurnRaiseSanitized.valid &&
-                    (config.oopTurnRaise = config.oopTurnRaiseSanitized.s)
-                "
-              />
-              %
-            </p>
-            <p v-if="config.donkOption" class="my-1">
-              <span class="inline-block w-14">Donk:</span>
-              <input
-                v-model="config.oopTurnDonk"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.oopTurnDonkSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.oopTurnDonkSanitized.valid &&
-                    (config.oopTurnDonk = config.oopTurnDonkSanitized.s)
-                "
-              />
-              %
-            </p>
-          </div>
+          <div class="flex justify-center flex-grow">
+            <div class="flex flex-col justify-center gap-3">
+              <button
+                class="button-base button-blue"
+                :disabled="!isInputValid"
+                @click="startEdit"
+              >
+                Preview & Edit Tree
+              </button>
 
-          <div class="ml-5">
-            <p class="my-1 underline">River</p>
-            <p class="my-1">
-              <span class="inline-block w-14">Bet:</span>
-              <input
-                v-model="config.oopRiverBet"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.oopRiverBetSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.oopRiverBetSanitized.valid &&
-                    (config.oopRiverBet = config.oopRiverBetSanitized.s)
-                "
-              />
-              %
-            </p>
-            <p class="my-1">
-              <span class="inline-block w-14">Raise:</span>
-              <input
-                v-model="config.oopRiverRaise"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.oopRiverRaiseSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.oopRiverRaiseSanitized.valid &&
-                    (config.oopRiverRaise = config.oopRiverRaiseSanitized.s)
-                "
-              />
-              %
-            </p>
-            <p v-if="config.donkOption" class="my-1">
-              <span class="inline-block w-14">Donk:</span>
-              <input
-                v-model="config.oopRiverDonk"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.oopRiverDonkSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.oopRiverDonkSanitized.valid &&
-                    (config.oopRiverDonk = config.oopRiverDonkSanitized.s)
-                "
-              />
-              %
-            </p>
+              <button
+                v-if="hasEdit"
+                class="button-base button-red"
+                @click="clearEdit"
+              >
+                Clear Edit & Unlock
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div>
-        <div class="flex">
-          <p class="mt-6 font-bold">IP bet sizes</p>
-          <div class="flex flex-grow items-center justify-center gap-6">
-            <button
-              class="mt-3 button-blue"
-              :disabled="isIpError"
-              @click="ipToOop"
-            >
-              ↑
-            </button>
-            <button
-              class="mt-3 button-blue"
-              :disabled="isOopError"
-              @click="oopToIp"
-            >
-              ↓
-            </button>
-          </div>
-        </div>
-
-        <div class="flex flex-row">
-          <div>
-            <p class="my-1 underline">Flop</p>
-            <p class="my-1">
-              <span class="inline-block w-14">Bet:</span>
-              <input
-                v-model="config.ipFlopBet"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.ipFlopBetSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.ipFlopBetSanitized.valid &&
-                    (config.ipFlopBet = config.ipFlopBetSanitized.s)
-                "
-              />
-              %
-            </p>
-            <p class="my-1">
-              <span class="inline-block w-14">Raise:</span>
-              <input
-                v-model="config.ipFlopRaise"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.ipFlopRaiseSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.ipFlopRaiseSanitized.valid &&
-                    (config.ipFlopRaise = config.ipFlopRaiseSanitized.s)
-                "
-              />
-              %
-            </p>
-          </div>
-
-          <div class="ml-5">
-            <p class="my-1 underline">Turn</p>
-            <p class="my-1">
-              <span class="inline-block w-14">Bet:</span>
-              <input
-                v-model="config.ipTurnBet"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.ipTurnBetSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.ipTurnBetSanitized.valid &&
-                    (config.ipTurnBet = config.ipTurnBetSanitized.s)
-                "
-              />
-              %
-            </p>
-            <p class="my-1">
-              <span class="inline-block w-14">Raise:</span>
-              <input
-                v-model="config.ipTurnRaise"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.ipTurnRaiseSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.ipTurnRaiseSanitized.valid &&
-                    (config.ipTurnRaise = config.ipTurnRaiseSanitized.s)
-                "
-              />
-              %
-            </p>
-          </div>
-
-          <div class="ml-5">
-            <p class="my-1 underline">River</p>
-            <p class="my-1">
-              <span class="inline-block w-14">Bet:</span>
-              <input
-                v-model="config.ipRiverBet"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.ipRiverBetSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.ipRiverBetSanitized.valid &&
-                    (config.ipRiverBet = config.ipRiverBetSanitized.s)
-                "
-              />
-              %
-            </p>
-            <p class="my-1">
-              <span class="inline-block w-14">Raise:</span>
-              <input
-                v-model="config.ipRiverRaise"
-                type="text"
-                :class="
-                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
-                  (!config.ipRiverRaiseSanitized.valid ? 'input-error' : '')
-                "
-                @change="
-                  config.ipRiverRaiseSanitized.valid &&
-                    (config.ipRiverRaise = config.ipRiverRaiseSanitized.s)
-                "
-              />
-              %
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-6">
-        <p class="my-1">
-          <span class="inline-block w-40">Add all-in threshold:</span>
-          <input
-            v-model="config.addAllInThreshold"
-            type="number"
-            :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-              (config.addAllInThreshold < 0 ? 'input-error' : '')
-            "
-            min="0"
-            max="10000000"
-          />
-          %
-        </p>
-
-        <p class="my-1">
-          <span class="inline-block w-40">Force all-in threshold:</span>
-          <input
-            v-model="config.forceAllInThreshold"
-            type="number"
-            :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-              (config.forceAllInThreshold < 0 ? 'input-error' : '')
-            "
-            min="0"
-            max="10000000"
-          />
-          %
-        </p>
-
-        <p class="my-1">
-          <span class="inline-block w-40">Merging threshold:</span>
-          <input
-            v-model="config.mergingThreshold"
-            type="number"
-            :class="
-              'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-              (config.mergingThreshold < 0 ? 'input-error' : '')
-            "
-            min="0"
-            max="10000000"
-          />
-          %
-        </p>
-      </div>
+      <db-item-picker
+        class="shrink mt-1 ml-6"
+        store-name="configurations"
+        :value="dbValue"
+        :allow-save="isInputValid"
+        @load-item="loadConfig"
+      />
     </div>
 
-    <db-item-picker
-      class="shrink mt-2 ml-6"
-      store-name="configurations"
-      :value="dbValue"
-      :allow-save="allowSave"
-      @load-item="loadConfig"
-    />
+    <div
+      v-if="addedLinesArray.length > 0 || removedLinesArray.length > 0"
+      class="mt-6"
+    >
+      <div v-if="addedLinesArray.length > 0" class="flex mt-3">
+        <div class="font-bold underline w-32">
+          Added line{{ addedLinesArray.length > 1 ? "s" : "" }}:
+        </div>
+        <div class="flex flex-col">
+          <div v-for="addedLine in addedLinesArray" :key="addedLine">
+            {{ addedLine }}
+          </div>
+        </div>
+      </div>
+
+      <div v-if="removedLinesArray.length > 0" class="flex mt-3">
+        <div class="font-bold underline w-32">
+          Removed line{{ removedLinesArray.length > 1 ? "s" : "" }}:
+        </div>
+        <div class="flex flex-col">
+          <div v-for="removedLine in removedLinesArray" :key="removedLine">
+            {{ removedLine }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div v-else>
+    <tree-editor @save="saveEdit" @cancel="cancelEdit" />
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from "vue";
-import { useConfigStore } from "../store";
+import { computed, defineComponent, ref } from "vue";
+import { useConfigStore, readableLineString } from "../store";
 
 import DbItemPicker from "./DbItemPicker.vue";
+import TreeEditor from "./TreeEditor.vue";
 
 type ConfigValue = {
   startingPot: number;
@@ -411,6 +495,7 @@ type ConfigValue = {
   addAllInThreshold: number;
   forceAllInThreshold: number;
   mergingThreshold: number;
+  expectedBoardLength: number;
   addedLines: string;
   removedLines: string;
 };
@@ -418,34 +503,92 @@ type ConfigValue = {
 export default defineComponent({
   components: {
     DbItemPicker,
+    TreeEditor,
   },
 
   setup() {
     const config = useConfigStore();
 
-    const isOopError = computed(() => {
-      return (
+    const isEditMode = ref(false);
+
+    const hasEdit = computed(
+      () => config.addedLines.length > 0 || config.removedLines.length > 0
+    );
+
+    const addedLinesArray = computed(() =>
+      config.addedLines === ""
+        ? []
+        : config.addedLines.split(",").map(readableLineString)
+    );
+
+    const removedLinesArray = computed(() =>
+      config.removedLines === ""
+        ? []
+        : config.removedLines.split(",").map(readableLineString)
+    );
+
+    const isOopError = computed(
+      () =>
         !config.oopFlopBetSanitized.valid ||
         !config.oopFlopRaiseSanitized.valid ||
         !config.oopTurnBetSanitized.valid ||
         !config.oopTurnRaiseSanitized.valid ||
-        !config.oopTurnDonkSanitized.valid ||
         !config.oopRiverBetSanitized.valid ||
         !config.oopRiverRaiseSanitized.valid ||
-        !config.oopRiverDonkSanitized.valid
-      );
-    });
+        (config.donkOption && !config.oopTurnDonkSanitized.valid) ||
+        (config.donkOption && !config.oopRiverDonkSanitized.valid)
+    );
 
-    const isIpError = computed(() => {
-      return (
+    const isIpError = computed(
+      () =>
         !config.ipFlopBetSanitized.valid ||
         !config.ipFlopRaiseSanitized.valid ||
         !config.ipTurnBetSanitized.valid ||
         !config.ipTurnRaiseSanitized.valid ||
         !config.ipRiverBetSanitized.valid ||
         !config.ipRiverRaiseSanitized.valid
-      );
-    });
+    );
+
+    const isInputValid = computed(
+      () =>
+        config.startingPot > 0 &&
+        config.startingPot <= 100000 &&
+        config.startingPot % 1 === 0 &&
+        config.effectiveStack > 0 &&
+        config.effectiveStack <= 100000 &&
+        config.effectiveStack % 1 === 0 &&
+        !isOopError.value &&
+        !isIpError.value &&
+        config.addAllInThreshold >= 0 &&
+        config.forceAllInThreshold >= 0 &&
+        config.mergingThreshold >= 0
+    );
+
+    const clearConfig = () => {
+      config.startingPot = 0;
+      config.effectiveStack = 0;
+      config.donkOption = false;
+      config.oopFlopBet = "";
+      config.oopFlopRaise = "";
+      config.oopTurnBet = "";
+      config.oopTurnRaise = "";
+      config.oopTurnDonk = "";
+      config.oopRiverBet = "";
+      config.oopRiverRaise = "";
+      config.oopRiverDonk = "";
+      config.ipFlopBet = "";
+      config.ipFlopRaise = "";
+      config.ipTurnBet = "";
+      config.ipTurnRaise = "";
+      config.ipRiverBet = "";
+      config.ipRiverRaise = "";
+      config.addAllInThreshold = 0;
+      config.forceAllInThreshold = 0;
+      config.mergingThreshold = 0;
+      config.expectedBoardLength = 0;
+      config.addedLines = "";
+      config.removedLines = "";
+    };
 
     const oopToIp = () => {
       config.ipFlopBet = config.oopFlopBet;
@@ -487,24 +630,10 @@ export default defineComponent({
         addAllInThreshold: config.addAllInThreshold,
         forceAllInThreshold: config.forceAllInThreshold,
         mergingThreshold: config.mergingThreshold,
+        expectedBoardLength: config.expectedBoardLength,
         addedLines: "",
         removedLines: "",
       })
-    );
-
-    const allowSave = computed(
-      () =>
-        config.startingPot > 0 &&
-        config.startingPot <= 100000 &&
-        config.startingPot % 1 === 0 &&
-        config.effectiveStack > 0 &&
-        config.effectiveStack <= 100000 &&
-        config.effectiveStack % 1 === 0 &&
-        !isOopError.value &&
-        !isIpError.value &&
-        config.addAllInThreshold >= 0 &&
-        config.forceAllInThreshold >= 0 &&
-        config.mergingThreshold >= 0
     );
 
     const loadConfig = (value: ConfigValue) => {
@@ -528,30 +657,69 @@ export default defineComponent({
       config.addAllInThreshold = value.addAllInThreshold;
       config.forceAllInThreshold = value.forceAllInThreshold;
       config.mergingThreshold = value.mergingThreshold;
+      config.expectedBoardLength = value.expectedBoardLength;
+      config.addedLines = value.addedLines;
+      config.removedLines = value.removedLines;
+    };
+
+    const startEdit = () => {
+      isEditMode.value = true;
+      if (config.expectedBoardLength === 0) {
+        config.expectedBoardLength = Math.max(config.board.length, 3);
+      }
+    };
+
+    const clearEdit = () => {
+      config.expectedBoardLength = 0;
+      config.addedLines = "";
+      config.removedLines = "";
+    };
+
+    const saveEdit = (addedLines: string, removedLines: string) => {
+      isEditMode.value = false;
+      config.addedLines = addedLines;
+      config.removedLines = removedLines;
+      if (config.addedLines === "" && config.removedLines === "") {
+        config.expectedBoardLength = 0;
+      }
+    };
+
+    const cancelEdit = () => {
+      isEditMode.value = false;
+      if (config.addedLines === "" && config.removedLines === "") {
+        config.expectedBoardLength = 0;
+      }
     };
 
     return {
       config,
+      isEditMode,
+      addedLinesArray,
+      removedLinesArray,
+      hasEdit,
       isOopError,
       isIpError,
+      isInputValid,
+      clearConfig,
       oopToIp,
       ipToOop,
       dbValue,
-      allowSave,
       loadConfig,
+      startEdit,
+      clearEdit,
+      saveEdit,
+      cancelEdit,
     };
   },
 });
 </script>
 
 <style scoped>
-input.input-error {
-  @apply ring-1 ring-red-600 border-red-600 bg-red-50;
+input {
+  @apply disabled:cursor-not-allowed;
 }
 
-.button-blue {
-  @apply rounded-lg shadow-sm px-2 py-1 text-white text-lg;
-  @apply bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300;
-  @apply disabled:opacity-40 disabled:bg-blue-600;
+.button-arrow {
+  @apply px-2 py-1 text-lg;
 }
 </style>

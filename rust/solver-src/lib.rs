@@ -16,6 +16,25 @@ pub struct ReadonlyBuffer {
     pub byte_length: usize,
 }
 
+fn decode_action(action: &str) -> Action {
+    match action {
+        "F" => Action::Fold,
+        "X" => Action::Check,
+        "C" => Action::Call,
+        _ => {
+            let mut chars = action.chars();
+            let first_char = chars.next().unwrap();
+            let amount = chars.as_str().parse().unwrap();
+            match first_char {
+                'B' => Action::Bet(amount),
+                'R' => Action::Raise(amount),
+                'A' => Action::AllIn(amount),
+                _ => unreachable!(),
+            }
+        }
+    }
+}
+
 #[wasm_bindgen]
 impl GameManager {
     pub fn new() -> Self {
@@ -49,6 +68,8 @@ impl GameManager {
         add_allin_threshold: f32,
         force_allin_threshold: f32,
         merging_threshold: f32,
+        added_lines: &str,
+        removed_lines: &str,
     ) -> Option<String> {
         let (turn, river, state) = match board.len() {
             3 => (NOT_DEALT, NOT_DEALT, BoardState::Flop),
@@ -96,7 +117,28 @@ impl GameManager {
             merging_threshold,
         };
 
-        let action_tree = ActionTree::with_config(tree_config).unwrap();
+        let mut action_tree = ActionTree::new(tree_config).unwrap();
+
+        if !added_lines.is_empty() {
+            for added_line in added_lines.split(',') {
+                let line = added_line
+                    .split(&['>', '|'][..])
+                    .map(decode_action)
+                    .collect::<Vec<_>>();
+                action_tree.add_line(&line).unwrap();
+            }
+        }
+
+        if !removed_lines.is_empty() {
+            for removed_line in removed_lines.split(',') {
+                let line = removed_line
+                    .split(&['>', '|'][..])
+                    .map(decode_action)
+                    .collect::<Vec<_>>();
+                action_tree.remove_line(&line).unwrap();
+            }
+        }
+
         self.game.update_config(card_config, action_tree).err()
     }
 

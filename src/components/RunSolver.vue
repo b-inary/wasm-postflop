@@ -16,7 +16,7 @@
       max="64"
     />
     <button
-      class="ml-3 button button-blue"
+      class="ml-3 button-base button-blue"
       :disabled="isTreeBuilding || store.isSolverRunning || store.isFinalizing"
       @click="buildTree"
     >
@@ -125,7 +125,7 @@
 
     <p class="flex mt-6 gap-3">
       <button
-        class="button button-blue"
+        class="button-base button-blue"
         :disabled="
           store.hasSolverRun ||
           memoryUsageCompressed > maxMemoryUsage ||
@@ -139,7 +139,7 @@
         Run solver
       </button>
       <button
-        class="button button-red"
+        class="button-base button-red"
         :disabled="!store.isSolverRunning"
         @click="() => (terminateFlag = true)"
       >
@@ -147,7 +147,7 @@
       </button>
       <button
         v-if="!store.isSolverPaused"
-        class="button button-green"
+        class="button-base button-green"
         :disabled="!store.isSolverRunning"
         @click="() => (pauseFlag = true)"
       >
@@ -155,7 +155,7 @@
       </button>
       <button
         v-else
-        class="button button-green"
+        class="button-base button-green"
         :disabled="
           targetExploitability <= 0 ||
           maxIterations < 0 ||
@@ -202,6 +202,7 @@ import {
   useTmpConfigStore,
   saveConfig,
   saveConfigTmp,
+  convertBetString,
 } from "../store";
 import { detect } from "detect-browser";
 
@@ -282,15 +283,11 @@ const checkConfig = (
     return "Invalid merging threshold";
   }
 
-  return null;
-};
+  if (config.board.length !== config.expectedBoardLength) {
+    return `Invalid board (expected ${config.expectedBoardLength} cards)`;
+  }
 
-const convertBetString = (s: string): string => {
-  if (s === "") return s;
-  return s
-    .split(", ")
-    .map((e) => ("acex".includes(e[e.length - 1]) ? e : e + "%"))
-    .join(",");
+  return null;
 };
 
 export default defineComponent({
@@ -388,10 +385,10 @@ export default defineComponent({
         convertBetString(tmpConfig.oopFlopRaise),
         convertBetString(tmpConfig.oopTurnBet),
         convertBetString(tmpConfig.oopTurnRaise),
-        convertBetString(tmpConfig.oopTurnDonk),
+        tmpConfig.donkOption ? convertBetString(tmpConfig.oopTurnDonk) : "",
         convertBetString(tmpConfig.oopRiverBet),
         convertBetString(tmpConfig.oopRiverRaise),
-        convertBetString(tmpConfig.oopRiverDonk),
+        tmpConfig.donkOption ? convertBetString(tmpConfig.oopRiverDonk) : "",
         convertBetString(tmpConfig.ipFlopBet),
         convertBetString(tmpConfig.ipFlopRaise),
         convertBetString(tmpConfig.ipTurnBet),
@@ -400,7 +397,9 @@ export default defineComponent({
         convertBetString(tmpConfig.ipRiverRaise),
         tmpConfig.addAllInThreshold / 100,
         tmpConfig.forceAllInThreshold / 100,
-        tmpConfig.mergingThreshold / 100
+        tmpConfig.mergingThreshold / 100,
+        tmpConfig.addedLines,
+        tmpConfig.removedLines
       );
 
       if (errorString) {
@@ -534,22 +533,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped>
-.button {
-  @apply rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium;
-  @apply focus:outline-none focus:ring-4 disabled:opacity-40;
-}
-
-.button-blue {
-  @apply bg-blue-600 hover:bg-blue-700 focus:ring-blue-300 disabled:bg-blue-600;
-}
-
-.button-red {
-  @apply bg-red-600 hover:bg-red-700 focus:ring-red-300 disabled:bg-red-600;
-}
-
-.button-green {
-  @apply bg-green-600 hover:bg-green-700 focus:ring-green-300 disabled:bg-green-600;
-}
-</style>

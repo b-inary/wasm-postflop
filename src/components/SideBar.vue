@@ -1,29 +1,29 @@
 <template>
   <aside
-    class="flex flex-col shrink-0 w-52 my-4 overflow-y-auto border-r-2"
+    class="flex flex-col shrink-0 w-56 my-4 overflow-y-auto border-r-2"
     style="height: calc(100vh - 5.5rem)"
   >
-    <button :class="itemStyle('About')" @click="store.mainView = 'About'">
+    <button :class="itemStyle('About')" @click="store.sideView = 'About'">
       About
     </button>
 
-    <button :class="itemStyle('OOPRange')" @click="store.mainView = 'OOPRange'">
+    <button :class="itemStyle('OOPRange')" @click="store.sideView = 'OOPRange'">
       OOP Range
       <span class="flex my-2 justify-center">
         <range-mini-viewer :player="0" />
       </span>
     </button>
 
-    <button :class="itemStyle('IPRange')" @click="store.mainView = 'IPRange'">
+    <button :class="itemStyle('IPRange')" @click="store.sideView = 'IPRange'">
       IP Range
       <span class="flex my-2 justify-center">
         <range-mini-viewer :player="1" />
       </span>
     </button>
 
-    <button :class="itemStyle('Board')" @click="store.mainView = 'Board'">
+    <button :class="itemStyle('Board')" @click="store.sideView = 'Board'">
       Board
-      <span class="flex justify-center">
+      <span class="flex mt-1 justify-center font-normal">
         <span
           v-for="item in boardTexts"
           :key="item.rank + item.suit"
@@ -36,27 +36,23 @@
 
     <button
       :class="itemStyle('TreeConfig')"
-      @click="store.mainView = 'TreeConfig'"
+      @click="store.sideView = 'TreeConfig'"
     >
       Tree Configuration
     </button>
 
     <button
       :class="itemStyle('RunSolver')"
-      @click="store.mainView = 'RunSolver'"
+      @click="store.sideView = 'RunSolver'"
     >
       Run Solver
-    </button>
-
-    <button :class="itemStyle('Result')" @click="store.mainView = 'Result'">
-      Result
     </button>
   </aside>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent } from "vue";
-import { MainView, cardText, useStore, useConfigStore } from "../store";
+import { SideView, cardText, useStore, useConfigStore } from "../store";
 
 import RangeMiniViewer from "./RangeMiniViewer.vue";
 
@@ -80,10 +76,10 @@ export default defineComponent({
     return {
       store,
       boardTexts,
-      itemStyle: (view: MainView) => {
+      itemStyle: (view: SideView) => {
         return (
           "side-bar-item " +
-          (view === store.mainView ? "border-blue-600" : "border-transparent")
+          (view === store.sideView ? "font-bold bg-blue-100" : "")
         );
       },
     };
@@ -93,6 +89,8 @@ export default defineComponent({
 
 <style scoped>
 .side-bar-item {
-  @apply block mx-2 my-1 px-2.5 py-1.5 border-[3px] rounded-xl text-left select-none;
+  @apply block mx-2 my-1 px-4 py-3 rounded-3xl;
+  @apply text-left text-[1.0625rem] select-none;
+  @apply transition-colors hover:bg-blue-100;
 }
 </style>

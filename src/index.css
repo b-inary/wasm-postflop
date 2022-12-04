@@ -11,6 +11,56 @@ body {
   min-width: 1080px;
 }
 
+.button-base {
+  @apply rounded-lg shadow px-3.5 py-1.5 text-white text-sm font-bold;
+  @apply transition-colors disabled:opacity-40;
+}
+
+.button-blue {
+  @apply bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-600;
+}
+
+.button-red {
+  @apply bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-red-600;
+}
+
+.button-green {
+  @apply bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-600;
+}
+
+input.input-error {
+  @apply !ring-1 !ring-red-600 !border-red-600 !bg-red-50;
+}
+
+.cross-icon {
+  @apply text-red-600;
+  position: absolute;
+  left: -10px;
+  top: 3px;
+  width: 21px;
+  height: 21px;
+}
+
+.cross-icon:before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  width: 21px;
+  height: 3px;
+  background-color: currentColor;
+  transform: rotate(-45deg);
+}
+
+.cross-icon:after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  width: 21px;
+  height: 3px;
+  background-color: currentColor;
+  transform: rotate(45deg);
+}
+
 .spinner {
   width: 1rem;
   height: 1rem;

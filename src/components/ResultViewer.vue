@@ -16,7 +16,7 @@
   </div>
 
   <div v-else>
-    <div ref="divResultNav" class="flex pl-0.5 overflow-x-auto">
+    <div ref="divResultNav" class="flex mt-1 pl-0.5 overflow-x-auto">
       <div class="flex flex-col items-start">
         <button
           :class="
@@ -26,7 +26,7 @@
               : 'border-black')
           "
           :disabled="actionList.length === 1"
-          @click="moveResult(0, 0)"
+          @click="moveNode(0, 0)"
         >
           <span class="inline-block mr-2 underline">
             {{ ["Flop", "Turn", "River"][board.length - 3] }}
@@ -55,7 +55,7 @@
                 : 'border-black')
             "
             :disabled="item.depth >= actionList.length - 1"
-            @click="moveResult(item.depth, item.selectedIndex)"
+            @click="moveNode(item.depth, item.selectedIndex)"
           >
             <span class="inline-block mr-2 underline">
               {{ item.type }}
@@ -91,7 +91,7 @@
               (action.isSelected && item.depth === actionList.length - 1) ||
               action.isTerminal
             "
-            @click="moveResult(item.depth, action.index)"
+            @click="moveNode(item.depth, action.index)"
           >
             {{ action.str }}
           </button>
@@ -329,7 +329,7 @@
               actionList[actionList.length - 1].actions[56 - 4 * rank - suit]
                 .isTerminal
             "
-            @click="moveResult(actionList.length, 56 - 4 * rank - suit)"
+            @click="moveNode(actionList.length, 56 - 4 * rank - suit)"
           />
         </div>
 
@@ -848,7 +848,7 @@ export default defineComponent({
       }
     };
 
-    const moveResult = async (depth: number, index: number) => {
+    const moveNode = async (depth: number, index: number) => {
       if (
         isLocked ||
         index === -1 ||
@@ -899,7 +899,7 @@ export default defineComponent({
       if (actions.length === 0) return [];
 
       const ret = [];
-      const subtract = actions[actions.length - 1] === "Check" ? 1 : 2;
+      let index = 0;
 
       for (let i = 0; i < actions.length; ++i) {
         let color;
@@ -912,7 +912,8 @@ export default defineComponent({
             { bg: "bg-amber-300", bar: "bg-amber-400" },
             { bg: "bg-pink-300", bar: "bg-pink-400" },
             { bg: "bg-violet-300", bar: "bg-violet-400" },
-          ][(actions.length - subtract - i - 1) % 3];
+          ][index];
+          index = (index + 1) % 3;
         }
         ret.push(color);
       }
@@ -1305,7 +1306,7 @@ export default defineComponent({
       trimMinusZero,
       sortBy,
       sortByChance,
-      moveResult,
+      moveNode,
       actionColor,
       actionColorByStr,
       hasWeight,

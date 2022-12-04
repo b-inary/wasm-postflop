@@ -1,8 +1,4 @@
 <template>
-  <div class="flex">
-    <div class="header">Welcome to WASM Postflop!</div>
-  </div>
-
   <p>
     <span class="font-bold">WASM Postflop</span> is a free, open-source
     <span class="font-bold">GTO solver</span> that works on web browsers.<br />
@@ -88,11 +84,6 @@
 </template>
 
 <style scoped>
-.header {
-  @apply mb-5 pl-2 pr-4 pb-1 text-xl font-bold border-l-8 border-b-2;
-  @apply border-blue-600 rounded rounded-br-none;
-}
-
 .link {
   @apply text-blue-500 hover:underline;
 }

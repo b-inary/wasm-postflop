@@ -39,6 +39,7 @@ type ConfigValue2 = {
   addAllInThreshold: number;
   forceAllInThreshold: number;
   mergingThreshold: number;
+  expectedBoardLength: number;
   addedLines: string;
   removedLines: string;
 };
@@ -73,6 +74,7 @@ export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
     addAllInThreshold: value.addAllInThreshold,
     forceAllInThreshold: value.forceAllInThreshold,
     mergingThreshold: 0,
+    expectedBoardLength: 0,
     addedLines: "",
     removedLines: "",
   };

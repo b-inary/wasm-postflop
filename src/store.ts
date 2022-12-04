@@ -1,30 +1,16 @@
 import { defineStore } from "pinia";
 
-export type MainView =
+export type NavView = "Solver" | "Results";
+
+export type SideView =
   | "About"
   | "OOPRange"
   | "IPRange"
   | "Board"
   | "TreeConfig"
-  | "RunSolver"
-  | "Result";
+  | "RunSolver";
 
-const ranks = [
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "J",
-  "Q",
-  "K",
-  "A",
-];
-
+const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
 const suits = ["♣", "♦", "♥", "♠"];
 
 const suitClasses = [
@@ -42,10 +28,8 @@ export const cardText = (card: number) => {
   };
 };
 
-const forbiddenChars = /[beox+-]/;
-
 const parseFloat = (s: string): number => {
-  if (forbiddenChars.test(s)) {
+  if (/[beox+-]/.test(s)) {
     return Number.NaN;
   } else {
     return Number(s);
@@ -66,7 +50,7 @@ export const sanitizeBetString = (
     elements.pop();
   }
 
-  if (elements.length >= 32) {
+  if (elements.length > 30) {
     return { s: "Too many specifications", valid: false };
   }
 
@@ -147,6 +131,66 @@ export const sanitizeBetString = (
   return { s: sanitized, valid: true };
 };
 
+export const convertBetString = (s: string): string => {
+  if (s === "") return s;
+  return s
+    .split(", ")
+    .map((e) => ("acex".includes(e[e.length - 1]) ? e : e + "%"))
+    .join(",");
+};
+
+const parseBetAmount = (
+  s: string,
+  index: number
+): { amount: number; indexEnd: number } => {
+  let indexEnd = index;
+  while (indexEnd < s.length && /\d/.test(s[indexEnd])) indexEnd++;
+  const amount = Number(s.slice(index, indexEnd));
+  return { amount, indexEnd };
+};
+
+export const readableLineString = (s: string): string => {
+  if (s === "(Root)") return s;
+
+  let ret = "";
+  let index = 0;
+
+  while (index < s.length) {
+    if (s[index] === ">") {
+      ret += " > ";
+      index += 1;
+    } else if (s[index] === "|") {
+      ret += " | ";
+      index += 1;
+    } else if (s[index] === "F") {
+      ret += "Fold";
+      index += 1;
+    } else if (s[index] === "X") {
+      ret += "Check";
+      index += 1;
+    } else if (s[index] === "C") {
+      ret += "Call";
+      index += 1;
+    } else if (s[index] === "B") {
+      const { amount, indexEnd } = parseBetAmount(s, index + 1);
+      ret += `Bet ${amount}`;
+      index = indexEnd;
+    } else if (s[index] === "R") {
+      const { amount, indexEnd } = parseBetAmount(s, index + 1);
+      ret += `Raise ${amount}`;
+      index = indexEnd;
+    } else if (s[index] === "A") {
+      const { amount, indexEnd } = parseBetAmount(s, index + 1);
+      ret += `All-in ${amount}`;
+      index = indexEnd;
+    } else {
+      return "Invalid line string";
+    }
+  }
+
+  return ret;
+};
+
 export const saveConfigTmp = () => {
   const config = useConfigStore();
   const tmpConfig = useTmpConfigStore();
@@ -176,6 +220,9 @@ export const saveConfigTmp = () => {
     addAllInThreshold: config.addAllInThreshold,
     forceAllInThreshold: config.forceAllInThreshold,
     mergingThreshold: config.mergingThreshold,
+    expectedBoardLength: config.expectedBoardLength,
+    addedLines: config.addedLines,
+    removedLines: config.removedLines,
   });
 };
 
@@ -208,12 +255,16 @@ export const saveConfig = () => {
     addAllInThreshold: tmpConfig.addAllInThreshold,
     forceAllInThreshold: tmpConfig.forceAllInThreshold,
     mergingThreshold: tmpConfig.mergingThreshold,
+    expectedBoardLength: tmpConfig.expectedBoardLength,
+    addedLines: tmpConfig.addedLines,
+    removedLines: tmpConfig.removedLines,
   });
 };
 
 export const useStore = defineStore("app", {
   state: () => ({
-    mainView: "About" as MainView,
+    navView: "Solver" as NavView,
+    sideView: "About" as SideView,
     isSolverRunning: false,
     isSolverPaused: false,
     isSolverFinished: false,
@@ -263,6 +314,9 @@ export const useConfigStore = defineStore("config", {
     addAllInThreshold: 0,
     forceAllInThreshold: 0,
     mergingThreshold: 0,
+    expectedBoardLength: 0,
+    addedLines: "",
+    removedLines: "",
   }),
 
   getters: {
@@ -310,6 +364,9 @@ export const useTmpConfigStore = defineStore("tmpConfig", {
     addAllInThreshold: 0,
     forceAllInThreshold: 0,
     mergingThreshold: 0,
+    expectedBoardLength: 0,
+    addedLines: "",
+    removedLines: "",
   }),
 });
 
@@ -340,5 +397,8 @@ export const useSavedConfigStore = defineStore("savedConfig", {
     addAllInThreshold: 0,
     forceAllInThreshold: 0,
     mergingThreshold: 0,
+    expectedBoardLength: 0,
+    addedLines: "",
+    removedLines: "",
   }),
 });

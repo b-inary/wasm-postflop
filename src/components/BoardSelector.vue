@@ -11,10 +11,23 @@
   </div>
 
   <div class="flex mt-4 mx-1 gap-3">
-    <button class="button-blue" @click="config.board = []">Clear</button>
-    <button class="button-blue" @click="generateRandomBoard">
-      Random flop
+    <button class="button-base button-blue" @click="config.board = []">
+      Clear
     </button>
+    <button class="button-base button-blue" @click="generateRandomBoard">
+      Random Flop
+    </button>
+  </div>
+
+  <div
+    v-if="
+      config.expectedBoardLength > 0 &&
+      config.board.length !== config.expectedBoardLength
+    "
+    class="mt-5 text-red-600"
+  >
+    <span class="font-bold underline">Warning:</span>
+    Editted tree assumes a {{ config.expectedBoardLength }}-card board.
   </div>
 </template>
 
@@ -62,10 +75,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped>
-.button-blue {
-  @apply rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium;
-  @apply bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300;
-}
-</style>
