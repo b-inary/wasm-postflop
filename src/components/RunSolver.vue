@@ -283,7 +283,10 @@ const checkConfig = (
     return "Invalid merging threshold";
   }
 
-  if (config.board.length !== config.expectedBoardLength) {
+  if (
+    config.expectedBoardLength > 0 &&
+    config.board.length !== config.expectedBoardLength
+  ) {
     return `Invalid board (expected ${config.expectedBoardLength} cards)`;
   }
 
