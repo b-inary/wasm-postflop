@@ -270,7 +270,9 @@ export default defineComponent({
     const existingAmounts = computed(() => {
       if (streets.value.length === 0) return [];
       const street = streets.value[streets.value.length - 1];
+      if (street.decisions.length === 0) return [];
       const decision = street.decisions[street.decisions.length - 1];
+      if (decision.actions.find((a) => a.isSelected)) return [];
       return decision.actions
         .filter((action) => {
           const name = action.name;

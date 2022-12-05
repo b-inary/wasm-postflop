@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="flex-grow max-w-[18rem]">
     <div
       ref="container"
-      class="max-w-xs h-96 px-1 border border-gray-500 rounded-md shadow text-sm overflow-x-auto overflow-y-scroll select-none"
+      class="w-full h-[23.5rem] px-1 border border-gray-500 rounded-md shadow text-sm overflow-x-auto overflow-y-scroll select-none"
       @click="unselect"
       @keydown.f2="renameItem()"
       @keydown.delete="deleteItem(true)"
@@ -381,52 +381,56 @@
       Something went wrong. Please reload the page.
     </div>
 
-    <div class="flex flex-wrap justify-center mt-4 gap-3 max-w-xs">
-      <button
-        class="button-base button-blue button-overrides"
-        :disabled="selectedItem?.item?.isGroup ?? true"
-        @click="loadItem()"
-      >
-        Load
-      </button>
+    <div class="flex flex-col mt-4 gap-3">
+      <div class="grid grid-cols-3 w-full gap-3">
+        <button
+          class="flex-grow button-base button-blue button-overrides"
+          :disabled="selectedItem?.item?.isGroup ?? true"
+          @click="loadItem()"
+        >
+          Load
+        </button>
 
-      <button
-        class="button-base button-blue button-overrides"
-        :disabled="errorOccured || !allowSave"
-        @click="addOrOverwriteItem()"
-      >
-        {{ selectedItem?.item?.isGroup === false ? "Overwrite" : "Save" }}
-      </button>
+        <button
+          class="flex-grow button-base button-blue button-overrides"
+          :disabled="errorOccured || !allowSave"
+          @click="addOrOverwriteItem()"
+        >
+          {{ selectedItem?.item?.isGroup === false ? "Overwrite" : "Save" }}
+        </button>
 
-      <button
-        class="button-base button-blue button-overrides"
-        :disabled="errorOccured || selectedValue === false"
-        @click="renameItem()"
-      >
-        Rename
-      </button>
+        <button
+          class="flex-grow button-base button-blue button-overrides"
+          :disabled="errorOccured || selectedValue === false"
+          @click="renameItem()"
+        >
+          Rename
+        </button>
+      </div>
 
-      <button
-        class="button-base button-blue button-overrides"
-        :disabled="
-          errorOccured ||
-          (selectedItem !== null &&
-            selectedItem.item.path.length +
-              (selectedItem.item.isGroup ? 1 : 0) >=
-              4)
-        "
-        @click="addGroup()"
-      >
-        Add Group
-      </button>
+      <div class="grid grid-cols-2 w-full gap-3">
+        <button
+          class="flex-grow button-base button-blue button-overrides"
+          :disabled="
+            errorOccured ||
+            (selectedItem !== null &&
+              selectedItem.item.path.length +
+                (selectedItem.item.isGroup ? 1 : 0) >=
+                4)
+          "
+          @click="addGroup()"
+        >
+          Add Group
+        </button>
 
-      <button
-        class="button-base button-red button-overrides"
-        :disabled="errorOccured || selectedValue === false"
-        @click="deleteItem(true)"
-      >
-        Delete
-      </button>
+        <button
+          class="flex-grow button-base button-red button-overrides"
+          :disabled="errorOccured || selectedValue === false"
+          @click="deleteItem(true)"
+        >
+          Delete
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -912,6 +916,7 @@ export default defineComponent({
         renameRecursive(item, newName, depth);
       }
 
+      selectedValue.value = item.pathStr;
       const parentItems = selectedItem.value?.parentItems;
       if (parentItems) {
         parentItems.sort(
@@ -1140,6 +1145,6 @@ input.input-error {
 }
 
 .button-overrides {
-  @apply px-0 w-24;
+  @apply px-0;
 }
 </style>

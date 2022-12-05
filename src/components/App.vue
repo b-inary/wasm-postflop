@@ -1,53 +1,53 @@
 <template>
   <nav-bar />
 
-  <div class="w-full mx-auto max-w-screen-xl">
-    <div v-show="store.navView === 'Solver'" class="flex">
-      <side-bar />
-
-      <div
-        class="flex-grow my-4 px-6 pt-2 overflow-y-auto"
-        style="height: calc(100vh - 4.5rem)"
-      >
-        <div class="flex">
-          <div
-            :class="
-              'mb-5 pl-2 pr-3 pb-0.5 text-lg font-bold border-l-8 border-b-2 ' +
-              'border-blue-600 rounded rounded-br-none'
-            "
-          >
-            {{ header }}
-          </div>
-        </div>
-
-        <div v-if="store.sideView === 'About'">
-          <about-page />
-        </div>
-        <div v-show="store.sideView === 'OOPRange'">
-          <range-editor :player="0" />
-        </div>
-        <div v-show="store.sideView === 'IPRange'">
-          <range-editor :player="1" />
-        </div>
-        <div v-show="store.sideView === 'Board'">
-          <board-selector />
-        </div>
-        <div v-show="store.sideView === 'TreeConfig'">
-          <tree-config />
-        </div>
-        <div v-show="store.sideView === 'RunSolver'">
-          <run-solver />
-        </div>
-      </div>
-    </div>
+  <div
+    v-show="store.navView === 'Solver'"
+    class="flex w-full mx-auto max-w-screen-xl"
+  >
+    <side-bar />
 
     <div
-      v-show="store.navView === 'Results'"
-      class="my-4 px-6 pt-2 overflow-y-auto"
+      class="flex-grow my-4 px-6 pt-2 overflow-y-auto"
       style="height: calc(100vh - 4.5rem)"
     >
-      <result-viewer />
+      <div class="flex">
+        <div
+          :class="
+            'mb-5 pl-2 pr-3 pb-0.5 text-lg font-bold border-l-8 border-b-2 ' +
+            'border-blue-600 rounded rounded-br-none'
+          "
+        >
+          {{ header }}
+        </div>
+      </div>
+
+      <div v-if="store.sideView === 'About'">
+        <about-page />
+      </div>
+      <div v-show="store.sideView === 'OOPRange'">
+        <range-editor :player="0" />
+      </div>
+      <div v-show="store.sideView === 'IPRange'">
+        <range-editor :player="1" />
+      </div>
+      <div v-show="store.sideView === 'Board'">
+        <board-selector />
+      </div>
+      <div v-show="store.sideView === 'TreeConfig'">
+        <tree-config />
+      </div>
+      <div v-show="store.sideView === 'RunSolver'">
+        <run-solver />
+      </div>
     </div>
+  </div>
+
+  <div
+    v-show="store.navView === 'Results'"
+    style="height: max(calc(100vh - 2.5rem), 600px)"
+  >
+    <result-viewer />
   </div>
 </template>
 

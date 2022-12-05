@@ -23,11 +23,11 @@
 
     <button :class="itemStyle('Board')" @click="store.sideView = 'Board'">
       Board
-      <span class="flex mt-1 justify-center font-normal">
+      <span class="flex mt-1 justify-center font-bold">
         <span
           v-for="item in boardTexts"
           :key="item.rank + item.suit"
-          :class="'inline-block mx-px ' + item.colorClass"
+          :class="'inline-block mx-0.5 ' + item.colorClass"
         >
           {{ item.rank + item.suit }}
         </span>

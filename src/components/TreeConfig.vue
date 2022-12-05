@@ -72,7 +72,7 @@
                   v-model="config.oopFlopBet"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.oopFlopBetSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -89,7 +89,7 @@
                   v-model="config.oopFlopRaise"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.oopFlopRaiseSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -110,7 +110,7 @@
                   v-model="config.oopTurnBet"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.oopTurnBetSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -127,7 +127,7 @@
                   v-model="config.oopTurnRaise"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.oopTurnRaiseSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -144,7 +144,7 @@
                   v-model="config.oopTurnDonk"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.oopTurnDonkSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -165,7 +165,7 @@
                   v-model="config.oopRiverBet"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.oopRiverBetSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -182,7 +182,7 @@
                   v-model="config.oopRiverRaise"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.oopRiverRaiseSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -199,7 +199,7 @@
                   v-model="config.oopRiverDonk"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.oopRiverDonkSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -244,7 +244,7 @@
                   v-model="config.ipFlopBet"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.ipFlopBetSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -261,7 +261,7 @@
                   v-model="config.ipFlopRaise"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.ipFlopRaiseSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -282,7 +282,7 @@
                   v-model="config.ipTurnBet"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.ipTurnBetSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -299,7 +299,7 @@
                   v-model="config.ipTurnRaise"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.ipTurnRaiseSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -320,7 +320,7 @@
                   v-model="config.ipRiverBet"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.ipRiverBetSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -337,7 +337,7 @@
                   v-model="config.ipRiverRaise"
                   type="text"
                   :class="
-                    'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                    'w-24 px-2 py-1 rounded-lg text-sm ' +
                     (!config.ipRiverRaiseSanitized.valid ? 'input-error' : '')
                   "
                   :disabled="hasEdit"
@@ -426,7 +426,7 @@
       </div>
 
       <db-item-picker
-        class="shrink mt-1 ml-6"
+        class="mt-1 ml-6"
         store-name="configurations"
         :value="dbValue"
         :allow-save="isInputValid"
