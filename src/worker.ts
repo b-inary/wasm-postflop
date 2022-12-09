@@ -104,32 +104,20 @@ function createHandler(mod: Mod) {
       this.game.apply_history(history);
     },
 
-    availableActions() {
-      return this.game.available_actions();
+    actions() {
+      return this.game.actions();
     },
 
-    isTerminalAction() {
-      return this.game.is_terminal_action();
+    actionsAfterChance() {
+      return this.game.actions_after_chance();
     },
 
     possibleCards() {
       return this.game.possible_cards();
     },
 
-    currentPlayer() {
-      return this.game.current_player();
-    },
-
-    getResults() {
-      return this.game.get_results();
-    },
-
-    availableActionsAfterChance() {
-      return this.game.available_actions_after_chance();
-    },
-
-    chanceReport() {
-      return this.game.chance_report();
+    equity(player: number): number {
+      return this.game.equity(player);
     },
   };
 }

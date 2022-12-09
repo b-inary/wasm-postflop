@@ -18,7 +18,8 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { cardText, useStore } from "../store";
+import { useStore } from "../store";
+import { cardText } from "../utils";
 
 export default defineComponent({
   props: {

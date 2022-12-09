@@ -1,11 +1,11 @@
 <template>
-  <nav-bar />
+  <NavBar />
 
   <div
     v-show="store.navView === 'Solver'"
     class="flex w-full mx-auto max-w-screen-xl"
   >
-    <side-bar />
+    <SideBar />
 
     <div
       class="flex-grow my-4 px-6 pt-2 overflow-y-auto"
@@ -23,22 +23,22 @@
       </div>
 
       <div v-if="store.sideView === 'About'">
-        <about-page />
+        <AboutPage />
       </div>
       <div v-show="store.sideView === 'OOPRange'">
-        <range-editor :player="0" />
+        <RangeEditor :player="0" />
       </div>
       <div v-show="store.sideView === 'IPRange'">
-        <range-editor :player="1" />
+        <RangeEditor :player="1" />
       </div>
       <div v-show="store.sideView === 'Board'">
-        <board-selector />
+        <BoardSelector />
       </div>
       <div v-show="store.sideView === 'TreeConfig'">
-        <tree-config />
+        <TreeConfig />
       </div>
       <div v-show="store.sideView === 'RunSolver'">
-        <run-solver />
+        <RunSolver />
       </div>
     </div>
   </div>
@@ -47,7 +47,7 @@
     v-show="store.navView === 'Results'"
     style="height: max(calc(100vh - 2.5rem), 600px)"
   >
-    <result-viewer />
+    <ResultViewer />
   </div>
 </template>
 
@@ -55,14 +55,14 @@
 import { computed, defineComponent } from "vue";
 import { useStore } from "../store";
 
-import AboutPage from "./AboutPage.vue";
-import BoardSelector from "./BoardSelector.vue";
 import NavBar from "./NavBar.vue";
-import RangeEditor from "./RangeEditor.vue";
-import ResultViewer from "./ResultViewer.vue";
-import RunSolver from "./RunSolver.vue";
 import SideBar from "./SideBar.vue";
+import AboutPage from "./AboutPage.vue";
+import RangeEditor from "./RangeEditor.vue";
+import BoardSelector from "./BoardSelector.vue";
 import TreeConfig from "./TreeConfig.vue";
+import RunSolver from "./RunSolver.vue";
+import ResultViewer from "./ResultViewer.vue";
 
 export default defineComponent({
   components: {

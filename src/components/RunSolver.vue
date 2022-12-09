@@ -202,8 +202,8 @@ import {
   useTmpConfigStore,
   saveConfig,
   saveConfigTmp,
-  convertBetString,
 } from "../store";
+import { convertBetString } from "../utils";
 import { detect } from "detect-browser";
 
 const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024;

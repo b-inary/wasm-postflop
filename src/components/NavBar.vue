@@ -4,7 +4,20 @@
   >
     <div class="flex relative w-full">
       <div class="flex items-center z-10">
-        <a href="#" class="px-4 text-lg font-semibold">WASM Postflop</a>
+        <span class="px-4 text-lg font-semibold">WASM Postflop</span>
+      </div>
+
+      <div class="flex ml-auto h-full items-center z-10">
+        <a
+          href="https://github.com/b-inary/wasm-postflop"
+          class="flex px-4 h-full items-center font-semibold hover:bg-slate-700"
+        >
+          <img
+            src="../assets/GitHub-Mark-Light-32px.png"
+            class="inline-block w-5 h-5 mr-2.5"
+          />
+          GitHub
+        </a>
       </div>
 
       <div
@@ -32,19 +45,6 @@
           <div class="result-icon"></div>
           <span class="pl-8">Results</span>
         </button>
-      </div>
-
-      <div class="flex absolute right-0 h-full items-center">
-        <a
-          href="https://github.com/b-inary/wasm-postflop"
-          class="flex px-4 h-full items-center font-semibold hover:bg-slate-700"
-        >
-          <img
-            src="../assets/GitHub-Mark-Light-32px.png"
-            class="inline-block w-5 h-5 mr-2.5"
-          />
-          GitHub
-        </a>
       </div>
     </div>
   </nav>

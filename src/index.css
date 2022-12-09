@@ -12,7 +12,7 @@ body {
 }
 
 .button-base {
-  @apply rounded-lg shadow px-3.5 py-1.5 text-white text-sm font-bold;
+  @apply rounded-lg shadow px-3.5 py-1.5 text-white text-sm font-semibold;
   @apply transition-colors disabled:opacity-40;
 }
 
@@ -32,6 +32,10 @@ input.input-error {
   @apply !ring-1 !ring-red-600 !border-red-600 !bg-red-50;
 }
 
+.text-shadow {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 .cross-icon {
   @apply text-red-600;
   position: absolute;
@@ -41,7 +45,7 @@ input.input-error {
   height: 21px;
 }
 
-.cross-icon:before {
+.cross-icon::before {
   content: "";
   position: absolute;
   top: 9px;
@@ -51,7 +55,7 @@ input.input-error {
   transform: rotate(-45deg);
 }
 
-.cross-icon:after {
+.cross-icon::after {
   content: "";
   position: absolute;
   top: 9px;
@@ -65,25 +69,13 @@ input.input-error {
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  background: #404040;
-  background: -moz-linear-gradient(left, #404040 10%, rgba(64, 64, 64, 0) 42%);
-  background: -webkit-linear-gradient(
-    left,
-    #404040 10%,
-    rgba(64, 64, 64, 0) 42%
-  );
-  background: -o-linear-gradient(left, #404040 10%, rgba(64, 64, 64, 0) 42%);
-  background: -ms-linear-gradient(left, #404040 10%, rgba(64, 64, 64, 0) 42%);
   background: linear-gradient(to right, #404040 10%, rgba(64, 64, 64, 0) 42%);
   position: relative;
-  -webkit-animation: spinner-animation 0.8s infinite linear;
   animation: spinner-animation 0.8s infinite linear;
-  -webkit-transform: translateZ(0);
-  -ms-transform: translateZ(0);
   transform: translateZ(0);
 }
 
-.spinner:before {
+.spinner::before {
   width: 50%;
   height: 50%;
   background: #404040;
@@ -94,7 +86,7 @@ input.input-error {
   content: "";
 }
 
-.spinner:after {
+.spinner::after {
   @apply bg-gray-50;
   width: 75%;
   height: 75%;
@@ -108,24 +100,11 @@ input.input-error {
   right: 0;
 }
 
-@-webkit-keyframes spinner-animation {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-
 @keyframes spinner-animation {
   0% {
-    -webkit-transform: rotate(0deg);
     transform: rotate(0deg);
   }
   100% {
-    -webkit-transform: rotate(360deg);
     transform: rotate(360deg);
   }
 }

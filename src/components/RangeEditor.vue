@@ -1,37 +1,27 @@
 <template>
   <div class="flex mt-1">
     <div class="shrink-0 ml-1">
-      <table class="bg-gray-200 shadow" @mouseleave="dragEnd">
+      <table class="bg-neutral-800 shadow-md" @mouseleave="dragEnd">
         <tr v-for="row in 13" :key="row" class="h-9">
           <td
             v-for="col in 13"
             :key="col"
-            :class="
-              'relative w-10 border-black select-none ' +
-              (row === col ? 'border-2' : 'border')
-            "
+            class="relative w-[2.625rem] border border-black select-none"
             @mousedown="dragStart(row, col)"
             @mouseup="dragEnd"
             @mouseenter="mouseEnter(row, col)"
           >
             <div
-              class="absolute bottom-0 left-0 w-full bg-yellow-300"
+              class="absolute bottom-0 left-0 w-full bg-amber-500"
               :style="{ height: weightPercent(row, col) }"
             ></div>
             <div
               :class="
-                'absolute -top-px left-px z-10 text-sm ' +
-                (!hasWeight(row, col) ? 'text-gray-500' : '')
+                'absolute -top-1 left-0.5 z-10 text-shadow ' +
+                (hasWeight(row, col) ? 'text-white' : 'text-neutral-500')
               "
             >
               {{ cellText(row, col) }}
-            </div>
-            <div class="absolute -bottom-px right-px z-10 text-sm">
-              {{
-                !hasWeight(row, col) || isWeightFull(row, col)
-                  ? ""
-                  : weightPercent(row, col)
-              }}
             </div>
           </td>
         </tr>
@@ -63,8 +53,8 @@
       </div>
     </div>
 
-    <db-item-picker
-      class="shrink ml-6"
+    <DbItemPicker
+      class="ml-6"
       store-name="ranges"
       :index="player"
       :value="rangeText"
@@ -111,11 +101,10 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { useConfigStore } from "../store";
+import { ranks } from "../utils";
 import { RangeManager } from "../../pkg/range/range";
 
 import DbItemPicker from "./DbItemPicker.vue";
-
-const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
 
 const rankPat = "[AaKkQqJjTt2-9]";
 const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
@@ -230,10 +219,6 @@ export default defineComponent({
       return rangeStore[13 * (row - 1) + col - 1] > 0;
     };
 
-    const isWeightFull = (row: number, col: number) => {
-      return rangeStore[13 * (row - 1) + col - 1] === 100;
-    };
-
     const weightPercent = (row: number, col: number) => {
       return rangeStore[13 * (row - 1) + col - 1].toFixed(0) + "%";
     };
@@ -252,8 +237,8 @@ export default defineComponent({
       numCombos.value = 0;
     };
 
-    const loadRange = (rangeStr: string) => {
-      rangeText.value = rangeStr;
+    const loadRange = (rangeStr: unknown) => {
+      rangeText.value = rangeStr as string;
       onRangeTextChange();
     };
 
@@ -268,7 +253,6 @@ export default defineComponent({
       dragEnd,
       mouseEnter,
       hasWeight,
-      isWeightFull,
       weightPercent,
       onWeightChange,
       clearRange,

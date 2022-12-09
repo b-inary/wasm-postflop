@@ -1,6 +1,6 @@
 <template>
   <div v-for="suit in 4" :key="suit" class="flex">
-    <board-selector-card
+    <BoardSelectorCard
       v-for="rank in 13"
       :key="rank"
       class="m-1"

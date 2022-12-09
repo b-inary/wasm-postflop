@@ -10,14 +10,14 @@
     <button :class="itemStyle('OOPRange')" @click="store.sideView = 'OOPRange'">
       OOP Range
       <span class="flex my-2 justify-center">
-        <range-mini-viewer :player="0" />
+        <RangeMiniViewer :player="0" />
       </span>
     </button>
 
     <button :class="itemStyle('IPRange')" @click="store.sideView = 'IPRange'">
       IP Range
       <span class="flex my-2 justify-center">
-        <range-mini-viewer :player="1" />
+        <RangeMiniViewer :player="1" />
       </span>
     </button>
 
@@ -52,7 +52,8 @@
 
 <script lang="ts">
 import { computed, defineComponent } from "vue";
-import { SideView, cardText, useStore, useConfigStore } from "../store";
+import { SideView, useStore, useConfigStore } from "../store";
+import { cardText } from "../utils";
 
 import RangeMiniViewer from "./RangeMiniViewer.vue";
 

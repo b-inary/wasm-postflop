@@ -425,7 +425,7 @@
         </div>
       </div>
 
-      <db-item-picker
+      <DbItemPicker
         class="mt-1 ml-6"
         store-name="configurations"
         :value="dbValue"
@@ -463,13 +463,14 @@
   </div>
 
   <div v-else>
-    <tree-editor @save="saveEdit" @cancel="cancelEdit" />
+    <TreeEditor @save="saveEdit" @cancel="cancelEdit" />
   </div>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
-import { useConfigStore, readableLineString } from "../store";
+import { useConfigStore } from "../store";
+import { readableLineString } from "../utils";
 
 import DbItemPicker from "./DbItemPicker.vue";
 import TreeEditor from "./TreeEditor.vue";
@@ -636,30 +637,31 @@ export default defineComponent({
       })
     );
 
-    const loadConfig = (value: ConfigValue) => {
-      config.startingPot = value.startingPot;
-      config.effectiveStack = value.effectiveStack;
-      config.donkOption = Boolean(value.donkOption);
-      config.oopFlopBet = value.oopFlopBet;
-      config.oopFlopRaise = value.oopFlopRaise;
-      config.oopTurnBet = value.oopTurnBet;
-      config.oopTurnRaise = value.oopTurnRaise;
-      config.oopTurnDonk = value.oopTurnDonk;
-      config.oopRiverBet = value.oopRiverBet;
-      config.oopRiverRaise = value.oopRiverRaise;
-      config.oopRiverDonk = value.oopRiverDonk;
-      config.ipFlopBet = value.ipFlopBet;
-      config.ipFlopRaise = value.ipFlopRaise;
-      config.ipTurnBet = value.ipTurnBet;
-      config.ipTurnRaise = value.ipTurnRaise;
-      config.ipRiverBet = value.ipRiverBet;
-      config.ipRiverRaise = value.ipRiverRaise;
-      config.addAllInThreshold = value.addAllInThreshold;
-      config.forceAllInThreshold = value.forceAllInThreshold;
-      config.mergingThreshold = value.mergingThreshold;
-      config.expectedBoardLength = value.expectedBoardLength;
-      config.addedLines = value.addedLines;
-      config.removedLines = value.removedLines;
+    const loadConfig = (value: unknown) => {
+      const configValue = value as ConfigValue;
+      config.startingPot = configValue.startingPot;
+      config.effectiveStack = configValue.effectiveStack;
+      config.donkOption = Boolean(configValue.donkOption);
+      config.oopFlopBet = configValue.oopFlopBet;
+      config.oopFlopRaise = configValue.oopFlopRaise;
+      config.oopTurnBet = configValue.oopTurnBet;
+      config.oopTurnRaise = configValue.oopTurnRaise;
+      config.oopTurnDonk = configValue.oopTurnDonk;
+      config.oopRiverBet = configValue.oopRiverBet;
+      config.oopRiverRaise = configValue.oopRiverRaise;
+      config.oopRiverDonk = configValue.oopRiverDonk;
+      config.ipFlopBet = configValue.ipFlopBet;
+      config.ipFlopRaise = configValue.ipFlopRaise;
+      config.ipTurnBet = configValue.ipTurnBet;
+      config.ipTurnRaise = configValue.ipTurnRaise;
+      config.ipRiverBet = configValue.ipRiverBet;
+      config.ipRiverRaise = configValue.ipRiverRaise;
+      config.addAllInThreshold = configValue.addAllInThreshold;
+      config.forceAllInThreshold = configValue.forceAllInThreshold;
+      config.mergingThreshold = configValue.mergingThreshold;
+      config.expectedBoardLength = configValue.expectedBoardLength;
+      config.addedLines = configValue.addedLines;
+      config.removedLines = configValue.removedLines;
     };
 
     const startEdit = () => {

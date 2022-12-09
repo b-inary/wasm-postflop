@@ -1,5 +1,8 @@
 <template>
-  <div v-if="!store.isSolverFinished" class="flex items-center">
+  <div
+    v-if="!store.isSolverFinished"
+    class="w-full max-w-screen-xl mx-auto py-6"
+  >
     <span
       v-if="store.isSolverRunning || store.isFinalizing"
       class="spinner inline-block mr-3"
@@ -15,1317 +18,668 @@
     }}
   </div>
 
-  <div v-else>
-    <div ref="divResultNav" class="flex mt-1 pl-0.5 overflow-x-auto">
-      <div class="flex flex-col items-start">
-        <button
-          :class="
-            'my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
-            (actionList.length === 1
-              ? 'ring-1 ring-red-600 border-red-600'
-              : 'border-black')
-          "
-          :disabled="actionList.length === 1"
-          @click="moveNode(0, 0)"
-        >
-          <span class="inline-block mr-2 underline">
-            {{ ["Flop", "Turn", "River"][board.length - 3] }}
-          </span>
-          <span
-            v-for="item in board.map(cardText)"
-            :key="item.rank + item.suit"
-            :class="item.colorClass"
-          >
-            {{ item.rank + item.suit }}
-          </span>
-        </button>
-      </div>
-
+  <div v-else class="flex flex-col h-full">
+    <div class="flex gap-0.5 p-0.5 overflow-x-auto whitespace-nowrap snug">
       <div
-        v-for="item in actionList"
-        :key="item.depth"
-        class="flex flex-col ml-2 items-start"
+        v-for="spot in spots"
+        :key="spot.index"
+        :class="
+          'flex flex-col h-[9.75rem] p-0.5 justify-start cursor-pointer ' +
+          'rounded-md shadow-md border-2  transition group ' +
+          (spot.type === 'chance'
+            ? 'hover:border-red-600 '
+            : 'hover:border-blue-600 ') +
+          (spot.index === selectedChance
+            ? 'border-red-600'
+            : spot.index === selectedSpot
+            ? 'border-blue-600'
+            : 'border-gray-500')
+        "
+        @click="selectSpot(spot.index, false)"
       >
-        <template v-if="item.type !== 'Player'">
-          <button
+        <!-- Root or Chance -->
+        <template v-if="spot.type === 'root' || spot.type === 'chance'">
+          <div
             :class="
-              'my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border bg-white rounded-lg shadow select-none ' +
-              (item.depth === actionList.length - 1
-                ? 'ring-1 ring-red-600 border-red-600'
-                : 'border-black')
+              'px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 ' +
+              (spot.index === selectedChance ? '' : 'opacity-70')
             "
-            :disabled="item.depth >= actionList.length - 1"
-            @click="moveNode(item.depth, item.selectedIndex)"
           >
-            <span class="inline-block mr-2 underline">
-              {{ item.type }}
-            </span>
-            <span
-              v-for="tmp in item.depth === actionList.length
-                ? [{ rank: '?', suit: '', colorClass: 'text-black' }]
-                : [cardText(item.selectedIndex)]"
-              :key="tmp.rank + tmp.suit"
-              :class="tmp.colorClass"
-            >
-              {{ tmp.rank + tmp.suit }}
-            </span>
-          </button>
-        </template>
-        <template v-else>
-          <button
-            v-for="action in item.actions"
-            :key="action.str"
-            :class="
-              'w-full my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border rounded-lg shadow text-center select-none ' +
-              (!action.isSelected && item.depth < actionList.length
-                ? 'opacity-40 '
-                : '') +
-              (action.isSelected && item.depth === actionList.length - 1
-                ? 'ring-1 ring-red-600 border-red-600 '
-                : 'border-black ') +
-              (item.depth === actionList.length
-                ? actionColorByStr[action.str].bg
-                : 'bg-white')
-            "
-            :disabled="
-              (action.isSelected && item.depth === actionList.length - 1) ||
-              action.isTerminal
-            "
-            @click="moveNode(item.depth, action.index)"
+            {{ spot.player.toUpperCase() }}
+          </div>
+          <div
+            class="flex flex-col flex-grow px-3 items-center justify-evenly font-bold"
           >
-            {{ action.str }}
-          </button>
-        </template>
-      </div>
-    </div>
-
-    <div
-      v-if="
-        actionList.length > 0 &&
-        actionList[actionList.length - 1].type === 'Player'
-      "
-      class="flex mt-5 items-start"
-    >
-      <div class="shrink-0">
-        <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
-          <tr v-for="row in 13" :key="row" class="h-9">
-            <td
-              v-for="col in 13"
-              :key="col"
-              :class="
-                'relative w-10 border-black select-none ' +
-                (row === col ? 'border-2' : 'border')
-              "
-              @mouseenter="onMouseEnter(row, col)"
-            >
-              <div
-                class="absolute bottom-0 left-0 w-full"
-                :style="{ height: weightPercent(row, col) }"
+            <div>
+              <span
+                v-for="card of spotCards(spot)"
+                :key="card.rank + card.suit"
+                :class="card.colorClass"
               >
-                <div
-                  v-for="item in cellItems(row, col)"
-                  :key="item.key"
-                  :class="'absolute top-0 right-0 h-full ' + item.class"
-                  :style="item.style"
-                ></div>
-              </div>
-              <div
+                {{ card.rank + card.suit }}
+              </span>
+            </div>
+            <div
+              :class="
+                'group-hover:opacity-100 ' +
+                (spot.index === selectedChance ? '' : 'opacity-70')
+              "
+            >
+              <div>Pot {{ spot.pot }}</div>
+              <div>Stack {{ spot.stack }}</div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Player -->
+        <template v-if="spot.type === 'player'">
+          <div
+            :class="
+              'px-1.5 py-1 font-bold group-hover:opacity-100 ' +
+              (spot.index === selectedSpot ? '' : 'opacity-70')
+            "
+          >
+            {{ spot.player.toUpperCase() }}
+          </div>
+          <div class="flex-grow overflow-y-auto">
+            <button
+              v-for="action of spot.actions"
+              :key="action.index"
+              :class="
+                'flex w-full px-1.5 rounded-md transition-colors hover:bg-blue-100 ' +
+                (action.isSelected ? 'bg-blue-100 ' : '')
+              "
+              @click.prevent="play(spot.index, action.index)"
+            >
+              <span class="inline-block relative w-4 mr-0.5">
+                <span
+                  v-if="spot.index === Math.max(selectedSpot, 1)"
+                  class="absolute top-[0.3125rem] left-0 w-3 h-3 rounded-sm"
+                  :style="{ backgroundColor: action.color }"
+                ></span>
+                <span v-if="action.isSelected">
+                  <CheckIcon
+                    class="absolute top-[0.1875rem] -left-0.5 w-4 h-4"
+                  />
+                </span>
+              </span>
+              <span
                 :class="
-                  'absolute -top-px left-px z-50 text-sm ' +
-                  (!hasWeight(row, col) ? 'text-gray-500' : '')
+                  'pr-0.5 font-bold group-hover:opacity-100 ' +
+                  (action.isSelected || spot.index === selectedSpot
+                    ? ''
+                    : 'opacity-70')
                 "
               >
-                {{ cellText(row, col) }}
-              </div>
-              <div class="absolute -bottom-px right-px z-50 text-sm">
-                {{ cellAuxText(row, col) }}
-              </div>
-            </td>
-          </tr>
-        </table>
-
-        <div class="mt-4">
-          Player: {{ nodeInformation.player === 0 ? "OOP" : "IP" }} / Pot:
-          {{ nodeInformation.pot }} / Stack: {{ nodeInformation.stack }}
-          {{
-            nodeInformation.toCall
-              ? " / To Call: " + nodeInformation.toCall
-              : ""
-          }}
-        </div>
-      </div>
-
-      <div class="pl-5 pb-1 overflow-x-auto">
-        <div
-          ref="divResultDetail"
-          class="max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-y-scroll will-change-transform"
-          @scroll.passive="onTableScroll"
-        >
-          <table class="align-middle divide-y divide-gray-300">
-            <thead class="sticky top-0 bg-gray-100 shadow z-10">
-              <tr style="height: calc(2rem + 1px)">
-                <th
-                  v-for="text in headers"
-                  :key="text"
-                  scope="col"
-                  :class="
-                    'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
-                    (text === 'Hand'
-                      ? 'min-w-[4.9rem]'
-                      : text === 'EV'
-                      ? 'min-w-[3.3rem]'
-                      : 'min-w-[3.6rem]')
-                  "
-                  @click="sortBy(text)"
-                >
-                  <span
-                    v-if="text === sortKey.key"
-                    class="inline-block text-xs"
-                  >
-                    {{ sortKey.order === "asc" ? "▲" : "▼" }}
-                  </span>
-                  {{
-                    text
-                      .replace("Bet", "B")
-                      .replace("Raise", "R")
-                      .replace("All-in", "A")
-                  }}
-                </th>
-              </tr>
-            </thead>
-
-            <tbody class="bg-white divide-y divide-gray-300">
-              <!-- Top empty row -->
-              <tr
-                v-if="emptyBufferTop > 0"
-                :style="{
-                  '--num-rows': emptyBufferTop,
-                  height: 'calc(var(--num-rows) * (2rem + 1px))',
-                }"
+                {{ action.name + (action.amount ? ` ${action.amount}` : "") }}
+              </span>
+              <span
+                v-if="spot.index === Math.max(selectedSpot, 1)"
+                :class="
+                  'ml-auto pl-1.5 group-hover:opacity-100 ' +
+                  (action.isSelected || spot.index === selectedSpot
+                    ? ''
+                    : 'opacity-70')
+                "
               >
-                <td :colspan="headers.length"></td>
-              </tr>
+                [xx.x%]
+              </span>
+            </button>
+          </div>
+        </template>
 
-              <!-- Body -->
-              <tr
-                v-for="item in resultRendered"
-                :key="item.card1 + '-' + item.card2"
-                class="text-right text-sm"
-                style="height: calc(2rem + 1px)"
-              >
-                <td class="px-[0.5625rem] text-center">
-                  <template
-                    v-for="card in [item.card1, item.card2].map(cardText)"
-                    :key="card.rank + card.suit"
-                  >
-                    <span :class="card.colorClass">
-                      {{ card.rank + card.suit }}
-                    </span>
-                  </template>
-                </td>
-                <td class="px-[0.5625rem]">
-                  {{ percentStr(item.weight) }}
-                </td>
-                <td class="px-[0.5625rem]">
-                  {{ percentStr(item.equity) }}
-                </td>
-                <td class="px-[0.5625rem]">
-                  {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
-                </td>
-                <td
-                  v-for="i in item.strategy.length"
-                  :key="i"
-                  class="relative px-[0.5625rem]"
-                >
-                  <span v-if="!showActionEv">
-                    {{ percentStr(item.strategy[i - 1]) }}
-                  </span>
-                  <span v-else>
-                    {{ trimMinusZero(item.actionEv[i - 1].toFixed(1)) }}
-                  </span>
-                  <div
-                    class="absolute bottom-0 left-2 h-[0.3125rem] bg-gray-400"
-                    style="width: calc(100% - 1rem)"
-                  ></div>
-                  <div
-                    :class="
-                      'absolute bottom-0 left-2 h-[0.3125rem] ' +
-                      actionColor[i - 1].bar
-                    "
-                    :style="`width: calc((100% - 1rem) * ${
-                      item.strategy[i - 1]
-                    }`"
-                  ></div>
-                </td>
-              </tr>
-
-              <!-- Bottom empty row -->
-              <tr
-                v-if="emptyBufferBottom > 0"
-                :style="{
-                  '--num-rows': emptyBufferBottom,
-                  height: 'calc(var(--num-rows) * (2rem + 1px))',
-                }"
-              >
-                <td :colspan="headers.length"></td>
-              </tr>
-            </tbody>
-
-            <tfoot class="sticky bottom-0 font-bold bg-white shadow">
-              <tr class="text-right text-sm" style="height: calc(2rem + 1px)">
-                <th scope="col" class="px-[0.5625rem] text-center underline">
-                  {{ hoveredCellText }}
-                </th>
-                <th scope="col" class="px-[0.5625rem]">
-                  {{ resultAverage.combos }}
-                </th>
-                <th scope="col" class="px-[0.5625rem]">
-                  {{ resultAverage.equity }}
-                </th>
-                <th scope="col" class="px-[0.5625rem]">
-                  {{ resultAverage.expectedValue }}
-                </th>
-                <th
-                  v-for="i in resultAverage.strategy.length"
-                  :key="i"
-                  scope="col"
-                  class="px-[0.5625rem]"
-                >
-                  {{ resultAverage.strategy[i - 1] }}
-                </th>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <div class="mt-4">
-          <label class="cursor-pointer">
-            <input
-              v-model="showActionEv"
-              type="checkbox"
-              class="mr-1 align-middle rounded cursor-pointer"
-            />
-            Show action EV
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-else-if="
-        actionList.length > 0 &&
-        actionList[actionList.length - 1].type !== 'Player'
-      "
-      class="flex mt-5 items-start"
-    >
-      <div class="shrink-0">
-        <div v-for="suit in 4" :key="suit" class="flex">
-          <board-selector-card
-            v-for="rank in 13"
-            :key="rank"
-            class="m-1 disabled:opacity-40"
-            :card-id="56 - 4 * rank - suit"
-            :disabled="
-              actionList[actionList.length - 1].actions[56 - 4 * rank - suit]
-                .isTerminal
+        <!-- Terminal -->
+        <template v-else-if="spot.type === 'terminal'">
+          <div
+            :class="
+              'px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 ' +
+              (spot.index === selectedSpot ? '' : 'opacity-70')
             "
-            @click="moveNode(actionList.length, 56 - 4 * rank - suit)"
-          />
-        </div>
-
-        <div class="mt-4">
-          <label class="cursor-pointer">
-            <input
-              v-model="showOopStats"
-              type="checkbox"
-              class="mr-1 align-middle rounded cursor-pointer"
-            />
-            Show OOP statistics
-          </label>
-        </div>
-      </div>
-
-      <!-- Turn/River report -->
-      <div v-if="showOopStats" class="pl-5 pb-1 overflow-x-auto">
-        <span class="underline">OOP statistics:</span>
-        <div
-          class="mt-3 max-h-[24rem] border border-gray-500 rounded-md shadow overflow-y-scroll"
-        >
-          <table class="align-middle divide-y divide-gray-300">
-            <thead class="sticky top-0 bg-gray-100 shadow z-10">
-              <tr style="height: calc(2rem + 1px)">
-                <th
-                  v-for="text in headersChance"
-                  :key="text"
-                  scope="col"
-                  :class="
-                    'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
-                    (text === 'Card'
-                      ? 'min-w-[3.5rem]'
-                      : text === 'EV'
-                      ? 'min-w-[3.3rem]'
-                      : 'min-w-[3.6rem]')
-                  "
-                  @click="sortByChance(text)"
-                >
-                  <span
-                    v-if="text === sortKeyChance.key"
-                    class="inline-block text-xs"
-                  >
-                    {{ sortKeyChance.order === "asc" ? "▲" : "▼" }}
-                  </span>
-                  {{
-                    text
-                      .replace("Card", actionList[actionList.length - 1].type)
-                      .replace("Bet", "B")
-                      .replace("Raise", "R")
-                      .replace("All-in", "A")
-                  }}
-                </th>
-              </tr>
-            </thead>
-
-            <tbody class="bg-white divide-y divide-gray-300">
-              <tr
-                v-for="item in resultChanceSorted"
-                :key="item.card"
-                class="text-right text-sm"
-                style="height: calc(2rem + 1px)"
-              >
-                <td class="px-[0.5625rem] text-center">
-                  <template
-                    v-for="card in [cardText(item.card)]"
-                    :key="card.rank + card.suit"
-                  >
-                    <span :class="card.colorClass">
-                      {{ card.rank + card.suit }}
-                    </span>
-                  </template>
-                </td>
-                <td class="px-[0.5625rem]">
-                  {{ percentStr(item.equity) }}
-                </td>
-                <td class="px-[0.5625rem]">
-                  {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
-                </td>
-                <td
-                  v-for="i in item.strategy.length"
-                  :key="i"
-                  class="px-[0.5625rem]"
-                >
-                  {{ percentStr(item.strategy[i - 1]) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          >
+            {{ spot.player.toUpperCase() }}
+          </div>
+          <div
+            :class="
+              'flex flex-col flex-grow items-center justify-evenly font-bold ' +
+              (spot.index === selectedSpot ? '' : 'opacity-70')
+            "
+          >
+            <div
+              v-if="spot.equityOop === 0 || spot.equityOop === 1"
+              class="px-3"
+            >
+              {{ ["IP", "OOP"][spot.equityOop] }} Wins
+            </div>
+            <div v-else-if="spot.equityOop !== -1" class="px-1.5">
+              <div class="mb-0.5">Equity</div>
+              <div class="flex w-full px-1.5">
+                <span>OOP</span>
+                <span class="ml-auto pl-2">
+                  {{ (100 * spot.equityOop).toFixed(1) }}%
+                </span>
+              </div>
+              <div class="flex w-full px-1.5">
+                <span>IP</span>
+                <span class="ml-auto pl-2">
+                  {{ (100 * (1 - spot.equityOop)).toFixed(1) }}%
+                </span>
+              </div>
+            </div>
+            <div class="px-3">Pot {{ spot.pot }}</div>
+          </div>
+        </template>
       </div>
     </div>
+
+    <button @click="reset">Reset</button>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, ref, watch } from "vue";
-import { cardText, useStore, useSavedConfigStore } from "../store";
+import { defineComponent, ref } from "vue";
+import { useStore, useSavedConfigStore } from "../store";
+import { cardText } from "../utils";
 import * as GlobalWorker from "../global-worker";
 
-import BoardSelectorCard from "./BoardSelectorCard.vue";
+import { CheckIcon } from "@heroicons/vue/20/solid";
 
-type Result = {
-  card1: number;
-  card2: number;
-  weight: number;
-  weightNormalized: number;
-  equity: number;
-  expectedValue: number;
-  actionEv: number[];
-  strategy: number[];
+type SpotRoot = {
+  type: "root";
+  index: 0;
+  player: "flop" | "turn" | "river";
+  selectedIndex: -1;
+  board: number[];
+  pot: number;
+  stack: number;
 };
 
-type ResultChance = {
-  card: number;
-  equity: number;
-  expectedValue: number;
-  strategy: number[];
+type SpotChance = {
+  type: "chance";
+  index: number;
+  player: "turn" | "river";
+  selectedIndex: number;
+  cards: {
+    card: number;
+    isSelected: boolean;
+    isDead: boolean;
+  }[];
+  pot: number;
+  stack: number;
 };
 
-const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
+type SpotPlayer = {
+  type: "player";
+  index: number;
+  player: "oop" | "ip";
+  selectedIndex: number;
+  actions: {
+    index: number;
+    name: string;
+    amount: number;
+    isSelected: boolean;
+    color: string;
+  }[];
+};
+
+type SpotTerminal = {
+  type: "terminal";
+  index: number;
+  player: "end";
+  selectedIndex: -1;
+  equityOop: number;
+  pot: number;
+};
+
+type Spot = SpotRoot | SpotChance | SpotPlayer | SpotTerminal;
+
+const foldColor = "#3b82f6"; // blue-500
+const checkColor = "#10b981"; // emerald-500
+const callColor = "#10b981"; // emerald-500
+const betColorGradient = [
+  "#f59e0b", // amber-500
+  "#f97316", // orange-500
+  "#ef4444", // red-500
+  "#f43f5e", // rose-500
+  "#ec4899", // pink-500
+  "#d946ef", // fuchsia-500
+  "#a855f7", // purple-500
+];
+
+const actionColor = (
+  name: string,
+  index: number,
+  numActions: number,
+  numBetActions: number
+) => {
+  if (name === "Fold") return foldColor;
+  if (name === "Check") return checkColor;
+  if (name === "Call") return callColor;
+
+  if (numBetActions === 1) return betColorGradient[0];
+  if (index === numActions - 1) {
+    return numBetActions === 2
+      ? betColorGradient[(betColorGradient.length - 1) / 2]
+      : betColorGradient[betColorGradient.length - 1];
+  }
+
+  const betIndex = index - (numActions - numBetActions);
+  const colorRate = betIndex / (numBetActions - 1);
+
+  const gradientRate = colorRate * (betColorGradient.length - 1);
+  const gradientIndex = Math.floor(gradientRate);
+  const gradientRemainder = gradientRate - gradientIndex;
+
+  const color1 = betColorGradient[gradientIndex];
+  const color2 = betColorGradient[gradientIndex + 1];
+
+  let colorString = "#";
+  for (let i = 1; i < 7; i += 2) {
+    const color1Int = parseInt(color1.slice(i, i + 2), 16);
+    const color2Int = parseInt(color2.slice(i, i + 2), 16);
+    const colorInt = Math.round(
+      color1Int * (1 - gradientRemainder) + color2Int * gradientRemainder
+    );
+    const colorHex = colorInt.toString(16).padStart(2, "0");
+    colorString += colorHex;
+  }
+
+  return colorString;
+};
 
 export default defineComponent({
   components: {
-    BoardSelectorCard,
+    CheckIcon,
   },
 
   setup() {
-    const store = useStore();
-    const savedConfig = useSavedConfigStore();
+    type Handler = Awaited<ReturnType<typeof GlobalWorker.getHandler>>;
+    let handler: Handler | null = null;
 
-    const divResultNav = ref(null as HTMLDivElement | null);
-    const divResultDetail = ref(null as HTMLDivElement | null);
+    const store = useStore();
+    const config = useSavedConfigStore();
+
+    const spots = ref<Spot[]>([]);
+    const selectedSpot = ref(-1);
+    const selectedChance = ref(-1);
+    const pendingChance = ref(-1);
+
+    let cards = [new Uint16Array(), new Uint16Array()];
+
+    const isSolverFinished = ref(false);
+    store.$subscribe(async (_, store) => {
+      if (isSolverFinished.value !== store.isSolverFinished) {
+        if ((isSolverFinished.value = store.isSolverFinished)) {
+          await initResults();
+          await selectSpot(1, true);
+        } else {
+          clearResults();
+        }
+      }
+    });
+
+    const initResults = async () => {
+      handler = await GlobalWorker.getHandler();
+      if (!handler) return;
+
+      const l = config.board.length;
+      const spot: SpotRoot = {
+        type: "root",
+        index: 0,
+        player: l === 3 ? "flop" : l === 4 ? "turn" : "river",
+        selectedIndex: -1,
+        board: config.board,
+        pot: config.startingPot,
+        stack: config.effectiveStack,
+      };
+      spots.value = [spot];
+
+      const memory = await GlobalWorker.getMemory();
+      const buffer = await memory.buffer;
+      for (let player = 0; player < 2; ++player) {
+        const cardsBuffer = await handler.privateCards(player);
+        cards[player] = new Uint16Array(
+          buffer,
+          cardsBuffer.ptr,
+          cardsBuffer.byteLength / 2
+        );
+      }
+    };
 
     let isLocked = false;
-    const isSolverFinished = ref(false);
-    const handCards = ref([new Uint16Array(), new Uint16Array()]);
+    const selectSpot = async (spotIndex: number, needSplice: boolean) => {
+      if (!handler || isLocked) return;
+      if (spotIndex === selectedSpot.value && !needSplice) return;
+      if (spotIndex === selectedChance.value && !needSplice) return;
 
-    const actionList = ref(
-      [] as {
-        type: "Player" | "Turn" | "River";
-        depth: number;
-        selectedIndex: number;
-        actions: {
-          index: number;
-          str: string;
-          isSelected: boolean;
-          isTerminal: boolean;
-        }[];
-      }[]
-    );
-
-    const result = ref([] as Result[]);
-
-    const resultCell = ref(
-      [] as {
-        count: number;
-        weight: number;
-        equity: number;
-        expectedValue: number;
-        actionEv: number[];
-        strategy: number[];
-      }[]
-    );
-
-    const resultChance = ref([] as ResultChance[]);
-
-    const nodeInformation = ref(
-      {} as {
-        player: number;
-        pot: number;
-        stack: number;
-        toCall: number;
-      }
-    );
-
-    const hoveredCell = ref({ row: 0, col: 0 });
-
-    type Order = "asc" | "desc";
-    const sortKey = ref({ key: "Hand", order: "desc" as Order });
-    const sortKeyChance = ref({ key: "Card", order: "desc" as Order });
-
-    const showActionEv = ref(false);
-    const showOopStats = ref(false);
-
-    const chanceNextActions = ref([] as string[]);
-
-    store.$subscribe(async (_, store) => {
-      if (store.isSolverFinished !== isSolverFinished.value) {
-        if ((isSolverFinished.value = store.isSolverFinished)) {
-          isLocked = true;
-          await updateResult(0, true);
-        } else {
-          clearResult();
-        }
-      }
-    });
-
-    const board = computed(() => savedConfig.board);
-
-    const dealtTurn = computed(() => {
-      const item = actionList.value.find((item) => item.type === "Turn");
-      return item?.selectedIndex ?? -1;
-    });
-
-    const dealtRiver = computed(() => {
-      const item = actionList.value.find((item) => item.type === "River");
-      return item?.selectedIndex ?? -1;
-    });
-
-    const percentStr = (num: number) => {
-      if (num >= 0.9995) {
-        return "100%";
-      } else {
-        return Math.max(100 * num, 0).toFixed(1) + "%";
-      }
-    };
-
-    const trimMinusZero = (str: string) => {
-      if (Number(str) === 0 && str[0] === "-") {
-        return str.slice(1);
-      } else {
-        return str;
-      }
-    };
-
-    const sortBy = (key: string) => {
-      const order: Order =
-        key === sortKey.value.key && sortKey.value.order === "desc"
-          ? "asc"
-          : "desc";
-      sortKey.value = { key, order };
-    };
-
-    const sortByChance = (key: string) => {
-      const order: Order =
-        key === sortKeyChance.value.key && sortKeyChance.value.order === "desc"
-          ? "asc"
-          : "desc";
-      sortKeyChance.value = { key, order };
-    };
-
-    const clearResult = () => {
-      handCards.value = [new Uint16Array(), new Uint16Array()];
-      actionList.value = [];
-      result.value = [];
-      resultCell.value = [];
-      resultChance.value = [];
-    };
-
-    const updateResult = async (depth: number, isFirstCall: boolean) => {
-      const handler = await GlobalWorker.getHandler();
-
-      if (isFirstCall) {
-        const memory = await GlobalWorker.getMemory();
-        const buffer = await memory.buffer;
-        for (let player = 0; player < 2; ++player) {
-          const cardsBuffer = await handler.privateCards(player);
-          handCards.value[player] = new Uint16Array(
-            buffer,
-            cardsBuffer.ptr,
-            cardsBuffer.byteLength / 2
-          );
-        }
-      }
-
-      const nextActions = (await handler.availableActions()).split("/");
-      const numActions = nextActions.length;
-      const isChance = nextActions[0] === "Chance";
-
-      if (isChance) {
-        const possibleCards = await handler.possibleCards();
-        const next = (await handler.availableActionsAfterChance()).split("/");
-        const results = await handler.chanceReport();
-
-        // update actionList
-        actionList.value.splice(depth, actionList.value.length, {
-          type: "River",
-          selectedIndex: -1,
-          depth: depth + 1,
-          actions: Array.from({ length: 52 }, (_, i) => ({
-            index: i,
-            str: i.toString(),
-            isSelected: false,
-            isTerminal: !(possibleCards & (1n << BigInt(i))),
-          })),
-        });
-
-        if (dealtTurn.value === -1 && board.value.length === 3) {
-          actionList.value[actionList.value.length - 1].type = "Turn";
-        }
-
-        // update resultChance
-        const numActions = next.length;
-        chanceNextActions.value = next.reverse();
-
-        const equity = results.subarray(0, 52);
-        const expectedValue = results.subarray(52, 52 * 2);
-        const strategy = results.subarray(52 * 2);
-
-        resultChance.value = [];
-        for (let i = 0; i < 52; ++i) {
-          if (!(possibleCards & (1n << BigInt(i)))) continue;
-          resultChance.value.push({
-            card: i,
-            equity: equity[i],
-            expectedValue: expectedValue[i],
-            strategy: Array.from(
-              { length: numActions },
-              (_, j) => strategy[i + j * 52]
-            ).reverse(),
-          });
-        }
-
-        updateResultFinal();
+      if (spotIndex === 0) {
+        await selectSpot(1, true);
         return;
       }
-
-      // obtain the current state
-      const isTerminalAction = await handler.isTerminalAction();
-
-      const currentPlayer = await handler.currentPlayer();
-      const cards = handCards.value[currentPlayer];
-
-      const results = await handler.getResults();
-      const weights = results.subarray(0, cards.length);
-      const weightsNormalized = results.subarray(
-        cards.length,
-        2 * cards.length
-      );
-      const equity = results.subarray(2 * cards.length, 3 * cards.length);
-      const actionEv = results.subarray(
-        3 * cards.length,
-        (3 + numActions) * cards.length
-      );
-      const strategy = results.subarray((3 + numActions) * cards.length);
-
-      // update actionList
-      actionList.value.splice(depth, actionList.value.length, {
-        type: "Player",
-        selectedIndex: -1,
-        depth: depth + 1,
-        actions: Array.from({ length: numActions }, (_, i) => ({
-          index: i,
-          str: nextActions[i],
-          isSelected: false,
-          isTerminal: !!(isTerminalAction & (1 << i)),
-        })).reverse(),
-      });
-
-      // update result
-      result.value = Array.from({ length: cards.length }, (_, i) => {
-        const a = Array.from(
-          { length: numActions },
-          (_, j) => actionEv[i + j * cards.length]
-        );
-
-        const s = Array.from(
-          { length: numActions },
-          (_, j) => strategy[i + j * cards.length]
-        );
-
-        const ev = a.map((v, j) => v * s[j]).reduce((acc, v) => acc + v, 0);
-
-        return {
-          card1: cards[i] >> 8,
-          card2: cards[i] & 0xff,
-          weight: weights[i],
-          weightNormalized: weightsNormalized[i],
-          equity: equity[i],
-          expectedValue: ev,
-          actionEv: a.reverse(),
-          strategy: s.reverse(),
-        };
-      });
-
-      // update terminal action flag
-      for (let i = 0; i < numActions; ++i) {
-        const action = actionList.value[actionList.value.length - 1].actions[i];
-        if (action.isTerminal) continue;
-        let invalid = true;
-        for (let j = 0; j < cards.length; ++j) {
-          if (
-            weightsNormalized[j] > 0 &&
-            weights[j] * result.value[j].strategy[i] >= 0.05 / 100
-          ) {
-            invalid = false;
-            break;
-          }
-        }
-        action.isTerminal = invalid;
-      }
-
-      // update resultCell
-      const weightSumCell = Array.from({ length: 13 * 13 }, () => 0);
-      const weightNormalizedSumCell = Array.from({ length: 13 * 13 }, () => 0);
-      const countCell = Array.from({ length: 13 * 13 }, () => 0);
-      const equitySumCell = Array.from({ length: 13 * 13 }, () => 0);
-      const expectedValueSumCell = Array.from({ length: 13 * 13 }, () => 0);
-      const actionEvSumCell = Array.from({ length: 13 * 13 }, () =>
-        Array.from({ length: numActions }, () => 0)
-      );
-      const strategySumCell = Array.from({ length: 13 * 13 }, () =>
-        Array.from({ length: numActions }, () => 0)
-      );
-
-      for (let i = 0; i < cards.length; ++i) {
-        const card1 = cards[i] >> 8;
-        const card2 = cards[i] & 0xff;
-        const rank1 = Math.floor(card1 / 4);
-        const rank2 = Math.floor(card2 / 4);
-        const suit1 = card1 % 4;
-        const suit2 = card2 % 4;
-
-        let row, col;
-        if (rank1 === rank2) {
-          row = 12 - rank1;
-          col = 12 - rank1;
-        } else if (suit1 === suit2) {
-          row = 12 - rank1;
-          col = 12 - rank2;
-        } else {
-          row = 12 - rank2;
-          col = 12 - rank1;
-        }
-
-        const idx = row * 13 + col;
-
-        if (weightsNormalized[i] > 0 && weights[i] >= 0.05 / 100) {
-          const w = weightsNormalized[i];
-          weightSumCell[idx] += weights[i];
-          weightNormalizedSumCell[idx] += w;
-          countCell[idx] += 1;
-          equitySumCell[idx] += w * equity[i];
-          expectedValueSumCell[idx] += w * result.value[i].expectedValue;
-          for (let j = 0; j < numActions; ++j) {
-            actionEvSumCell[idx][j] += w * result.value[i].actionEv[j];
-            strategySumCell[idx][j] += w * result.value[i].strategy[j];
-          }
-        }
-      }
-
-      resultCell.value = Array.from({ length: 13 * 13 }, (_, i) => ({
-        weight: weightSumCell[i],
-        count: countCell[i],
-        equity: equitySumCell[i] / weightNormalizedSumCell[i],
-        expectedValue: expectedValueSumCell[i] / weightNormalizedSumCell[i],
-        actionEv: Array.from(
-          { length: numActions },
-          (_, j) => actionEvSumCell[i][j] / weightNormalizedSumCell[i]
-        ),
-        strategy: Array.from(
-          { length: numActions },
-          (_, j) => strategySumCell[i][j] / weightNormalizedSumCell[i]
-        ),
-      }));
-
-      // update nodeInformation
-      let player = 0;
-      let lastBet = 0;
-      const pot = [0, 0];
-
-      for (let i = 0; i < actionList.value.length - 1; ++i) {
-        const item = actionList.value[i];
-        if (item.type !== "Player") {
-          player = 0;
-          lastBet = 0;
-          continue;
-        }
-
-        const action = item.actions[item.selectedIndex];
-
-        if (action.str === "Call") {
-          pot[player] = pot[1 - player];
-        } else if (action.str.slice(0, 3) === "Bet") {
-          const bet = Number(action.str.slice(4));
-          pot[player] += bet;
-          lastBet = bet;
-        } else if (
-          action.str.slice(0, 5) === "Raise" ||
-          action.str.slice(0, 6) === "All-in"
-        ) {
-          const bet = Number(action.str.slice(6).trimStart());
-          const potDiff = pot[1 - player] - pot[player];
-          pot[player] += bet - lastBet + potDiff;
-          lastBet = bet;
-        }
-
-        player = 1 - player;
-      }
-
-      nodeInformation.value = {
-        player,
-        pot: savedConfig.startingPot + pot[0] + pot[1],
-        stack: savedConfig.effectiveStack - pot[player],
-        toCall: pot[1 - player] - pot[player],
-      };
-
-      await nextTick();
-      if (divResultNav.value) {
-        const div = divResultNav.value;
-        div.scrollLeft = div.scrollWidth - div.clientWidth;
-      }
-
-      updateResultFinal();
-    };
-
-    const updateResultFinal = () => {
-      isLocked = false;
-
-      if (!["Hand", "Weight", "EQ", "EV"].includes(sortKey.value.key)) {
-        sortKey.value = { key: "Hand", order: "desc" };
-      }
-
-      if (!["Card", "EQ", "EV"].includes(sortKeyChance.value.key)) {
-        sortKeyChance.value = { key: "Card", order: "desc" };
-      }
-    };
-
-    const moveNode = async (depth: number, index: number) => {
-      if (
-        isLocked ||
-        index === -1 ||
-        (depth === 0 && actionList.value.length === 1)
-      )
-        return;
 
       isLocked = true;
 
-      if (depth > 0) {
-        const item = actionList.value[depth - 1];
-        const selectedIndex = item.actions.findIndex((a) => a.index === index);
-        if (
-          item.actions[selectedIndex].isTerminal ||
-          (item.selectedIndex === selectedIndex &&
-            depth === actionList.value.length - 1)
-        ) {
-          isLocked = false;
-          return;
-        }
-        item.selectedIndex = selectedIndex;
-        item.actions.forEach((a) => (a.isSelected = a.index === index));
-      }
-
       const history = new Uint32Array(
-        actionList.value
-          .slice(0, depth)
-          .map((item) => item.actions[item.selectedIndex].index)
+        spots.value.slice(1, spotIndex).map((spot) => spot.selectedIndex)
       );
 
-      const handler = await GlobalWorker.getHandler();
       await handler.applyHistory(history);
-      await updateResult(depth, false);
-    };
+      const actions = (await handler.actions()).split("/");
 
-    const nextActionsStr = computed(() => {
-      if (actionList.value.length === 0) return [];
-      const lastItem = actionList.value[actionList.value.length - 1];
-      if (lastItem.type === "Player") {
-        return lastItem.actions.map((a) => a.str);
+      const isChance = !needSplice && spots.value[spotIndex]?.type === "chance";
+      if (actions[0] === "Terminal") {
+        await updateResultsTerminal(spotIndex, needSplice);
+      } else if (actions[0] === "Chance" || isChance) {
+        await updateResultsChance(spotIndex, needSplice);
       } else {
-        return [];
-      }
-    });
-
-    const actionColor = computed(() => {
-      const actions = nextActionsStr.value;
-      if (actions.length === 0) return [];
-
-      const ret = [];
-      let index = 0;
-
-      for (let i = 0; i < actions.length; ++i) {
-        let color;
-        if (actions[i] === "Fold") {
-          color = { bg: "bg-sky-300", bar: "bg-sky-400" };
-        } else if (actions[i] === "Check" || actions[i] === "Call") {
-          color = { bg: "bg-green-300", bar: "bg-green-400" };
-        } else {
-          color = [
-            { bg: "bg-amber-300", bar: "bg-amber-400" },
-            { bg: "bg-pink-300", bar: "bg-pink-400" },
-            { bg: "bg-violet-300", bar: "bg-violet-400" },
-          ][index];
-          index = (index + 1) % 3;
-        }
-        ret.push(color);
+        await updateResultsPlayer(spotIndex, needSplice, actions);
       }
 
-      return ret;
-    });
-
-    const actionColorByStr = computed(() => {
-      const ret = {} as { [key: string]: { bg: string; bar: string } };
-      const actions = nextActionsStr.value;
-      for (let i = 0; i < actions.length; ++i) {
-        ret[actions[i]] = actionColor.value[i];
-      }
-      return ret;
-    });
-
-    const hasWeight = (row: number, col: number) => {
-      if (resultCell.value.length === 0) return false;
-      const idx = (row - 1) * 13 + col - 1;
-      return resultCell.value[idx].count > 0;
+      isLocked = false;
     };
 
-    const weightPercent = (row: number, col: number) => {
-      if (resultCell.value.length === 0) return "0%";
+    const updateResultsTerminal = async (
+      spotIndex: number,
+      needSplice: boolean
+    ) => {
+      if (!handler) return;
 
-      const r1 = 13 - row;
-      const r2 = 13 - col;
+      // handler operations
 
-      let denom = 0;
-      for (let s1 = 0; s1 < 4; ++s1) {
-        for (let s2 = 0; s2 < 4; ++s2) {
-          if (
-            (row === col && s1 < s2) ||
-            (row !== col && row < col === (s1 === s2))
-          ) {
-            const c1 = r1 * 4 + s1;
-            const c2 = r2 * 4 + s2;
-            if (
-              savedConfig.board.indexOf(c1) === -1 &&
-              dealtTurn.value !== c1 &&
-              dealtRiver.value !== c1 &&
-              savedConfig.board.indexOf(c2) === -1 &&
-              dealtTurn.value !== c2 &&
-              dealtRiver.value !== c2
-            ) {
-              denom += 1;
+      const findUnselectedChance = (startIndex: number) =>
+        spots.value
+          .slice(startIndex, spotIndex)
+          .find(
+            (spot: Spot) => spot.type === "chance" && spot.selectedIndex === -1
+          ) as SpotChance | undefined;
+
+      const skippedChance = findUnselectedChance(3);
+      const skippedRiver = skippedChance
+        ? findUnselectedChance(skippedChance.index + 3)
+        : undefined;
+
+      if (needSplice) {
+        const lastChance = spots.value
+          .slice(3)
+          .reverse()
+          .find((spot) => spot.type === "chance") as SpotChance | undefined;
+
+        const lastSpot = spots.value[spotIndex - 1] as SpotPlayer;
+        const lastAction = lastSpot.actions[lastSpot.selectedIndex];
+
+        let equityOop;
+        if (lastAction.name === "Fold") {
+          equityOop = lastSpot.player === "oop" ? 0 : 1;
+        } else if (skippedChance) {
+          equityOop = -1;
+        } else {
+          equityOop = await handler.equity(0);
+        }
+
+        let pot = lastChance?.pot ?? config.startingPot;
+
+        if (lastAction.name === "Fold") {
+          for (const i of [spotIndex - 2, spotIndex - 3]) {
+            const spot = spots.value[i];
+            if (spot.type === "player") {
+              const action = spot.actions[spot.selectedIndex];
+              pot += action.amount;
             }
           }
+        } else if (lastAction.name === "Call") {
+          const lastBetSpot = spots.value[spotIndex - 2] as SpotPlayer;
+          pot += 2 * lastBetSpot.actions[lastBetSpot.selectedIndex].amount;
         }
+
+        spots.value.splice(spotIndex, spots.value.length, {
+          type: "terminal",
+          index: spotIndex,
+          player: "end",
+          selectedIndex: -1,
+          equityOop,
+          pot,
+        });
       }
 
-      const idx = (row - 1) * 13 + col - 1;
-      return percentStr(resultCell.value[idx].weight / denom);
+      if (spotIndex <= pendingChance.value) {
+        pendingChance.value = -1;
+      }
+      if (spotIndex <= selectedChance.value) {
+        selectedChance.value = pendingChance.value;
+        pendingChance.value = -1;
+      }
+      if (spotIndex <= selectedChance.value) {
+        selectedChance.value = -1;
+      }
+      if (skippedChance && selectedChance.value === -1) {
+        selectedChance.value = skippedChance.index;
+      }
+      if (skippedRiver && pendingChance.value === -1) {
+        pendingChance.value = skippedRiver.index;
+      }
+
+      selectedSpot.value = spotIndex;
+
+      // display operations
     };
 
-    const cellItems = (row: number, col: number) => {
-      if (resultCell.value.length === 0) return [];
-      const idx = (row - 1) * 13 + col - 1;
-      const strategy = resultCell.value[idx].strategy;
-      return strategy.map((_, i) => {
-        const left = strategy.slice(0, i).reduce((a, b) => a + b, 0);
-        return {
-          key: i,
-          class: actionColor.value[i].bg,
-          style: {
-            width: percentStr(1 - left),
-            zIndex: i,
+    const updateResultsChance = async (
+      spotIndex: number,
+      needSplice: boolean
+    ) => {
+      if (!handler) return;
+
+      // handler operations
+
+      if (needSplice) {
+        type SpotTurn = SpotRoot | SpotChance;
+        const lastBetSpot = spots.value[spotIndex - 2] as SpotPlayer;
+        const turnSpot = spots.value
+          .slice(0, spotIndex)
+          .find((spot) => spot.player === "turn") as SpotTurn | undefined;
+
+        const amount = lastBetSpot.actions[lastBetSpot.selectedIndex].amount;
+        const pot = (turnSpot?.pot ?? config.startingPot) + 2 * amount;
+        const stack = (turnSpot?.stack ?? config.effectiveStack) - amount;
+
+        const possibleCards = await handler.possibleCards();
+        const nextActions = (await handler.actionsAfterChance()).split("/");
+
+        let numBetActions = nextActions.length;
+        while (
+          numBetActions > 0 &&
+          nextActions[nextActions.length - numBetActions].split(":")[1] === "0"
+        ) {
+          --numBetActions;
+        }
+
+        spots.value.splice(
+          spotIndex,
+          spots.value.length,
+          {
+            type: "chance",
+            index: spotIndex,
+            player: turnSpot ? "river" : "turn",
+            selectedIndex: -1,
+            cards: Array.from({ length: 52 }, (_, i) => ({
+              card: i,
+              isSelected: false,
+              isDead: !(possibleCards & (1n << BigInt(i))),
+            })),
+            pot,
+            stack,
           },
-        };
-      });
-    };
+          {
+            type: "player",
+            index: spotIndex + 1,
+            player: "oop",
+            selectedIndex: -1,
+            actions: nextActions.map((action, i) => {
+              const [name, amount] = action.split(":");
+              return {
+                index: i,
+                name,
+                amount: Number(amount),
+                isSelected: false,
+                color: actionColor(name, i, nextActions.length, numBetActions),
+              };
+            }),
+          }
+        );
 
-    const cellText = (row: number, col: number) => {
-      const r1 = 13 - Math.min(row, col);
-      const r2 = 13 - Math.max(row, col);
-      return ranks[r1] + ranks[r2] + ["s", "", "o"][Math.sign(row - col) + 1];
-    };
-
-    const cellAuxText = (row: number, col: number) => {
-      const idx = (row - 1) * 13 + col - 1;
-      if (resultCell.value.length === 0 || resultCell.value[idx].count === 0) {
-        return "";
+        selectedSpot.value = spotIndex + 1;
       }
-      if (sortKey.value.key === "EQ") {
-        return (100 * resultCell.value[idx].equity).toFixed(0) + "%";
-      } else if (sortKey.value.key === "EV") {
-        const ev = resultCell.value[idx].expectedValue;
-        return -0.5 <= ev && ev < 0.5
-          ? "0"
-          : (ev >= 0 ? "+" : "") + ev.toFixed(0);
-      } else {
-        const i = nextActionsStr.value.indexOf(sortKey.value.key);
-        if (i !== -1) {
-          return (100 * resultCell.value[idx].strategy[i]).toFixed(0) + "%";
-        }
-      }
-      return "";
-    };
 
-    const onMouseEnter = (row: number, col: number) => {
-      hoveredCell.value = { row, col };
-    };
-
-    const onMouseLeave = () => {
-      hoveredCell.value = { row: 0, col: 0 };
-    };
-
-    const hoveredCellText = computed(() => {
-      const { row, col } = hoveredCell.value;
-      const idx = (row - 1) * 13 + col - 1;
       if (
-        idx < 0 ||
-        resultCell.value.length === 0 ||
-        resultCell.value[idx].count === 0
+        needSplice &&
+        selectedChance.value !== -1 &&
+        selectedChance.value < spotIndex
       ) {
-        return "All";
-      } else {
-        return cellText(row, col);
-      }
-    });
-
-    const headers = computed(() => {
-      return ["Hand", "Weight", "EQ", "EV"].concat(nextActionsStr.value);
-    });
-
-    const headersChance = computed(() => {
-      return ["Card", "EQ", "EV"].concat(chanceNextActions.value);
-    });
-
-    const resultFiltered = ref([] as Result[]);
-    const resultSorted = ref([] as Result[]);
-    const resultAverage = ref({
-      combos: "-",
-      equity: "-",
-      expectedValue: "-",
-      strategy: [] as string[],
-    });
-
-    const resultRendered = ref([] as Result[]);
-    const bufferUnit = 13;
-    const emptyBufferTop = ref(-2 * bufferUnit);
-    const emptyBufferBottom = computed(
-      () => resultFiltered.value.length - emptyBufferTop.value - 5 * bufferUnit
-    );
-
-    // update resultFiltered
-    watch([hoveredCell, result, resultCell], (newValues, prevValues) => {
-      const [hoveredCell, result, resultCell] = newValues;
-      const [prevHoveredCell, prevResult, prevResultCell] = prevValues;
-
-      if (resultCell.length === 0) return;
-
-      const { row, col } = hoveredCell;
-      const idx = (row - 1) * 13 + col - 1;
-      const showAll = idx < 0 || resultCell[idx].count === 0;
-
-      // skip recalculation if possible
-      if (result === prevResult && resultCell === prevResultCell) {
-        const { row: prevRow, col: prevCol } = prevHoveredCell;
-        const prevIdx = (prevRow - 1) * 13 + prevCol - 1;
-        const prevShowAll = prevIdx < 0 || resultCell[prevIdx].count === 0;
-        if (showAll && prevShowAll) return;
+        pendingChance.value = spotIndex;
+      } else if (spotIndex !== selectedChance.value) {
+        pendingChance.value = selectedChance.value;
+        selectedChance.value = spotIndex;
       }
 
-      if (showAll) {
-        resultFiltered.value = result.filter(
-          (r) => r.weightNormalized > 0 && r.weight >= 0.05 / 100
-        );
-      } else {
-        const r1 = 13 - Math.min(row, col);
-        const r2 = 13 - Math.max(row, col);
-        const isSuited = row < col;
-        resultFiltered.value = result.filter(
-          (r) =>
-            Math.floor(r.card1 / 4) === r1 &&
-            Math.floor(r.card2 / 4) === r2 &&
-            (r.card1 % 4 === r.card2 % 4) === isSuited &&
-            r.weightNormalized > 0 &&
-            r.weight >= 0.05 / 100
-        );
-      }
-    });
-
-    // update resultSorted
-    watch([resultFiltered, sortKey], () => {
-      const rankComparator = (
-        a1: number,
-        a2: number,
-        b1: number,
-        b2: number,
-        order: Order
-      ) => {
-        const coef = order === "asc" ? 1 : -1;
-        const ar1 = Math.floor(a1 / 4);
-        const as1 = a1 % 4;
-        const ar2 = Math.floor(a2 / 4);
-        const as2 = a2 % 4;
-        const br1 = Math.floor(b1 / 4);
-        const bs1 = b1 % 4;
-        const br2 = Math.floor(b2 / 4);
-        const bs2 = b2 % 4;
-        return (
-          coef * (ar1 - br1) ||
-          coef * (ar2 - br2) ||
-          Number(bs1 === bs2) - Number(as1 === as2) ||
-          bs1 - as1 ||
-          bs2 - as2
-        );
-      };
-
-      const coef = sortKey.value.order === "asc" ? 1 : -1;
-      const round = (x: number) => Math.round(10 * x);
-
-      resultSorted.value = [...resultFiltered.value].sort((a, b) => {
-        if (sortKey.value.key === "Hand") {
-          return rankComparator(
-            a.card1,
-            a.card2,
-            b.card1,
-            b.card2,
-            sortKey.value.order
-          );
-        } else {
-          const fallback = rankComparator(
-            a.card1,
-            a.card2,
-            b.card1,
-            b.card2,
-            "desc"
-          );
-          if (sortKey.value.key === "Weight") {
-            return (
-              coef * (round(100 * a.weight) - round(100 * b.weight)) || fallback
-            );
-          } else if (sortKey.value.key === "EQ") {
-            return (
-              coef * (round(100 * a.equity) - round(100 * b.equity)) || fallback
-            );
-          } else if (sortKey.value.key === "EV") {
-            return (
-              coef * (round(a.expectedValue) - round(b.expectedValue)) ||
-              fallback
-            );
-          } else {
-            const idx = nextActionsStr.value.indexOf(sortKey.value.key);
-            return (
-              coef *
-                (round(100 * a.strategy[idx]) - round(100 * b.strategy[idx])) ||
-              fallback
-            );
-          }
-        }
-      });
-
-      // scroll to top
-      emptyBufferTop.value = -2 * bufferUnit;
-      resultRendered.value = resultSorted.value.slice(0, 3 * bufferUnit);
-      if (divResultDetail.value) {
-        divResultDetail.value.scrollTop = 0;
-      }
-    });
-
-    // update resultAverage
-    watch(resultFiltered, () => {
-      if (resultFiltered.value.length === 0) {
-        resultAverage.value = {
-          combos: "-",
-          equity: "-",
-          expectedValue: "-",
-          strategy: nextActionsStr.value.map(() => "-"),
-        };
-        return;
-      }
-      let weightSum = 0;
-      let combos = 0;
-      let equity = 0;
-      let expectedValue = 0;
-      const strategy = nextActionsStr.value.map(() => 0);
-      for (const r of resultFiltered.value) {
-        weightSum += r.weightNormalized;
-        combos += r.weight;
-        equity += r.equity * r.weightNormalized;
-        expectedValue += r.expectedValue * r.weightNormalized;
-        for (let i = 0; i < nextActionsStr.value.length; i++) {
-          strategy[i] += r.strategy[i] * r.weightNormalized;
-        }
-      }
-      resultAverage.value = {
-        combos: combos.toFixed(1),
-        equity: percentStr(equity / weightSum),
-        expectedValue: trimMinusZero((expectedValue / weightSum).toFixed(1)),
-        strategy: strategy.map((x) => percentStr(x / weightSum)),
-      };
-    });
-
-    const rem = Number(
-      window
-        .getComputedStyle(document.documentElement)
-        .getPropertyValue("font-size")
-        .replace("px", "")
-    );
-
-    const rowHeight = 2 * rem + 1;
-
-    let ticking = false;
-
-    // update resultRendered
-    const onTableScroll = () => {
-      if (ticking) return;
-      ticking = true;
-
-      requestAnimationFrame(() => {
-        ticking = false;
-        if (!divResultDetail.value) return;
-        const { scrollTop } = divResultDetail.value;
-        const topIndex = Math.max(scrollTop / rowHeight, 0);
-        let update = false;
-        if (topIndex < emptyBufferTop.value + bufferUnit) {
-          update = true;
-          emptyBufferTop.value =
-            (Math.floor(topIndex / bufferUnit) - 1) * bufferUnit;
-        } else if (topIndex > emptyBufferTop.value + 3 * bufferUnit) {
-          update = true;
-          emptyBufferTop.value =
-            (Math.floor(topIndex / bufferUnit) - 2) * bufferUnit;
-        }
-        if (update) {
-          resultRendered.value = resultSorted.value.slice(
-            Math.max(emptyBufferTop.value, 0),
-            emptyBufferTop.value + 5 * bufferUnit
-          );
-        }
-      });
+      // display operations
     };
 
-    const resultChanceSorted = ref([] as ResultChance[]);
+    const updateResultsPlayer = async (
+      spotIndex: number,
+      needSplice: boolean,
+      actions: string[]
+    ) => {
+      if (!handler) return;
 
-    // update resultChanceSorted
-    watch([resultChance, sortKeyChance], () => {
-      const rankComparator = (a: number, b: number, order: Order) => {
-        const coef = order === "asc" ? 1 : -1;
-        const ar = Math.floor(a / 4);
-        const as = a % 4;
-        const br = Math.floor(b / 4);
-        const bs = b % 4;
-        return coef * (ar - br) || bs - as;
-      };
+      const findUnselectedChance = (startIndex: number) =>
+        spots.value
+          .slice(startIndex, spotIndex)
+          .find(
+            (spot: Spot) => spot.type === "chance" && spot.selectedIndex === -1
+          ) as SpotChance | undefined;
 
-      const coef = sortKeyChance.value.order === "asc" ? 1 : -1;
-      const round = (x: number) => Math.round(10 * x);
+      const skippedChance = findUnselectedChance(3);
+      const skippedRiver = skippedChance
+        ? findUnselectedChance(skippedChance.index + 3)
+        : undefined;
 
-      resultChanceSorted.value = [...resultChance.value].sort((a, b) => {
-        if (sortKeyChance.value.key === "Card") {
-          return rankComparator(a.card, b.card, sortKeyChance.value.order);
-        } else {
-          const fallback = rankComparator(a.card, b.card, "desc");
-          if (sortKeyChance.value.key === "EQ") {
-            const av = round(100 * a.equity);
-            const bv = round(100 * b.equity);
-            return coef * (av - bv) || fallback;
-          } else if (sortKeyChance.value.key === "EV") {
-            const av = round(a.expectedValue);
-            const bv = round(b.expectedValue);
-            return coef * (av - bv) || fallback;
-          } else {
-            const idx = chanceNextActions.value.indexOf(
-              sortKeyChance.value.key
-            );
-            const av = round(100 * a.strategy[idx]);
-            const bv = round(100 * b.strategy[idx]);
-            return coef * (av - bv) || fallback;
-          }
-        }
-      });
-    });
+      if (needSplice) {
+        const lastSpot = spots.value[spotIndex - 1];
+        const player = lastSpot.player === "oop" ? "ip" : "oop";
+
+        let numBetActions = actions.length;
+        if (actions[0].split(":")[1] === "0") --numBetActions;
+        if (actions[1]?.split(":")[1] === "0") --numBetActions;
+
+        spots.value.splice(spotIndex, spots.value.length, {
+          type: "player",
+          index: spotIndex,
+          player,
+          selectedIndex: -1,
+          actions: actions.map((action, i) => {
+            const [name, amount] = action.split(":");
+            return {
+              index: i,
+              name,
+              amount: Number(amount),
+              isSelected: false,
+              color: actionColor(name, i, actions.length, numBetActions),
+            };
+          }),
+        });
+      }
+
+      if (spotIndex <= pendingChance.value) {
+        pendingChance.value = -1;
+      }
+      if (spotIndex <= selectedChance.value) {
+        selectedChance.value = pendingChance.value;
+        pendingChance.value = -1;
+      }
+      if (spotIndex <= selectedChance.value) {
+        selectedChance.value = -1;
+      }
+      if (skippedChance && selectedChance.value === -1) {
+        selectedChance.value = skippedChance.index;
+      }
+      if (skippedRiver && pendingChance.value === -1) {
+        pendingChance.value = skippedRiver.index;
+      }
+
+      selectedSpot.value = spotIndex;
+
+      // display operations
+    };
+
+    const play = async (spotIndex: number, actionIndex: number) => {
+      const spot = spots.value[spotIndex] as SpotPlayer;
+
+      if (spot.selectedIndex !== -1) {
+        spot.actions[spot.selectedIndex].isSelected = false;
+      }
+      spot.actions[actionIndex].isSelected = true;
+      spot.selectedIndex = actionIndex;
+
+      await selectSpot(spotIndex + 1, true);
+    };
+
+    const deal = async (card: number) => {
+      const spot = spots.value[selectedChance.value] as SpotChance;
+      if (spot.selectedIndex === card) return;
+
+      if (spot.selectedIndex !== -1) {
+        spot.cards[spot.selectedIndex].isSelected = false;
+      }
+      spot.cards[card].isSelected = true;
+      spot.selectedIndex = card;
+
+      selectedChance.value = pendingChance.value;
+      pendingChance.value = -1;
+
+      await selectSpot(selectedSpot.value, false);
+    };
+
+    const clearResults = () => {
+      handler = null;
+      spots.value = [];
+      selectedSpot.value = -1;
+      selectedChance.value = -1;
+      pendingChance.value = -1;
+      cards = [new Uint16Array(), new Uint16Array()];
+    };
+
+    const spotCards = (spot: SpotRoot | SpotChance) => {
+      if (spot.type === "root") {
+        return spot.board.map((card) => cardText(card));
+      } else if (spot.selectedIndex === -1) {
+        return [{ rank: "?", suit: "", colorClass: "text-black" }];
+      } else {
+        return [cardText(spot.selectedIndex)];
+      }
+    };
+
+    const reset = async () => {
+      await initResults();
+      await selectSpot(1, true);
+    };
 
     return {
-      cardText,
       store,
-      divResultNav,
-      divResultDetail,
-      actionList,
-      nodeInformation,
-      sortKey,
-      sortKeyChance,
-      showActionEv,
-      showOopStats,
-      board,
-      percentStr,
-      trimMinusZero,
-      sortBy,
-      sortByChance,
-      moveNode,
-      actionColor,
-      actionColorByStr,
-      hasWeight,
-      weightPercent,
-      cellItems,
-      cellText,
-      cellAuxText,
-      onMouseEnter,
-      onMouseLeave,
-      hoveredCellText,
-      headers,
-      headersChance,
-      resultAverage,
-      resultRendered,
-      emptyBufferTop,
-      emptyBufferBottom,
-      onTableScroll,
-      resultChanceSorted,
+      config,
+      spots,
+      selectedSpot,
+      selectedChance,
+      selectSpot,
+      play,
+      deal,
+      spotCards,
+      reset,
     };
   },
 });
 </script>
+
+<style scoped>
+.snug * {
+  @apply leading-tight;
+}
+</style>

@@ -537,7 +537,9 @@ export default defineComponent({
     },
   },
 
-  emits: ["load-item"],
+  emits: {
+    "load-item": (_value: unknown) => true,
+  },
 
   setup(props, context) {
     const data = ref([] as (Item | Group)[]);

@@ -164,13 +164,17 @@
 
 <script lang="ts">
 import { computed, defineComponent, nextTick, ref } from "vue";
-import { useConfigStore, convertBetString, readableLineString } from "../store";
+import { useConfigStore } from "../store";
+import { convertBetString, readableLineString } from "../utils";
 import { TreeManager } from "../../pkg/tree/tree";
 
 export default defineComponent({
   name: "TreeEditor",
 
-  emits: ["save", "cancel"],
+  emits: {
+    save: (_addedLines: string, _removedLines: string) => true,
+    cancel: () => true,
+  },
 
   setup(_, context) {
     const divTreeNav = ref(null as HTMLDivElement | null);
