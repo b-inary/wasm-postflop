@@ -1,7 +1,10 @@
 import * as Comlink from "comlink";
-import { WorkerApi } from "./worker";
+import { WorkerApi, Handler } from "./worker";
+export { ReadonlyBuffer } from "./worker";
 
 let worker: Worker | null = null;
+export let handler: Comlink.Remote<Handler> | null = null;
+export let memory: Comlink.Remote<WebAssembly.Memory> | null = null;
 
 export async function init(numThreads: number) {
   if (worker) {
@@ -13,20 +16,7 @@ export async function init(numThreads: number) {
   });
 
   await Comlink.wrap<WorkerApi>(worker).init(numThreads);
-}
 
-export async function getMemory() {
-  if (!worker) {
-    throw new Error("Worker not initialized");
-  }
-
-  return Comlink.wrap<WorkerApi>(worker).getMemory();
-}
-
-export async function getHandler() {
-  if (!worker) {
-    throw new Error("Worker not initialized");
-  }
-
-  return await Comlink.wrap<WorkerApi>(worker).getHandler();
+  handler = await Comlink.wrap<WorkerApi>(worker).getHandler();
+  memory = await Comlink.wrap<WorkerApi>(worker).getMemory();
 }

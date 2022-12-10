@@ -8,6 +8,7 @@ pub use wasm_bindgen_rayon::init_thread_pool;
 #[wasm_bindgen]
 pub struct GameManager {
     game: PostFlopGame,
+    result_buffer: Vec<f32>,
 }
 
 #[wasm_bindgen]
@@ -40,6 +41,7 @@ impl GameManager {
     pub fn new() -> Self {
         Self {
             game: PostFlopGame::new(),
+            result_buffer: Vec::new(),
         }
     }
 
@@ -178,11 +180,30 @@ impl GameManager {
         self.game.apply_history(history);
     }
 
-    pub fn actions(&self) -> String {
+    pub fn total_bet_amount(&self) -> Box<[f32]> {
+        self.game
+            .total_bet_amount()
+            .iter()
+            .map(|&x| x as f32)
+            .collect()
+    }
+
+    pub fn current_player(&self) -> String {
         if self.game.is_terminal_node() {
-            "Terminal".to_string()
+            "terminal".to_string()
         } else if self.game.is_chance_node() {
-            "Chance".to_string()
+            "chance".to_string()
+        } else {
+            match self.game.current_player() {
+                0 => "oop".to_string(),
+                _ => "ip".to_string(),
+            }
+        }
+    }
+
+    pub fn actions(&self) -> String {
+        if self.game.is_terminal_node() || self.game.is_chance_node() {
+            "".to_string()
         } else {
             self.game
                 .available_actions()
@@ -213,10 +234,51 @@ impl GameManager {
         self.game.possible_cards()
     }
 
-    pub fn equity(&mut self, player: usize) -> f32 {
-        self.game.cache_normalized_weights();
-        let weights = self.game.normalized_weights(player);
-        let equity = self.game.equity(player);
-        compute_average(&equity, weights)
+    pub fn get_results(&mut self) -> ReadonlyBuffer {
+        let game = &mut self.game;
+        game.cache_normalized_weights();
+
+        let buf = &mut self.result_buffer;
+        buf.clear();
+        buf.extend_from_slice(game.weights(0));
+        buf.extend_from_slice(game.weights(1));
+        buf.extend_from_slice(game.normalized_weights(0));
+        buf.extend_from_slice(game.normalized_weights(1));
+
+        let equity = [game.equity(0), game.equity(1)];
+        let ev = [game.expected_values(0), game.expected_values(1)];
+
+        buf.extend_from_slice(&equity[0]);
+        buf.extend_from_slice(&equity[1]);
+        buf.extend_from_slice(&ev[0]);
+        buf.extend_from_slice(&ev[1]);
+
+        let total_bet_amount = game.total_bet_amount();
+        let pot_base = game.tree_config().starting_pot + total_bet_amount.iter().min().unwrap();
+
+        let mut eqr = [
+            Vec::with_capacity(game.private_cards(0).len()),
+            Vec::with_capacity(game.private_cards(1).len()),
+        ];
+
+        for player in 0..2 {
+            let pot = (pot_base + total_bet_amount[player]) as f32;
+            for (&eq, &ev) in equity[player].iter().zip(ev[player].iter()) {
+                eqr[player].push(ev / (pot * eq));
+            }
+        }
+
+        buf.extend_from_slice(&eqr[0]);
+        buf.extend_from_slice(&eqr[1]);
+
+        if !game.is_terminal_node() && !game.is_chance_node() {
+            buf.extend_from_slice(&game.strategy());
+            buf.extend_from_slice(&game.expected_values_detail(game.current_player()));
+        }
+
+        ReadonlyBuffer {
+            pointer: buf.as_ptr() as *const u8,
+            byte_length: buf.len() * 4,
+        }
     }
 }

@@ -7,7 +7,7 @@ type ModST = typeof import("../pkg/solver-st/solver.js");
 type ModMT = typeof import("../pkg/solver-mt/solver.js");
 type Mod = ModST | ModMT;
 
-type ReadonlyBuffer = {
+export type ReadonlyBuffer = {
   ptr: number;
   byteLength: number;
 };
@@ -72,12 +72,12 @@ function createHandler(mod: Mod) {
       );
     },
 
-    privateCards(player: number) {
+    privateCards(player: number): ReadonlyBuffer {
       const ret = this.game.private_cards(player);
       return {
         ptr: ret.pointer,
         byteLength: ret.byte_length,
-      } as ReadonlyBuffer;
+      };
     },
 
     memoryUsage(enable_compression: boolean) {
@@ -104,6 +104,14 @@ function createHandler(mod: Mod) {
       this.game.apply_history(history);
     },
 
+    totalBetAmount() {
+      return this.game.total_bet_amount();
+    },
+
+    currentPlayer() {
+      return this.game.current_player();
+    },
+
     actions() {
       return this.game.actions();
     },
@@ -116,14 +124,18 @@ function createHandler(mod: Mod) {
       return this.game.possible_cards();
     },
 
-    equity(player: number): number {
-      return this.game.equity(player);
+    getResults(): ReadonlyBuffer {
+      const ret = this.game.get_results();
+      return {
+        ptr: ret.pointer,
+        byteLength: ret.byte_length,
+      };
     },
   };
 }
 
 type InitOutput = InitOutputST | InitOutputMT;
-type Handler = ReturnType<typeof createHandler>;
+export type Handler = ReturnType<typeof createHandler>;
 
 let wasm: InitOutput;
 let handler: Handler;

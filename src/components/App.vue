@@ -1,58 +1,61 @@
 <template>
-  <NavBar />
-
-  <div
-    v-show="store.navView === 'Solver'"
-    class="flex w-full mx-auto max-w-screen-xl"
-  >
-    <SideBar />
+  <div class="min-w-[1080px]" :style="{ height: clientHeight + 'px' }">
+    <NavBar />
 
     <div
-      class="flex-grow my-4 px-6 pt-2 overflow-y-auto"
-      style="height: calc(100vh - 4.5rem)"
+      v-show="store.navView === 'Solver'"
+      class="flex w-full mx-auto max-w-screen-xl"
+      style="height: calc(100% - 2.5rem)"
     >
-      <div class="flex">
-        <div
-          :class="
-            'mb-5 pl-2 pr-3 pb-0.5 text-lg font-bold border-l-8 border-b-2 ' +
-            'border-blue-600 rounded rounded-br-none'
-          "
-        >
-          {{ header }}
+      <SideBar style="height: calc(100% - 2rem)" />
+
+      <div
+        class="flex-grow my-4 px-6 pt-2 overflow-y-auto"
+        style="height: calc(100% - 2rem)"
+      >
+        <div class="flex">
+          <div
+            :class="
+              'mb-5 pl-2 pr-3 pb-0.5 text-lg font-bold border-l-8 border-b-2 ' +
+              'border-blue-600 rounded rounded-br-none'
+            "
+          >
+            {{ header }}
+          </div>
+        </div>
+
+        <div v-if="store.sideView === 'About'">
+          <AboutPage />
+        </div>
+        <div v-show="store.sideView === 'OOPRange'">
+          <RangeEditor :player="0" />
+        </div>
+        <div v-show="store.sideView === 'IPRange'">
+          <RangeEditor :player="1" />
+        </div>
+        <div v-show="store.sideView === 'Board'">
+          <BoardSelector />
+        </div>
+        <div v-show="store.sideView === 'TreeConfig'">
+          <TreeConfig />
+        </div>
+        <div v-show="store.sideView === 'RunSolver'">
+          <RunSolver />
         </div>
       </div>
-
-      <div v-if="store.sideView === 'About'">
-        <AboutPage />
-      </div>
-      <div v-show="store.sideView === 'OOPRange'">
-        <RangeEditor :player="0" />
-      </div>
-      <div v-show="store.sideView === 'IPRange'">
-        <RangeEditor :player="1" />
-      </div>
-      <div v-show="store.sideView === 'Board'">
-        <BoardSelector />
-      </div>
-      <div v-show="store.sideView === 'TreeConfig'">
-        <TreeConfig />
-      </div>
-      <div v-show="store.sideView === 'RunSolver'">
-        <RunSolver />
-      </div>
     </div>
-  </div>
 
-  <div
-    v-show="store.navView === 'Results'"
-    style="height: max(calc(100vh - 2.5rem), 600px)"
-  >
-    <ResultViewer />
+    <div
+      v-show="store.navView === 'Results'"
+      style="height: calc(max(100%, 720px) - 2.5rem)"
+    >
+      <ResultViewer />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent, ref } from "vue";
 import { useStore } from "../store";
 
 import NavBar from "./NavBar.vue";
@@ -90,9 +93,15 @@ export default defineComponent({
         }[store.sideView])
     );
 
+    const clientHeight = ref(document.documentElement.clientHeight);
+    window.addEventListener("resize", () => {
+      clientHeight.value = document.documentElement.clientHeight;
+    });
+
     return {
       store,
       header,
+      clientHeight,
     };
   },
 });

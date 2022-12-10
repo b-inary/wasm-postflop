@@ -25,25 +25,25 @@
       >
         <button
           :class="
-            'relative px-5 font-semibold transition-colors ' +
-            'hover:bg-slate-700 hover:text-blue-200 ' +
+            'flex relative w-32 items-center justify-center font-semibold ' +
+            'transition-colors hover:bg-slate-700 hover:text-blue-200 ' +
             (store.navView === 'Solver' ? 'bg-slate-700 text-blue-200' : '')
           "
           @click="store.navView = 'Solver'"
         >
-          <div class="solver-icon"></div>
-          <span class="pl-8">Solver</span>
+          <ComputerDesktopIcon class="w-6 h-6" />
+          <span class="pl-3">Solver</span>
         </button>
         <button
           :class="
-            'relative px-5 font-semibold transition-colors ' +
-            'hover:bg-slate-700 hover:text-blue-200 ' +
+            'flex relative w-32 items-center justify-center font-semibold ' +
+            'transition-colors hover:bg-slate-700 hover:text-blue-200 ' +
             (store.navView === 'Results' ? 'bg-slate-700 text-blue-200' : '')
           "
           @click="store.navView = 'Results'"
         >
-          <div class="result-icon"></div>
-          <span class="pl-8">Results</span>
+          <ChartBarIcon class="w-6 h-6" />
+          <span class="pl-3">Results</span>
         </button>
       </div>
     </div>
@@ -54,7 +54,13 @@
 import { defineComponent } from "vue";
 import { useStore } from "../store";
 
+import { ComputerDesktopIcon, ChartBarIcon } from "@heroicons/vue/24/solid";
+
 export default defineComponent({
+  components: {
+    ComputerDesktopIcon,
+    ChartBarIcon,
+  },
   setup() {
     return {
       store: useStore(),
@@ -62,63 +68,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped>
-.solver-icon {
-  position: absolute;
-  margin-top: 4px;
-  width: 20px;
-  height: 14px;
-  border-radius: 3px;
-  border: solid 2px currentColor;
-}
-
-.solver-icon:before {
-  content: "";
-  position: absolute;
-  left: 7px;
-  bottom: -6px;
-  width: 2px;
-  height: 5px;
-  background-color: currentColor;
-}
-
-.solver-icon:after {
-  content: "";
-  position: absolute;
-  left: 2px;
-  bottom: -7px;
-  width: 12px;
-  height: 2px;
-  background-color: currentColor;
-}
-
-.result-icon {
-  position: absolute;
-  margin-left: 7px;
-  margin-top: 4px;
-  width: 5px;
-  height: 19px;
-  background-color: currentColor;
-}
-
-.result-icon:before {
-  content: "";
-  position: absolute;
-  right: 7px;
-  bottom: 0;
-  width: 5px;
-  height: 13px;
-  background-color: currentColor;
-}
-
-.result-icon:after {
-  content: "";
-  position: absolute;
-  left: 7px;
-  bottom: 0;
-  width: 5px;
-  height: 10px;
-  background-color: currentColor;
-}
-</style>

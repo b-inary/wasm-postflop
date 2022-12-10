@@ -193,3 +193,16 @@ export const readableLineString = (s: string): string => {
 
   return ret;
 };
+
+export const average = (
+  values: Float32Array,
+  weights: Float32Array
+): number => {
+  let sum = 0;
+  let totalWeight = 0;
+  for (let i = 0; i < values.length; ++i) {
+    sum += values[i] * weights[i];
+    totalWeight += weights[i];
+  }
+  return sum / totalWeight;
+};

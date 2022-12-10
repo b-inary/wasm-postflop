@@ -195,7 +195,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
-import * as GlobalWorker from "../global-worker";
+import { init, handler } from "../global-worker";
 import {
   useStore,
   useConfigStore,
@@ -374,8 +374,8 @@ export default defineComponent({
       isTreeBuilding.value = true;
       treeStatus.value = "Building tree...";
 
-      await GlobalWorker.init(numThreads.value);
-      const handler = await GlobalWorker.getHandler();
+      await init(numThreads.value);
+      if (!handler) return;
 
       const errorString = await handler.init(
         tmpConfig.rangeRaw[0],
@@ -437,7 +437,7 @@ export default defineComponent({
     };
 
     const runSolver = async () => {
-      const handler = await GlobalWorker.getHandler();
+      if (!handler) return;
 
       terminateFlag.value = false;
       pauseFlag.value = false;
@@ -459,7 +459,7 @@ export default defineComponent({
     };
 
     const resumeSolver = async () => {
-      const handler = await GlobalWorker.getHandler();
+      if (!handler) return;
 
       store.isSolverRunning = true;
       store.isSolverPaused = false;

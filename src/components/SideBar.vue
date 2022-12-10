@@ -1,8 +1,5 @@
 <template>
-  <aside
-    class="flex flex-col shrink-0 w-56 my-4 overflow-y-auto border-r-2"
-    style="height: calc(100vh - 5.5rem)"
-  >
+  <aside class="flex flex-col shrink-0 w-56 my-4 overflow-y-auto border-r-2">
     <button :class="itemStyle('About')" @click="store.sideView = 'About'">
       About
     </button>

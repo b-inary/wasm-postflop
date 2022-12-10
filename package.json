@@ -23,7 +23,7 @@
     "detect-browser": "^5.3.0",
     "dexie": "^3.2.2",
     "floating-vue": "^2.0.0-beta.20",
-    "pinia": "^2.0.27",
+    "pinia": "^2.0.28",
     "vue": "^3.2.45"
   },
   "devDependencies": {
