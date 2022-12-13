@@ -6,6 +6,10 @@
   line-height: 1.6;
 }
 
+.snug * {
+  @apply leading-tight;
+}
+
 body {
   @apply bg-gray-50;
 }

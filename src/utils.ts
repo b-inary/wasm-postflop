@@ -31,6 +31,58 @@ export const cardText = (card: number) => {
   };
 };
 
+export const cardPairCellIndex = (card1: number, card2: number) => {
+  if (card1 > card2) [card1, card2] = [card2, card1];
+  const hr = Math.floor(card2 / 4);
+  const lr = Math.floor(card1 / 4);
+  const hs = card2 % 4;
+  const ls = card1 % 4;
+  const isSuited = hs === ls;
+  return {
+    row: 12 - (isSuited ? hr : lr),
+    col: 12 - (isSuited ? lr : hr),
+    index: isSuited
+      ? 3 - hs
+      : hr === lr
+      ? 6 - ((ls * (5 - ls)) / 2 + hs)
+      : 11 - (3 * hs + ls - +(hs < ls)),
+  };
+};
+
+export const cardPairOrder = (card1: number, card2: number) => {
+  if (card1 > card2) [card1, card2] = [card2, card1];
+  const hr = Math.floor(card2 / 4);
+  const lr = Math.floor(card1 / 4);
+  const hs = card2 % 4;
+  const ls = card1 % 4;
+  const isSuited = hs === ls;
+  return (((hr * 2 + +isSuited) * 16 + lr) * 4 + hs) * 4 + ls;
+};
+
+export const average = (
+  values: Float64Array,
+  weights: Float64Array
+): number => {
+  let sum = 0;
+  let totalWeight = 0;
+  for (let i = 0; i < values.length; ++i) {
+    sum += values[i] * weights[i];
+    totalWeight += weights[i];
+  }
+  return sum / totalWeight;
+};
+
+export const colorString = (color: {
+  red: number;
+  green: number;
+  blue: number;
+}) => {
+  const red = color.red.toString(16).padStart(2, "0");
+  const green = color.green.toString(16).padStart(2, "0");
+  const blue = color.blue.toString(16).padStart(2, "0");
+  return `#${red}${green}${blue}`;
+};
+
 const parseFloat = (s: string): number => {
   if (/[beox+-]/.test(s)) {
     return Number.NaN;
@@ -192,17 +244,4 @@ export const readableLineString = (s: string): string => {
   }
 
   return ret;
-};
-
-export const average = (
-  values: Float32Array,
-  weights: Float32Array
-): number => {
-  let sum = 0;
-  let totalWeight = 0;
-  for (let i = 0; i < values.length; ++i) {
-    sum += values[i] * weights[i];
-    totalWeight += weights[i];
-  }
-  return sum / totalWeight;
 };

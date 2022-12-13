@@ -21,6 +21,8 @@ export type ConfigValue1 = {
 type ConfigValue2 = {
   startingPot: number;
   effectiveStack: number;
+  rakePercent: number;
+  rakeCap: number;
   donkOption: number;
   oopFlopBet: string;
   oopFlopRaise: string;
@@ -56,6 +58,8 @@ export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
   return {
     startingPot: value.startingPot,
     effectiveStack: value.effectiveStack,
+    rakePercent: 0,
+    rakeCap: 0,
     donkOption: 0,
     oopFlopBet: migrateBetString1to2(value.oopFlopBetStr),
     oopFlopRaise: migrateBetString1to2(value.oopFlopRaiseStr),

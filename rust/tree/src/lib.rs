@@ -95,9 +95,9 @@ impl TreeManager {
         ip_turn_raise: &str,
         ip_river_bet: &str,
         ip_river_raise: &str,
-        add_allin_threshold: f32,
-        force_allin_threshold: f32,
-        merging_threshold: f32,
+        add_allin_threshold: f64,
+        force_allin_threshold: f64,
+        merging_threshold: f64,
         added_lines: &str,
         removed_lines: &str,
     ) -> Self {
@@ -112,6 +112,8 @@ impl TreeManager {
             initial_state,
             starting_pot,
             effective_stack,
+            rake_rate: 0.0,
+            rake_cap: 0.0,
             flop_bet_sizes: [
                 BetSizeCandidates::try_from((oop_flop_bet, oop_flop_raise)).unwrap(),
                 BetSizeCandidates::try_from((ip_flop_bet, ip_flop_raise)).unwrap(),

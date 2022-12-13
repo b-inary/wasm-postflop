@@ -4,16 +4,20 @@
       v-for="spot in spots"
       :key="spot.index"
       :class="
-        'flex flex-col h-full p-0.5 justify-start cursor-pointer ' +
-        'rounded-md shadow-md border-2  transition group ' +
+        'flex flex-col h-full p-0.5 justify-start ' +
+        'rounded-md shadow-md border-2 transition group ' +
         (spot.type === 'chance'
-          ? 'hover:border-red-600 '
+          ? spot.index === pendingChanceIndex
+            ? ''
+            : 'hover:border-red-600 '
           : 'hover:border-blue-600 ') +
-        (spot.index === selectedChance
+        (spot.index === selectedChanceIndex
           ? 'border-red-600'
-          : spot.index === selectedSpot
+          : spot.index === selectedSpotIndex
           ? 'border-blue-600'
-          : 'border-gray-500')
+          : spot.index === pendingChanceIndex
+          ? 'border-gray-500'
+          : 'border-gray-500 cursor-pointer')
       "
       @click="selectSpot(spot.index, false)"
     >
@@ -22,7 +26,7 @@
         <div
           :class="
             'px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 ' +
-            (spot.index === selectedChance ? '' : 'opacity-70')
+            (spot.index === selectedChanceIndex ? '' : 'opacity-70')
           "
         >
           {{ spot.player.toUpperCase() }}
@@ -42,7 +46,7 @@
           <div
             :class="
               'group-hover:opacity-100 ' +
-              (spot.index === selectedChance ? '' : 'opacity-70')
+              (spot.index === selectedChanceIndex ? '' : 'opacity-70')
             "
           >
             <div>Pot {{ spot.pot }}</div>
@@ -56,7 +60,7 @@
         <div
           :class="
             'px-1.5 py-1 font-bold group-hover:opacity-100 ' +
-            (spot.index === selectedSpot ? '' : 'opacity-70')
+            (spot.index === selectedSpotIndex ? '' : 'opacity-70')
           "
         >
           {{ spot.player.toUpperCase() }}
@@ -73,7 +77,7 @@
           >
             <span class="inline-block relative w-4 mr-0.5">
               <span
-                v-if="spot.index === Math.max(selectedSpot, 1)"
+                v-if="spot.index === selectedSpotIndex"
                 class="absolute top-[0.3125rem] left-0 w-3 h-3 rounded-sm"
                 :style="{ backgroundColor: action.color }"
               ></span>
@@ -84,23 +88,24 @@
             <span
               :class="
                 'pr-0.5 font-bold group-hover:opacity-100 ' +
-                (action.isSelected || spot.index === selectedSpot
+                (action.isSelected || spot.index === selectedSpotIndex
                   ? ''
                   : 'opacity-70')
               "
             >
-              {{ action.name + (action.amount ? ` ${action.amount}` : "") }}
+              {{ action.name }}
+              {{ action.amount === "0" ? "" : action.amount }}
             </span>
             <span
-              v-if="spot.index === Math.max(selectedSpot, 1)"
+              v-if="spot.index === selectedSpotIndex && rates != null"
               :class="
                 'ml-auto pl-1.5 group-hover:opacity-100 ' +
-                (action.isSelected || spot.index === selectedSpot
+                (action.isSelected || spot.index === selectedSpotIndex
                   ? ''
                   : 'opacity-70')
               "
             >
-              [xx.x%]
+              [{{ (100 * rates[action.index]).toFixed(1) }}%]
             </span>
           </button>
         </div>
@@ -111,15 +116,15 @@
         <div
           :class="
             'px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 ' +
-            (spot.index === selectedSpot ? '' : 'opacity-70')
+            (spot.index === selectedSpotIndex ? '' : 'opacity-70')
           "
         >
           {{ spot.player.toUpperCase() }}
         </div>
         <div
           :class="
-            'flex flex-col flex-grow items-center justify-evenly font-bold ' +
-            (spot.index === selectedSpot ? '' : 'opacity-70')
+            'flex flex-col flex-grow items-center justify-evenly font-bold group-hover:opacity-100 ' +
+            (spot.index === selectedSpotIndex ? '' : 'opacity-70')
           "
         >
           <div v-if="spot.equityOop === 0 || spot.equityOop === 1" class="px-3">
@@ -148,12 +153,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, toRefs, ref, watch } from "vue";
+import { computed, defineComponent, toRefs, ref, watch } from "vue";
 import { useSavedConfigStore } from "../store";
-import { cardText, average } from "../utils";
+import { cardText, average, colorString } from "../utils";
 import { handler, memory, ReadonlyBuffer } from "../global-worker";
 import {
   Results,
+  ChanceReports,
   Spot,
   SpotRoot,
   SpotChance,
@@ -162,17 +168,17 @@ import {
 
 import { CheckIcon } from "@heroicons/vue/20/solid";
 
-const foldColor = "#3b82f6"; // blue-500
-const checkColor = "#10b981"; // emerald-500
-const callColor = "#10b981"; // emerald-500
+const foldColor = { red: 0x3b, green: 0x82, blue: 0xf6 }; // blue-500
+const checkColor = { red: 0x10, green: 0xb9, blue: 0x81 }; // emerald-500
+const callColor = { red: 0x10, green: 0xb9, blue: 0x81 }; // emerald-500
 const betColorGradient = [
-  "#f59e0b", // amber-500
-  "#f97316", // orange-500
-  "#ef4444", // red-500
-  "#f43f5e", // rose-500
-  "#ec4899", // pink-500
-  "#d946ef", // fuchsia-500
-  "#a855f7", // purple-500
+  { red: 0xf5, green: 0x9e, blue: 0x0b }, // amber-500
+  { red: 0xf9, green: 0x73, blue: 0x16 }, // orange-500
+  { red: 0xef, green: 0x44, blue: 0x44 }, // red-500
+  { red: 0xf4, green: 0x3f, blue: 0x5e }, // rose-500
+  { red: 0xec, green: 0x48, blue: 0x99 }, // pink-500
+  { red: 0xd9, green: 0x46, blue: 0xef }, // fuchsia-500
+  { red: 0xa8, green: 0x55, blue: 0xf7 }, // purple-500
 ];
 
 const actionColor = (
@@ -181,15 +187,14 @@ const actionColor = (
   numActions: number,
   numBetActions: number
 ) => {
-  if (name === "Fold") return foldColor;
-  if (name === "Check") return checkColor;
-  if (name === "Call") return callColor;
+  if (name === "Fold") return colorString(foldColor);
+  if (name === "Check") return colorString(checkColor);
+  if (name === "Call") return colorString(callColor);
 
-  if (numBetActions === 1) return betColorGradient[0];
+  if (numBetActions === 1) return colorString(betColorGradient[0]);
   if (index === numActions - 1) {
-    return numBetActions === 2
-      ? betColorGradient[(betColorGradient.length - 1) / 2]
-      : betColorGradient[betColorGradient.length - 1];
+    const denom = numBetActions === 2 ? 2 : 1;
+    return colorString(betColorGradient[(betColorGradient.length - 1) / denom]);
   }
 
   const betIndex = index - (numActions - numBetActions);
@@ -197,23 +202,19 @@ const actionColor = (
 
   const gradientRate = colorRate * (betColorGradient.length - 1);
   const gradientIndex = Math.floor(gradientRate);
-  const gradientRemainder = gradientRate - gradientIndex;
+  const r = gradientRate - gradientIndex;
 
   const color1 = betColorGradient[gradientIndex];
   const color2 = betColorGradient[gradientIndex + 1];
 
-  let colorString = "#";
-  for (let i = 1; i < 7; i += 2) {
-    const color1Int = parseInt(color1.slice(i, i + 2), 16);
-    const color2Int = parseInt(color2.slice(i, i + 2), 16);
-    const colorInt = Math.round(
-      color1Int * (1 - gradientRemainder) + color2Int * gradientRemainder
-    );
-    const colorHex = colorInt.toString(16).padStart(2, "0");
-    colorString += colorHex;
+  const retColor = { red: 0, green: 0, blue: 0 };
+  for (const primary of ["red", "green", "blue"] as const) {
+    const primary1 = color1[primary];
+    const primary2 = color2[primary];
+    retColor[primary] = Math.round(primary1 * (1 - r) + primary2 * r);
   }
 
-  return colorString;
+  return colorString(retColor);
 };
 
 export default defineComponent({
@@ -230,8 +231,8 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
-    cardsLength: {
-      type: Array as () => number[],
+    cards: {
+      type: Array as () => Uint16Array[],
       required: true,
     },
   },
@@ -239,21 +240,61 @@ export default defineComponent({
   emits: {
     "update:is-handler-updated": (_value: boolean) => true,
     "update:is-locked": (_value: boolean) => true,
-    "trigger-update": () => true,
+    "trigger-update": (
+      _selectedSpot: Spot | null,
+      _selectedChance: SpotChance | null,
+      _currentBoard: number[],
+      _results: Results,
+      _chanceReports: ChanceReports | null,
+      _totalBetAmount: number[]
+    ) => true,
   },
 
   setup(props, context) {
+    const { isHandlerUpdated } = toRefs(props);
+
     const config = useSavedConfigStore();
 
     const spots = ref<Spot[]>([]);
-    const selectedSpot = ref(-1);
-    const selectedChance = ref(-1);
-    const pendingChance = ref(-1);
+    const rates = ref<number[] | null>(null);
+    const selectedSpotIndex = ref(-1);
+    const selectedChanceIndex = ref(-1);
+    const pendingChanceIndex = ref(-1);
 
-    const { isHandlerUpdated } = toRefs(props);
+    const selectedSpot = computed(() =>
+      selectedSpotIndex.value === -1 ||
+      selectedSpotIndex.value >= spots.value.length
+        ? null
+        : spots.value[selectedSpotIndex.value]
+    );
 
-    let totalBetAmount = new Float32Array(2);
+    const selectedChance = computed(() =>
+      selectedChanceIndex.value === -1
+        ? null
+        : (spots.value[selectedChanceIndex.value] as SpotChance)
+    );
+
+    const currentBoard = computed(() => {
+      const board = [...config.board];
+      for (let i = 3; i < selectedSpotIndex.value; ++i) {
+        const spot = spots.value[i];
+        if (spot.type === "chance") {
+          const card = spot.selectedIndex;
+          if (card !== -1) board.push(card);
+          else return board;
+        }
+      }
+      return board;
+    });
+
+    let selectedSpotIndexTmp = -1;
+    let selectedChanceIndexTmp = -1;
+    let pendingChanceIndexTmp = -1;
+
     let results: Results | null = null;
+    let chanceReports: ChanceReports | null = null;
+    let totalBetAmount = [0, 0];
+    let totalBetAmountAppended = [0, 0];
 
     watch(isHandlerUpdated, async () => {
       if (!isHandlerUpdated.value) return;
@@ -275,9 +316,16 @@ export default defineComponent({
     });
 
     const selectSpot = async (spotIndex: number, needSplice: boolean) => {
-      if (!handler || props.isLocked) return;
-      if (spotIndex === selectedSpot.value && !needSplice) return;
-      if (spotIndex === selectedChance.value && !needSplice) return;
+      if (!handler) throw new Error("null handler");
+      if (
+        props.isLocked ||
+        (!needSplice &&
+          (spotIndex === selectedSpotIndex.value ||
+            spotIndex === selectedChanceIndex.value ||
+            spotIndex === pendingChanceIndex.value))
+      ) {
+        return;
+      }
 
       if (spotIndex === 0) {
         await selectSpot(1, true);
@@ -286,94 +334,192 @@ export default defineComponent({
 
       context.emit("update:is-locked", true);
 
+      selectedSpotIndexTmp = selectedSpotIndex.value;
+      selectedChanceIndexTmp = selectedChanceIndex.value;
+      pendingChanceIndexTmp = pendingChanceIndex.value;
+
+      if (!needSplice && spots.value[spotIndex].type === "chance") {
+        selectedChanceIndexTmp = spotIndex;
+        if (selectedSpotIndexTmp < spotIndex + 1) {
+          selectedSpotIndexTmp = spotIndex + 1;
+        }
+      } else {
+        selectedSpotIndexTmp = spotIndex;
+        selectedChanceIndexTmp = -1;
+        pendingChanceIndexTmp = -1;
+
+        for (let i = 3; i < spotIndex; ++i) {
+          const spot = spots.value[i];
+          if (spot.type === "chance" && spot.selectedIndex === -1) {
+            if (selectedChanceIndexTmp === -1) {
+              selectedChanceIndexTmp = i;
+            } else {
+              pendingChanceIndexTmp = i;
+            }
+          }
+        }
+      }
+
+      let endIndex: number;
+      if (selectedChanceIndexTmp === -1) {
+        endIndex = spotIndex;
+      } else {
+        endIndex = selectedChanceIndexTmp;
+      }
+
       const history = new Uint32Array(
-        spots.value.slice(1, spotIndex).map((spot) => spot.selectedIndex)
+        spots.value.slice(1, endIndex).map((spot) => spot.selectedIndex)
       );
 
       await handler.applyHistory(history);
 
-      totalBetAmount = await handler.totalBetAmount();
       const currentPlayer = await handler.currentPlayer();
-      const actions = (await handler.actions()).split("/");
-      const numActions = ["terminal", "chance"].includes(currentPlayer)
-        ? 0
-        : actions.length;
+      let numActions: number;
+      if (["terminal", "chance"].includes(currentPlayer)) {
+        numActions = 0;
+      } else {
+        numActions = await handler.numActions();
+      }
 
       const buffer = await handler.getResults();
       results = await getResults(buffer, currentPlayer, numActions);
 
-      const isChance = !needSplice && spots.value[spotIndex]?.type === "chance";
-      if (currentPlayer === "terminal") {
-        await updateResultsTerminal(spotIndex, needSplice);
-      } else if (currentPlayer === "chance" || isChance) {
-        await updateResultsChance(spotIndex, needSplice);
-      } else {
-        await updateResultsPlayer(spotIndex, needSplice, actions);
+      let appendArray: number[] = [];
+      let append = new Uint32Array();
+
+      if (selectedChanceIndexTmp !== -1) {
+        appendArray = spots.value
+          .slice(selectedChanceIndexTmp, spotIndex)
+          .map((spot) => spot.selectedIndex);
+        append = new Uint32Array(appendArray);
       }
 
-      context.emit("trigger-update");
+      const nextActionsStr = await handler.actionsAfterHistory(append);
+
+      const canChanceReports =
+        selectedChanceIndexTmp !== -1 &&
+        spots.value
+          .slice(selectedChanceIndexTmp + 3, selectedSpotIndexTmp)
+          .every((spot) => spot.type !== "chance") &&
+        nextActionsStr !== "chance";
+
+      if (canChanceReports) {
+        let player: "oop" | "ip" | "terminal";
+        if (nextActionsStr === "terminal") {
+          player = "terminal";
+        } else {
+          player = append.length % 2 === 1 ? "oop" : "ip";
+        }
+
+        const actionsStr = await handler.actionsAfterHistory(append);
+        const numActions = actionsStr.split("/").length;
+
+        const buffer = await handler.getChanceReports(append, numActions);
+        chanceReports = await getChanceReports(buffer, player, numActions);
+      } else {
+        chanceReports = null;
+      }
+
+      const emptyAppend = new Uint32Array();
+      totalBetAmount = Array.from(await handler.totalBetAmount(emptyAppend));
+      totalBetAmountAppended = Array.from(await handler.totalBetAmount(append));
+
+      if (needSplice) {
+        if (nextActionsStr === "terminal") {
+          updateResultsTerminal(spotIndex);
+        } else if (nextActionsStr === "chance") {
+          await updateResultsChance(spotIndex);
+        } else {
+          await updateResultsPlayer(spotIndex, nextActionsStr);
+        }
+      }
+
+      const spot = spots.value[selectedSpotIndexTmp];
+      if (spot.type === "player" && selectedChanceIndexTmp === -1) {
+        const playerIndex = spot.player === "oop" ? 0 : 1;
+        const n = props.cards[playerIndex].length;
+        rates.value = Array.from({ length: spot.actions.length }, (_, i) => {
+          if (!results) throw new Error("null results");
+          const rates = results.strategy.subarray(i * n, (i + 1) * n);
+          return average(rates, results.normalizer[playerIndex]);
+        });
+      } else {
+        rates.value = null;
+      }
+
+      selectedSpotIndex.value = selectedSpotIndexTmp;
+      selectedChanceIndex.value = selectedChanceIndexTmp;
+      pendingChanceIndex.value = pendingChanceIndexTmp;
+
+      context.emit(
+        "trigger-update",
+        selectedSpot.value,
+        selectedChance.value,
+        currentBoard.value,
+        results,
+        chanceReports,
+        totalBetAmount
+      );
     };
 
     const getResults = async (
       resultsBuffer: ReadonlyBuffer,
-      currentPlayer: string,
+      currentPlayer: "oop" | "ip" | "chance" | "terminal",
       numActions: number
     ): Promise<Results> => {
-      if (!memory) throw new Error("something wrong");
+      if (!memory) throw new Error("null memory");
       const buffer = await memory.buffer;
 
-      const ptr = resultsBuffer.ptr;
-      const lengthOop = props.cardsLength[0];
-      const lengthIp = props.cardsLength[1];
+      const ptr = resultsBuffer.ptr >>> 0;
+      const lengthOop = props.cards[0].length;
+      const lengthIp = props.cards[1].length;
 
       let offset = 0;
 
-      const weightOop = new Float32Array(buffer, ptr + offset, lengthOop);
-      offset += 4 * lengthOop;
-      const weightIp = new Float32Array(buffer, ptr + offset, lengthIp);
-      offset += 4 * lengthIp;
+      const weightOop = new Float64Array(buffer, ptr + offset, lengthOop);
+      offset += 8 * lengthOop;
+      const weightIp = new Float64Array(buffer, ptr + offset, lengthIp);
+      offset += 8 * lengthIp;
 
-      const normalizedOop = new Float32Array(buffer, ptr + offset, lengthOop);
-      offset += 4 * lengthOop;
-      const normalizedIp = new Float32Array(buffer, ptr + offset, lengthIp);
-      offset += 4 * lengthIp;
+      const normalizerOop = new Float64Array(buffer, ptr + offset, lengthOop);
+      offset += 8 * lengthOop;
+      const normalizerIp = new Float64Array(buffer, ptr + offset, lengthIp);
+      offset += 8 * lengthIp;
 
-      const equityOop = new Float32Array(buffer, ptr + offset, lengthOop);
-      offset += 4 * lengthOop;
-      const equityIp = new Float32Array(buffer, ptr + offset, lengthIp);
-      offset += 4 * lengthIp;
+      const equityOop = new Float64Array(buffer, ptr + offset, lengthOop);
+      offset += 8 * lengthOop;
+      const equityIp = new Float64Array(buffer, ptr + offset, lengthIp);
+      offset += 8 * lengthIp;
 
-      const evOop = new Float32Array(buffer, ptr + offset, lengthOop);
-      offset += 4 * lengthOop;
-      const evIp = new Float32Array(buffer, ptr + offset, lengthIp);
-      offset += 4 * lengthIp;
+      const evOop = new Float64Array(buffer, ptr + offset, lengthOop);
+      offset += 8 * lengthOop;
+      const evIp = new Float64Array(buffer, ptr + offset, lengthIp);
+      offset += 8 * lengthIp;
 
-      const eqrOop = new Float32Array(buffer, ptr + offset, lengthOop);
-      offset += 4 * lengthOop;
-      const eqrIp = new Float32Array(buffer, ptr + offset, lengthIp);
-      offset += 4 * lengthIp;
+      const eqrOop = new Float64Array(buffer, ptr + offset, lengthOop);
+      offset += 8 * lengthOop;
+      const eqrIp = new Float64Array(buffer, ptr + offset, lengthIp);
+      offset += 8 * lengthIp;
 
-      let strategy = new Float32Array();
-      let evDetail = new Float32Array();
+      let strategy = new Float64Array();
+      let evDetail = new Float64Array();
       if (["oop", "ip"].includes(currentPlayer)) {
         const length = currentPlayer === "oop" ? lengthOop : lengthIp;
-        strategy = new Float32Array(buffer, ptr + offset, numActions * length);
-        offset += 4 * numActions * length;
-        evDetail = new Float32Array(buffer, ptr + offset, numActions * length);
-        offset += 4 * numActions * length;
+        strategy = new Float64Array(buffer, ptr + offset, numActions * length);
+        offset += 8 * numActions * length;
+        evDetail = new Float64Array(buffer, ptr + offset, numActions * length);
+        offset += 8 * numActions * length;
       }
 
-      console.log(4 * offset, resultsBuffer.byteLength);
+      const isOopEmpty = weightOop.every((v) => v < 0.0005); // 0.05%
+      const isIpEmpty = weightIp.every((v) => v < 0.0005);
 
       return {
-        currentPlayer: currentPlayer as Results["currentPlayer"],
+        currentPlayer,
         numActions,
-        isEmpty: [
-          weightOop.every((v) => v < 0.0005), // 0.05%
-          weightIp.every((v) => v < 0.0005),
-        ],
+        isEmpty: isOopEmpty || isIpEmpty,
         weights: [weightOop, weightIp],
-        normalized: [normalizedOop, normalizedIp],
+        normalizer: [normalizerOop, normalizerIp],
         equity: [equityOop, equityIp],
         ev: [evOop, evIp],
         eqr: [eqrOop, eqrIp],
@@ -382,215 +528,202 @@ export default defineComponent({
       };
     };
 
-    const updateResultsTerminal = async (
-      spotIndex: number,
-      needSplice: boolean
-    ) => {
-      if (!handler || !results) return;
+    const getChanceReports = async (
+      reportBuffer: ReadonlyBuffer,
+      currentPlayer: "oop" | "ip" | "terminal",
+      numActions: number
+    ): Promise<ChanceReports> => {
+      if (!memory) throw new Error("null memory");
+      const buffer = await memory.buffer;
 
-      // handler operations
+      const ptr = reportBuffer.ptr >>> 0;
+      let offset = 0;
 
-      const findUnselectedChance = (startIndex: number) =>
-        spots.value
-          .slice(startIndex, spotIndex)
-          .find(
-            (spot: Spot) => spot.type === "chance" && spot.selectedIndex === -1
-          ) as SpotChance | undefined;
+      const isValid = new Float64Array(buffer, ptr + offset, 52);
+      offset += 8 * 52;
 
-      const skippedChance = findUnselectedChance(3);
-      const skippedRiver = skippedChance
-        ? findUnselectedChance(skippedChance.index + 3)
-        : undefined;
+      const combosOop = new Float64Array(buffer, ptr + offset, 52);
+      offset += 8 * 52;
+      const combosIp = new Float64Array(buffer, ptr + offset, 52);
+      offset += 8 * 52;
 
-      if (needSplice) {
-        const prevSpot = spots.value[spotIndex - 1] as SpotPlayer;
-        const prevAction = prevSpot.actions[prevSpot.selectedIndex];
+      const equityOop = new Float64Array(buffer, ptr + offset, 52);
+      offset += 8 * 52;
+      const equityIp = new Float64Array(buffer, ptr + offset, 52);
+      offset += 8 * 52;
 
-        let equityOop;
-        if (prevAction.name === "Fold") {
-          equityOop = prevSpot.player === "oop" ? 0 : 1;
-        } else if (skippedChance || results.isEmpty[0] || results.isEmpty[1]) {
-          equityOop = -1;
-        } else {
-          equityOop = average(results.equity[0], results.normalized[0]);
-        }
+      const evOop = new Float64Array(buffer, ptr + offset, 52);
+      offset += 8 * 52;
+      const evIp = new Float64Array(buffer, ptr + offset, 52);
+      offset += 8 * 52;
 
-        spots.value.splice(spotIndex, spots.value.length, {
-          type: "terminal",
+      const eqrOop = new Float64Array(buffer, ptr + offset, 52);
+      offset += 8 * 52;
+      const eqrIp = new Float64Array(buffer, ptr + offset, 52);
+      offset += 8 * 52;
+
+      let strategy = new Float64Array();
+      if (currentPlayer !== "terminal") {
+        strategy = new Float64Array(buffer, ptr + offset, 52 * numActions);
+        offset += 8 * 52 * numActions;
+      }
+
+      return {
+        currentPlayer,
+        numActions,
+        isValid,
+        combos: [combosOop, combosIp],
+        equity: [equityOop, equityIp],
+        ev: [evOop, evIp],
+        eqr: [eqrOop, eqrIp],
+        strategy,
+      };
+    };
+
+    const updateResultsTerminal = (spotIndex: number) => {
+      if (!results) throw new Error("null results");
+
+      const prevSpot = spots.value[spotIndex - 1] as SpotPlayer;
+      const prevAction = prevSpot.actions[prevSpot.selectedIndex];
+
+      const chanceIndex = selectedChanceIndexTmp;
+      const chanceSkipped =
+        chanceIndex !== -1 &&
+        (spots.value[chanceIndex] as SpotChance).selectedIndex === -1;
+
+      let equityOop;
+      if (prevAction.name === "Fold") {
+        equityOop = prevSpot.player === "oop" ? 0 : 1;
+      } else if (chanceSkipped || results.isEmpty) {
+        equityOop = -1;
+      } else {
+        equityOop = average(results.equity[0], results.normalizer[0]);
+      }
+
+      const betSum = totalBetAmountAppended[0] + totalBetAmountAppended[1];
+      spots.value.splice(spotIndex, spots.value.length, {
+        type: "terminal",
+        index: spotIndex,
+        player: "end",
+        selectedIndex: -1,
+        prevPlayer: prevSpot.player,
+        equityOop,
+        pot: config.startingPot + betSum,
+      });
+    };
+
+    const updateResultsChance = async (spotIndex: number) => {
+      if (!handler) throw new Error("null handler");
+
+      type SpotTurn = SpotRoot | SpotChance;
+      const prevSpot = spots.value[spotIndex - 1] as SpotPlayer;
+      const turnSpot = spots.value
+        .slice(0, spotIndex)
+        .find((spot) => spot.player === "turn") as SpotTurn | undefined;
+
+      let appendArray = [] as number[];
+      if (selectedChanceIndex.value !== -1) {
+        appendArray = spots.value
+          .slice(selectedChanceIndex.value, spotIndex)
+          .map((spot) => spot.selectedIndex);
+      }
+
+      appendArray.push(-1);
+      const append = new Uint32Array(appendArray);
+      const nextActionsStr = await handler.actionsAfterHistory(append);
+      const nextActions = nextActionsStr.split("/");
+
+      let numBetActions = nextActions.length;
+      while (
+        numBetActions > 0 &&
+        nextActions[nextActions.length - numBetActions].split(":")[1] === "0"
+      ) {
+        --numBetActions;
+      }
+
+      let possibleCards = 0n;
+      if (selectedChanceIndex.value === -1) {
+        possibleCards = await handler.possibleCards();
+        const numActions = nextActions.length;
+        const buffer = await handler.getChanceReports(append, numActions);
+        chanceReports = await getChanceReports(buffer, "oop", numActions);
+      }
+
+      spots.value.splice(
+        spotIndex,
+        spots.value.length,
+        {
+          type: "chance",
           index: spotIndex,
-          player: "end",
+          player: turnSpot ? "river" : "turn",
           selectedIndex: -1,
           prevPlayer: prevSpot.player,
-          equityOop,
-          pot: config.startingPot + totalBetAmount[0] + totalBetAmount[1],
-        });
-      }
-
-      if (spotIndex <= pendingChance.value) {
-        pendingChance.value = -1;
-      }
-      if (spotIndex <= selectedChance.value) {
-        selectedChance.value = pendingChance.value;
-        pendingChance.value = -1;
-      }
-      if (spotIndex <= selectedChance.value) {
-        selectedChance.value = -1;
-      }
-      if (skippedChance && selectedChance.value === -1) {
-        selectedChance.value = skippedChance.index;
-      }
-      if (skippedRiver && pendingChance.value === -1) {
-        pendingChance.value = skippedRiver.index;
-      }
-
-      selectedSpot.value = spotIndex;
-
-      // display operations
-    };
-
-    const updateResultsChance = async (
-      spotIndex: number,
-      needSplice: boolean
-    ) => {
-      if (!handler) return;
-
-      // handler operations
-
-      if (needSplice) {
-        type SpotTurn = SpotRoot | SpotChance;
-        const prevSpot = spots.value[spotIndex - 1] as SpotPlayer;
-        const turnSpot = spots.value
-          .slice(0, spotIndex)
-          .find((spot) => spot.player === "turn") as SpotTurn | undefined;
-
-        const possibleCards = await handler.possibleCards();
-        const nextActions = (await handler.actionsAfterChance()).split("/");
-
-        let numBetActions = nextActions.length;
-        while (
-          numBetActions > 0 &&
-          nextActions[nextActions.length - numBetActions].split(":")[1] === "0"
-        ) {
-          --numBetActions;
-        }
-
-        spots.value.splice(
-          spotIndex,
-          spots.value.length,
-          {
-            type: "chance",
-            index: spotIndex,
-            player: turnSpot ? "river" : "turn",
-            selectedIndex: -1,
-            prevPlayer: prevSpot.player,
-            cards: Array.from({ length: 52 }, (_, i) => ({
-              card: i,
-              isSelected: false,
-              isDead: !(possibleCards & (1n << BigInt(i))),
-            })),
-            pot: config.startingPot + 2 * totalBetAmount[0],
-            stack: config.effectiveStack - totalBetAmount[0],
-          },
-          {
-            type: "player",
-            index: spotIndex + 1,
-            player: "oop",
-            selectedIndex: -1,
-            actions: nextActions.map((action, i) => {
-              const [name, amount] = action.split(":");
-              return {
-                index: i,
-                name,
-                amount: Number(amount),
-                isSelected: false,
-                color: actionColor(name, i, nextActions.length, numBetActions),
-              };
-            }),
-          }
-        );
-
-        selectedSpot.value = spotIndex + 1;
-      }
-
-      if (
-        needSplice &&
-        selectedChance.value !== -1 &&
-        selectedChance.value < spotIndex
-      ) {
-        pendingChance.value = spotIndex;
-      } else if (spotIndex !== selectedChance.value) {
-        pendingChance.value = selectedChance.value;
-        selectedChance.value = spotIndex;
-      }
-
-      // display operations
-    };
-
-    const updateResultsPlayer = async (
-      spotIndex: number,
-      needSplice: boolean,
-      actions: string[]
-    ) => {
-      if (!handler) return;
-
-      const findUnselectedChance = (startIndex: number) =>
-        spots.value
-          .slice(startIndex, spotIndex)
-          .find(
-            (spot: Spot) => spot.type === "chance" && spot.selectedIndex === -1
-          ) as SpotChance | undefined;
-
-      const skippedChance = findUnselectedChance(3);
-      const skippedRiver = skippedChance
-        ? findUnselectedChance(skippedChance.index + 3)
-        : undefined;
-
-      if (needSplice) {
-        const lastSpot = spots.value[spotIndex - 1];
-        const player = lastSpot.player === "oop" ? "ip" : "oop";
-
-        let numBetActions = actions.length;
-        if (actions[0].split(":")[1] === "0") --numBetActions;
-        if (actions[1]?.split(":")[1] === "0") --numBetActions;
-
-        spots.value.splice(spotIndex, spots.value.length, {
+          cards: Array.from({ length: 52 }, (_, i) => ({
+            card: i,
+            isSelected: false,
+            isDead: !(possibleCards & (1n << BigInt(i))),
+          })),
+          pot: config.startingPot + 2 * totalBetAmountAppended[0],
+          stack: config.effectiveStack - totalBetAmountAppended[0],
+        },
+        {
           type: "player",
-          index: spotIndex,
-          player,
+          index: spotIndex + 1,
+          player: "oop",
           selectedIndex: -1,
-          actions: actions.map((action, i) => {
+          actions: nextActions.map((action, i) => {
             const [name, amount] = action.split(":");
             return {
               index: i,
               name,
-              amount: Number(amount),
+              amount,
+              rate: -1,
               isSelected: false,
-              color: actionColor(name, i, actions.length, numBetActions),
+              color: actionColor(name, i, nextActions.length, numBetActions),
             };
           }),
-        });
-      }
+        }
+      );
 
-      if (spotIndex <= pendingChance.value) {
-        pendingChance.value = -1;
-      }
-      if (spotIndex <= selectedChance.value) {
-        selectedChance.value = pendingChance.value;
-        pendingChance.value = -1;
-      }
-      if (spotIndex <= selectedChance.value) {
-        selectedChance.value = -1;
-      }
-      if (skippedChance && selectedChance.value === -1) {
-        selectedChance.value = skippedChance.index;
-      }
-      if (skippedRiver && pendingChance.value === -1) {
-        pendingChance.value = skippedRiver.index;
-      }
+      ++selectedSpotIndexTmp;
 
-      selectedSpot.value = spotIndex;
+      if (selectedChanceIndexTmp === -1) {
+        selectedChanceIndexTmp = spotIndex;
+      } else {
+        pendingChanceIndexTmp = spotIndex;
+      }
+    };
 
-      // display operations
+    const updateResultsPlayer = async (
+      spotIndex: number,
+      actionsStr: string
+    ) => {
+      if (!handler) throw new Error("null handler");
+
+      const lastSpot = spots.value[spotIndex - 1];
+      const player = lastSpot.player === "oop" ? "ip" : "oop";
+
+      const actions = actionsStr.split("/");
+      let numBetActions = actions.length;
+      if (actions[0].split(":")[1] === "0") --numBetActions;
+      if (actions[1]?.split(":")[1] === "0") --numBetActions;
+
+      spots.value.splice(spotIndex, spots.value.length, {
+        type: "player",
+        index: spotIndex,
+        player,
+        selectedIndex: -1,
+        actions: actions.map((action, i) => {
+          const [name, amount] = action.split(":");
+          return {
+            index: i,
+            name,
+            amount,
+            isSelected: false,
+            color: actionColor(name, i, actions.length, numBetActions),
+          };
+        }),
+      });
     };
 
     const play = async (spotIndex: number, actionIndex: number) => {
@@ -606,8 +739,8 @@ export default defineComponent({
     };
 
     const deal = async (card: number) => {
-      const spot = spots.value[selectedChance.value] as SpotChance;
-      if (spot.selectedIndex === card) return;
+      const spot = selectedChance.value;
+      if (!spot || spot.selectedIndex === card) return;
 
       if (spot.selectedIndex !== -1) {
         spot.cards[spot.selectedIndex].isSelected = false;
@@ -615,10 +748,17 @@ export default defineComponent({
       spot.cards[card].isSelected = true;
       spot.selectedIndex = card;
 
-      selectedChance.value = pendingChance.value;
-      pendingChance.value = -1;
+      selectedChanceIndex.value = pendingChanceIndex.value;
+      pendingChanceIndex.value = -1;
 
-      await selectSpot(selectedSpot.value, false);
+      // const spot = selectedSpot.value as SpotTerminal;
+      // if (!chanceSkipped && !results.isEmpty && spot.equityOop == -1) {
+      //   spot.equityOop = average(results.equity[0], results.normalizer[0]);
+      // }
+
+      // update river dead cards
+
+      await selectSpot(selectedSpotIndex.value, false);
     };
 
     const spotCards = (spot: SpotRoot | SpotChance) => {
@@ -633,8 +773,10 @@ export default defineComponent({
 
     return {
       spots,
-      selectedSpot,
-      selectedChance,
+      rates,
+      selectedSpotIndex,
+      selectedChanceIndex,
+      pendingChanceIndex,
       selectSpot,
       play,
       deal,
@@ -643,9 +785,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped>
-.snug * {
-  @apply leading-tight;
-}
-</style>

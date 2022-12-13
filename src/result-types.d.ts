@@ -1,14 +1,25 @@
 export type Results = {
   currentPlayer: "oop" | "ip" | "chance" | "terminal";
   numActions: number;
-  isEmpty: boolean[];
-  weights: Float32Array[];
-  normalized: Float32Array[];
-  equity: Float32Array[];
-  ev: Float32Array[];
-  eqr: Float32Array[];
-  strategy: Float32Array;
-  evDetail: Float32Array;
+  isEmpty: boolean;
+  weights: Float64Array[];
+  normalizer: Float64Array[];
+  equity: Float64Array[];
+  ev: Float64Array[];
+  eqr: Float64Array[];
+  strategy: Float64Array;
+  evDetail: Float64Array;
+};
+
+export type ChanceReports = {
+  currentPlayer: "oop" | "ip" | "terminal";
+  numActions: number;
+  isValid: Float64Array;
+  combos: Float64Array[];
+  equity: Float64Array[];
+  ev: Float64Array[];
+  eqr: Float64Array[];
+  strategy: Float64Array;
 };
 
 export type SpotRoot = {
@@ -44,7 +55,7 @@ export type SpotPlayer = {
   actions: {
     index: number;
     name: string;
-    amount: number;
+    amount: string;
     isSelected: boolean;
     color: string;
   }[];
@@ -66,7 +77,7 @@ export type DisplayMode = "basics" | "graphs" | "scatter" | "compare" | "stats";
 
 export type DisplayOptions = {
   player: "auto" | "oop" | "ip";
-  barHeight: "normalized" | "full" | "absolute";
+  barHeight: "normalized" | "absolute" | "full";
   suit: "grouped" | "individual";
   strategy: "show" | "none";
   content: "default" | "eq" | "ev" | "eqr";

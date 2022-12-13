@@ -47,7 +47,7 @@ checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
 [[package]]
 name = "postflop-solver"
 version = "0.1.0"
-source = "git+https://github.com/b-inary/postflop-solver#68f835d4361bf6db466f8559108acf8202110d1a"
+source = "git+https://github.com/b-inary/postflop-solver#500d3b608b79000618e95a36fd9f6193433921c7"
 dependencies = [
  "once_cell",
  "regex",
@@ -73,7 +73,7 @@ dependencies = [
 
 [[package]]
 name = "range"
-version = "0.1.4"
+version = "0.2.0-alpha"
 dependencies = [
  "postflop-solver",
  "wasm-bindgen",

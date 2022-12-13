@@ -383,6 +383,8 @@ export default defineComponent({
         new Uint8Array(tmpConfig.board),
         tmpConfig.startingPot,
         tmpConfig.effectiveStack,
+        tmpConfig.rakePercent / 100,
+        tmpConfig.rakeCap,
         tmpConfig.donkOption,
         convertBetString(tmpConfig.oopFlopBet),
         convertBetString(tmpConfig.oopFlopRaise),

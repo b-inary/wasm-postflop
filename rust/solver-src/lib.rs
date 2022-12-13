@@ -8,7 +8,8 @@ pub use wasm_bindgen_rayon::init_thread_pool;
 #[wasm_bindgen]
 pub struct GameManager {
     game: PostFlopGame,
-    result_buffer: Vec<f32>,
+    result_buffer: Vec<f64>,
+    report_buffer: Vec<f64>,
 }
 
 #[wasm_bindgen]
@@ -42,6 +43,7 @@ impl GameManager {
         Self {
             game: PostFlopGame::new(),
             result_buffer: Vec::new(),
+            report_buffer: Vec::new(),
         }
     }
 
@@ -52,6 +54,8 @@ impl GameManager {
         board: &[u8],
         starting_pot: i32,
         effective_stack: i32,
+        rake_rate: f64,
+        rake_cap: f64,
         donk_option: bool,
         oop_flop_bet: &str,
         oop_flop_raise: &str,
@@ -67,9 +71,9 @@ impl GameManager {
         ip_turn_raise: &str,
         ip_river_bet: &str,
         ip_river_raise: &str,
-        add_allin_threshold: f32,
-        force_allin_threshold: f32,
-        merging_threshold: f32,
+        add_allin_threshold: f64,
+        force_allin_threshold: f64,
+        merging_threshold: f64,
         added_lines: &str,
         removed_lines: &str,
     ) -> Option<String> {
@@ -94,6 +98,8 @@ impl GameManager {
             initial_state: state,
             starting_pot,
             effective_stack,
+            rake_rate,
+            rake_cap,
             flop_bet_sizes: [
                 BetSizeCandidates::try_from((oop_flop_bet, oop_flop_raise)).unwrap(),
                 BetSizeCandidates::try_from((ip_flop_bet, ip_flop_raise)).unwrap(),
@@ -180,12 +186,15 @@ impl GameManager {
         self.game.apply_history(history);
     }
 
-    pub fn total_bet_amount(&self) -> Box<[f32]> {
-        self.game
-            .total_bet_amount()
-            .iter()
-            .map(|&x| x as f32)
-            .collect()
+    pub fn total_bet_amount(&mut self, append: &[usize]) -> Box<[u32]> {
+        let history = self.game.history().to_vec();
+        for &action in append {
+            self.game.play(action);
+        }
+        let total_bet_amount = self.game.total_bet_amount();
+        let ret = total_bet_amount.iter().map(|&x| x as u32).collect();
+        self.game.apply_history(&history);
+        ret
     }
 
     pub fn current_player(&self) -> String {
@@ -193,17 +202,22 @@ impl GameManager {
             "terminal".to_string()
         } else if self.game.is_chance_node() {
             "chance".to_string()
+        } else if self.game.current_player() == 0 {
+            "oop".to_string()
         } else {
-            match self.game.current_player() {
-                0 => "oop".to_string(),
-                _ => "ip".to_string(),
-            }
+            "ip".to_string()
         }
     }
 
-    pub fn actions(&self) -> String {
-        if self.game.is_terminal_node() || self.game.is_chance_node() {
-            "".to_string()
+    pub fn num_actions(&self) -> usize {
+        self.game.available_actions().len()
+    }
+
+    fn actions(&self) -> String {
+        if self.game.is_terminal_node() {
+            "terminal".to_string()
+        } else if self.game.is_chance_node() {
+            "chance".to_string()
         } else {
             self.game
                 .available_actions()
@@ -222,9 +236,11 @@ impl GameManager {
         }
     }
 
-    pub fn actions_after_chance(&mut self) -> String {
+    pub fn actions_after_history(&mut self, append: &[usize]) -> String {
         let history = self.game.history().to_vec();
-        self.game.play(usize::MAX);
+        for &action in append {
+            self.game.play(action);
+        }
         let ret = self.actions();
         self.game.apply_history(&history);
         ret
@@ -240,45 +256,175 @@ impl GameManager {
 
         let buf = &mut self.result_buffer;
         buf.clear();
-        buf.extend_from_slice(game.weights(0));
-        buf.extend_from_slice(game.weights(1));
-        buf.extend_from_slice(game.normalized_weights(0));
-        buf.extend_from_slice(game.normalized_weights(1));
+        buf.extend(round_iter(game.weights(0).iter()));
+        buf.extend(round_iter(game.weights(1).iter()));
+        buf.extend(round_iter(game.normalized_weights(0).iter()));
+        buf.extend(round_iter(game.normalized_weights(1).iter()));
 
         let equity = [game.equity(0), game.equity(1)];
         let ev = [game.expected_values(0), game.expected_values(1)];
 
-        buf.extend_from_slice(&equity[0]);
-        buf.extend_from_slice(&equity[1]);
-        buf.extend_from_slice(&ev[0]);
-        buf.extend_from_slice(&ev[1]);
+        buf.extend(round_iter(equity[0].iter()));
+        buf.extend(round_iter(equity[1].iter()));
+        buf.extend(round_iter(ev[0].iter()));
+        buf.extend(round_iter(ev[1].iter()));
 
         let total_bet_amount = game.total_bet_amount();
         let pot_base = game.tree_config().starting_pot + total_bet_amount.iter().min().unwrap();
 
         let mut eqr = [
-            Vec::with_capacity(game.private_cards(0).len()),
-            Vec::with_capacity(game.private_cards(1).len()),
+            Vec::with_capacity(equity[0].len()),
+            Vec::with_capacity(equity[1].len()),
         ];
 
         for player in 0..2 {
             let pot = (pot_base + total_bet_amount[player]) as f32;
             for (&eq, &ev) in equity[player].iter().zip(ev[player].iter()) {
-                eqr[player].push(ev / (pot * eq));
+                if eq == 0.0 {
+                    eqr[player].push(0.0);
+                } else {
+                    eqr[player].push(ev / (pot * eq));
+                }
             }
         }
 
-        buf.extend_from_slice(&eqr[0]);
-        buf.extend_from_slice(&eqr[1]);
+        buf.extend(round_iter(eqr[0].iter()));
+        buf.extend(round_iter(eqr[1].iter()));
 
         if !game.is_terminal_node() && !game.is_chance_node() {
-            buf.extend_from_slice(&game.strategy());
-            buf.extend_from_slice(&game.expected_values_detail(game.current_player()));
+            buf.extend(round_iter(game.strategy().iter()));
+            buf.extend(round_iter(
+                game.expected_values_detail(game.current_player()).iter(),
+            ));
         }
 
         ReadonlyBuffer {
             pointer: buf.as_ptr() as *const u8,
-            byte_length: buf.len() * 4,
+            byte_length: buf.len() * 8,
         }
     }
+
+    pub fn get_chance_reports(&mut self, append: &[usize], num_actions: usize) -> ReadonlyBuffer {
+        let game = &mut self.game;
+        let history = game.history().to_vec();
+
+        let mut is_valid = vec![false; 52];
+        let mut combos = [vec![0.0; 52], vec![0.0; 52]];
+        let mut equity = [vec![0.0; 52], vec![0.0; 52]];
+        let mut ev = [vec![0.0; 52], vec![0.0; 52]];
+        let mut eqr = [vec![0.0; 52], vec![0.0; 52]];
+        let mut strategy = vec![0.0; num_actions * 52];
+
+        let possible_cards = game.possible_cards();
+        for chance in 0..52 {
+            if possible_cards & (1 << chance) == 0 {
+                continue;
+            }
+
+            game.play(chance);
+            for &action in &append[1..] {
+                game.play(action);
+            }
+
+            game.cache_normalized_weights();
+
+            let weights = [game.weights(0), game.weights(1)];
+            let normalizer = [game.normalized_weights(0), game.normalized_weights(1)];
+            let is_oop_empty = weights[0].iter().all(|&w| w < 0.0005);
+            let is_ip_empty = weights[1].iter().all(|&w| w < 0.0005);
+
+            if is_oop_empty || is_ip_empty {
+                game.apply_history(&history);
+                continue;
+            }
+
+            is_valid[chance] = true;
+
+            let total_bet_amount = game.total_bet_amount();
+            let pot_base = game.tree_config().starting_pot + total_bet_amount.iter().min().unwrap();
+
+            for player in 0..2 {
+                let equity_tmp = game.equity(player);
+                let ev_tmp = game.expected_values(player);
+                let mut eqr_tmp = Vec::with_capacity(equity_tmp.len());
+
+                let pot = (pot_base + total_bet_amount[player]) as f32;
+                for (&eq, &ev) in equity_tmp.iter().zip(ev_tmp.iter()) {
+                    if eq == 0.0 {
+                        eqr_tmp.push(0.0);
+                    } else {
+                        eqr_tmp.push(ev / (pot * eq));
+                    }
+                }
+
+                combos[player][chance] = weights[player].iter().fold(0.0, |acc, &w| acc + w as f64);
+                equity[player][chance] = round(weighted_average(&equity_tmp, &normalizer[player]));
+                ev[player][chance] = round(weighted_average(&ev_tmp, &normalizer[player]));
+                eqr[player][chance] = round(weighted_average(&eqr_tmp, &normalizer[player]));
+            }
+
+            if !game.is_terminal_node() {
+                let strategy_tmp = game.strategy();
+                let current_player = game.current_player();
+                let num_hands = game.private_cards(current_player).len();
+                for action in 0..num_actions {
+                    let slice = &strategy_tmp[action * num_hands..(action + 1) * num_hands];
+                    let strategy_summary = weighted_average(slice, &normalizer[current_player]);
+                    strategy[chance * num_actions + action] = round(strategy_summary);
+                }
+            }
+
+            game.apply_history(&history);
+        }
+
+        let buf = &mut self.report_buffer;
+        buf.clear();
+
+        buf.extend(is_valid.iter().map(|&x| x as usize as f64));
+        buf.extend_from_slice(&combos[0]);
+        buf.extend_from_slice(&combos[1]);
+        buf.extend_from_slice(&equity[0]);
+        buf.extend_from_slice(&equity[1]);
+        buf.extend_from_slice(&ev[0]);
+        buf.extend_from_slice(&ev[1]);
+        buf.extend_from_slice(&eqr[0]);
+        buf.extend_from_slice(&eqr[1]);
+        buf.extend_from_slice(&strategy);
+
+        ReadonlyBuffer {
+            pointer: buf.as_ptr() as *const u8,
+            byte_length: buf.len() * 8,
+        }
+    }
+}
+
+#[inline]
+fn round(value: f64) -> f64 {
+    if value < 1.0 {
+        (value * 100000.0).round() / 100000.0
+    } else if value < 10.0 {
+        (value * 10000.0).round() / 10000.0
+    } else if value < 100.0 {
+        (value * 1000.0).round() / 1000.0
+    } else if value < 1000.0 {
+        (value * 100.0).round() / 100.0
+    } else {
+        (value * 10.0).round() / 10.0
+    }
+}
+
+#[inline]
+fn round_iter<'a>(iter: impl Iterator<Item = &'a f32> + 'a) -> impl Iterator<Item = f64> + 'a {
+    iter.map(|&x| round(x as f64))
+}
+
+#[inline]
+pub fn weighted_average(slice: &[f32], weights: &[f32]) -> f64 {
+    let mut sum = 0.0;
+    let mut weight_sum = 0.0;
+    for (&value, &weight) in slice.iter().zip(weights.iter()) {
+        sum += value as f64 * weight as f64;
+        weight_sum += weight as f64;
+    }
+    sum / weight_sum
 }

@@ -35,10 +35,10 @@
         <div class="text-sm">Player:</div>
         <select
           v-model="displayOptions.player"
-          class="w-16 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+          class="w-28 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
           @change="updateDisplayOptions"
         >
-          <option value="auto">Auto</option>
+          <option value="auto">Auto ({{ autoPlayer.toUpperCase() }})</option>
           <option value="oop">OOP</option>
           <option value="ip">IP</option>
         </select>
@@ -52,8 +52,8 @@
           @change="updateDisplayOptions"
         >
           <option value="normalized">Normalized</option>
-          <option value="full">Full</option>
           <option value="absolute">Absolute</option>
+          <option value="full">Full</option>
         </select>
       </div>
 
@@ -70,66 +70,57 @@
       </div>
 
       <div class="flex flex-col items-start justify-center h-full">
-        <div class="text-sm">Strategy:</div>
-        <select
-          v-model="displayOptions.strategy"
-          class="w-[4.25rem] px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
-          @change="updateDisplayOptions"
-        >
-          <option value="show">Show</option>
-          <option value="none">None</option>
-        </select>
-      </div>
-
-      <div class="flex flex-col items-start justify-center h-full">
         <div class="text-sm">Display:</div>
         <select
-          v-model="displayOptions.content"
-          class="w-[5.25rem] px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+          v-model="strategyContentPair"
+          class="w-[8.75rem] px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+          @change="updateDisplayOptions"
         >
-          <option value="default">Default</option>
-          <option value="eq">EQ</option>
-          <option value="ev">EV</option>
-          <option value="eqr">EQR</option>
+          <option value="show,default">Strategy</option>
+          <option value="show,eq">Strategy + EQ</option>
+          <option value="show,ev">Strategy + EV</option>
+          <option value="show,eqr">Strategy + EQR</option>
+          <option value="none,default">Weight</option>
+          <option value="none,eq">EQ</option>
+          <option value="none,ev">EV</option>
+          <option value="none,eqr">EQR</option>
         </select>
       </div>
 
       <div class="flex-grow"></div>
 
       <div class="flex items-center pr-4 gap-4">
-        <button
-          v-tooltip="{
-            content: 'Copy range text to clipboard',
-            shown: isCopyTooltipShown,
-            triggers: [],
-          }"
-          :class="
-            'flex w-8 h-8 items-center justify-center rounded-lg shadow transition-colors border ' +
-            (copySuccess === 1
-              ? 'border-green-600 bg-green-100'
-              : copySuccess === -1
-              ? 'border-red-600 bg-red-100'
-              : 'border-gray-600 bg-gray-200')
-          "
-          @click="copyToClipboard"
-          @mouseenter="isCopyTooltipShown = true"
-          @mouseleave="onCopyTooltipLeave"
-        >
-          <ClipboardDocumentIcon
-            v-show="copySuccess !== 1"
-            :class="'w-5 h-5 ' + (copySuccess === -1 ? 'text-red-600' : '')"
-          />
-          <ClipboardDocumentCheckIcon
-            v-show="copySuccess === 1"
-            class="w-5 h-5 text-green-600"
-          />
-        </button>
-        <button
-          v-tooltip="'Open solver integration menu; not yet implemented'"
-          class="flex w-8 h-8 items-center justify-center border border-gray-600 bg-gray-200 rounded-lg shadow transition-colors active:bg-gray-300"
-        >
-          <ComputerDesktopIcon class="w-5 h-5" />
-        </button>
+        <Tippy content="Copy range text to clipboard">
+          <button
+            :class="
+              'flex w-8 h-8 items-center justify-center rounded-lg shadow transition-colors border ' +
+              (copySuccess === 1
+                ? 'border-green-600 bg-green-100'
+                : copySuccess === -1
+                ? 'border-red-600 bg-red-100'
+                : 'border-gray-600 bg-gray-200')
+            "
+            @click="copyToClipboard"
+            @mouseleave="onCopyTooltipLeave"
+          >
+            <ClipboardDocumentIcon
+              v-show="copySuccess !== 1"
+              :class="'w-5 h-5 ' + (copySuccess === -1 ? 'text-red-600' : '')"
+            />
+            <ClipboardDocumentCheckIcon
+              v-show="copySuccess === 1"
+              class="w-5 h-5 text-green-600"
+            />
+          </button>
+        </Tippy>
+
+        <Tippy content="Open solver integration menu; not yet implemented">
+          <button
+            class="flex w-8 h-8 items-center justify-center border border-gray-600 bg-gray-200 rounded-lg shadow transition-colors active:bg-gray-300"
+          >
+            <ComputerDesktopIcon class="w-5 h-5" />
+          </button>
+        </Tippy>
       </div>
     </div>
   </div>
@@ -137,6 +128,7 @@
 
 <script lang="ts">
 import { defineComponent, reactive, ref } from "vue";
+import { Tippy } from "vue-tippy";
 
 import { ComputerDesktopIcon } from "@heroicons/vue/24/solid";
 import {
@@ -148,6 +140,7 @@ import { DisplayMode, DisplayOptions } from "../result-types";
 
 export default defineComponent({
   components: {
+    Tippy,
     ComputerDesktopIcon,
     ClipboardDocumentIcon,
     ClipboardDocumentCheckIcon,
@@ -160,6 +153,10 @@ export default defineComponent({
     },
     statsMode: {
       type: String,
+      required: true,
+    },
+    autoPlayer: {
+      type: String as () => "oop" | "ip",
       required: true,
     },
     copySuccess: {
@@ -176,10 +173,6 @@ export default defineComponent({
   },
 
   setup(_, context) {
-    const updateDisplayMode = (displayMode: string) => {
-      context.emit("update:display-mode", displayMode as DisplayMode);
-    };
-
     const displayOptions = reactive({
       player: "auto",
       barHeight: "normalized",
@@ -187,6 +180,8 @@ export default defineComponent({
       strategy: "show",
       content: "default",
     } as DisplayOptions);
+
+    const strategyContentPair = ref("show,default");
 
     const savedDisplayOptions = localStorage.getItem("display-options");
     if (savedDisplayOptions) {
@@ -203,39 +198,41 @@ export default defineComponent({
       if (["default", "eq", "ev", "eqr"].includes(parsed?.content)) {
         displayOptions.content = parsed.content;
       }
+      strategyContentPair.value = [
+        displayOptions.strategy,
+        displayOptions.content,
+      ].join(",");
+      context.emit("update:display-options", displayOptions);
     }
 
+    const updateDisplayMode = (displayMode: string) => {
+      context.emit("update:display-mode", displayMode as DisplayMode);
+    };
+
     const updateDisplayOptions = () => {
+      const [strategy, content] = strategyContentPair.value.split(",");
+      displayOptions.strategy = strategy as DisplayOptions["strategy"];
+      displayOptions.content = content as DisplayOptions["content"];
       localStorage.setItem("display-options", JSON.stringify(displayOptions));
       context.emit("update:display-options", displayOptions);
     };
 
-    const isCopyTooltipShown = ref(false);
-
     const copyToClipboard = () => {
-      isCopyTooltipShown.value = false;
       context.emit("copy-to-clipboard");
     };
 
     const onCopyTooltipLeave = () => {
-      isCopyTooltipShown.value = false;
       context.emit("reset-copy-success");
     };
 
     return {
-      updateDisplayMode,
       displayOptions,
+      strategyContentPair,
+      updateDisplayMode,
       updateDisplayOptions,
-      isCopyTooltipShown,
       copyToClipboard,
       onCopyTooltipLeave,
     };
   },
 });
 </script>
-
-<style scoped>
-.snug * {
-  @apply leading-tight;
-}
-</style>

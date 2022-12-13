@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="!store.isSolverFinished"
-    class="w-full max-w-screen-xl mx-auto px-4 py-6"
+    class="flex w-full max-w-screen-xl mx-auto px-4 py-6 items-center"
   >
     <span
       v-if="store.isSolverRunning || store.isFinalizing"
@@ -22,7 +22,7 @@
     <ResultNav
       :is-handler-updated="isHandlerUpdated"
       :is-locked="isLocked"
-      :cards-length="cardsLength"
+      :cards="cards"
       @update:is-handler-updated="(value) => (isHandlerUpdated = value)"
       @update:is-locked="(value) => (isLocked = value)"
       @trigger-update="onUpdateSpot"
@@ -31,12 +31,59 @@
     <ResultMiddle
       :display-mode="displayMode"
       :stats-mode="statsMode"
+      :auto-player="autoPlayer"
       :copy-success="copySuccess"
       @update:display-mode="updateDisplayMode"
       @update:display-options="updateDisplayOptions"
       @copy-to-clipboard="copyRangeTextToClipboard"
       @reset-copy-success="resetCopySuccess"
     />
+
+    <div class="flex flex-grow">
+      <template v-if="displayMode === 'basics'">
+        <ResultBasics
+          style="flex: 5"
+          :cards="cards"
+          :selected-spot="selectedSpot"
+          :selected-chance="selectedChance"
+          :current-board="currentBoard"
+          :total-bet-amount="totalBetAmount"
+          :results="results"
+          :display-options="displayOptions"
+          :display-player="displayPlayer"
+          :is-compare-mode="false"
+        />
+        <div class="bg-gray-300" style="flex: 4"></div>
+      </template>
+
+      <template v-else-if="displayMode === 'compare'">
+        <ResultBasics
+          style="flex: 5"
+          :cards="cards"
+          :selected-spot="selectedSpot"
+          :selected-chance="selectedChance"
+          :current-board="currentBoard"
+          :total-bet-amount="totalBetAmount"
+          :results="results"
+          :display-options="displayOptions"
+          display-player="oop"
+          :is-compare-mode="true"
+        />
+        <div class="bg-gray-300" style="flex: 2"></div>
+        <ResultBasics
+          style="flex: 5"
+          :cards="cards"
+          :selected-spot="selectedSpot"
+          :selected-chance="selectedChance"
+          :current-board="currentBoard"
+          :total-bet-amount="totalBetAmount"
+          :results="results"
+          :display-options="displayOptions"
+          display-player="ip"
+          :is-compare-mode="true"
+        />
+      </template>
+    </div>
   </div>
 </template>
 
@@ -45,15 +92,24 @@ import { computed, defineComponent, ref } from "vue";
 import { useStore, useSavedConfigStore } from "../store";
 import { handler, memory } from "../global-worker";
 
+import {
+  Results,
+  ChanceReports,
+  Spot,
+  SpotChance,
+  DisplayMode,
+  DisplayOptions,
+} from "../result-types";
+
 import ResultNav from "./ResultNav.vue";
 import ResultMiddle from "./ResultMiddle.vue";
-
-import { DisplayMode, DisplayOptions } from "../result-types";
+import ResultBasics from "./ResultBasics.vue";
 
 export default defineComponent({
   components: {
     ResultNav,
     ResultMiddle,
+    ResultBasics,
   },
 
   setup() {
@@ -66,9 +122,13 @@ export default defineComponent({
     const isLocked = ref(false);
 
     const cards = ref([new Uint16Array(), new Uint16Array()]);
-    const cardsLength = computed(() =>
-      cards.value.map((cards) => cards.length)
-    );
+
+    const selectedSpot = ref<Spot | null>(null);
+    const selectedChance = ref<SpotChance | null>(null);
+    const currentBoard = ref([...config.board]);
+    const results = ref<Results | null>(null);
+    const chanceReports = ref<ChanceReports | null>(null);
+    const totalBetAmount = ref([0, 0]);
 
     const isSolverFinished = ref(false);
     store.$subscribe(async (_, store) => {
@@ -84,18 +144,18 @@ export default defineComponent({
     const init = async () => {
       if (!handler || !memory) return;
       const memoryBuffer = await memory.buffer;
+      const cardsBuffer = [
+        await handler.privateCards(0),
+        await handler.privateCards(1),
+      ];
 
-      cards.value = [];
-      for (let player = 0; player < 2; ++player) {
-        const cardsBuffer = await handler.privateCards(player);
-        cards.value.push(
-          new Uint16Array(
-            memoryBuffer,
-            cardsBuffer.ptr,
-            cardsBuffer.byteLength / 2
-          )
+      cards.value = Array.from({ length: 2 }, (_, player) => {
+        return new Uint16Array(
+          memoryBuffer,
+          cardsBuffer[player].ptr >>> 0,
+          cardsBuffer[player].byteLength / 2
         );
-      }
+      });
 
       isHandlerUpdated.value = true;
     };
@@ -104,18 +164,33 @@ export default defineComponent({
       cards.value = [new Uint16Array(), new Uint16Array()];
     };
 
-    const onUpdateSpot = () => {
+    const onUpdateSpot = (
+      newSelectedSpot: Spot | null,
+      newSelectedChance: SpotChance | null,
+      newCurrentBoard: number[],
+      newResults: Results,
+      newChanceReports: ChanceReports | null,
+      newTotalBetAmount: number[]
+    ) => {
+      selectedSpot.value = newSelectedSpot;
+      selectedChance.value = newSelectedChance;
+      currentBoard.value = newCurrentBoard;
+      results.value = newResults;
+      chanceReports.value = newChanceReports;
+      totalBetAmount.value = newTotalBetAmount;
       isLocked.value = false;
+
+      if (chanceReports.value) {
+        console.log("chance reports recieved!");
+      } else {
+        console.log("null chance reports");
+      }
     };
 
     /* Middle Bar */
 
     const displayMode = ref("basics");
     const statsMode = ref("");
-
-    const updateDisplayMode = (mode: DisplayMode) => {
-      displayMode.value = mode;
-    };
 
     const displayOptions = ref<DisplayOptions>({
       player: "auto",
@@ -126,6 +201,10 @@ export default defineComponent({
     });
 
     const copySuccess = ref(0);
+
+    const updateDisplayMode = (mode: DisplayMode) => {
+      displayMode.value = mode;
+    };
 
     const updateDisplayOptions = (options: DisplayOptions) => {
       displayOptions.value = options;
@@ -143,20 +222,53 @@ export default defineComponent({
       copySuccess.value = 0;
     };
 
+    /* Computed */
+
+    const autoPlayer = computed(() => {
+      const spot = selectedSpot.value;
+      const chance = selectedChance.value;
+      if (!spot) return "oop";
+
+      if (chance) {
+        return chance.prevPlayer;
+      } else if (spot.type == "terminal") {
+        return spot.prevPlayer;
+      } else {
+        return spot.player as "oop" | "ip";
+      }
+    });
+
+    const displayPlayer = computed(() => {
+      const optionPlayer = displayOptions.value.player;
+      if (optionPlayer === "auto") {
+        return autoPlayer.value;
+      } else {
+        return optionPlayer;
+      }
+    });
+
     return {
       store,
       config,
       isHandlerUpdated,
       isLocked,
-      cardsLength,
+      cards,
+      selectedSpot,
+      selectedChance,
+      currentBoard,
+      results,
+      totalBetAmount,
       onUpdateSpot,
       displayMode,
       statsMode,
+      displayOptions,
       updateDisplayMode,
       updateDisplayOptions,
       copySuccess,
       copyRangeTextToClipboard,
       resetCopySuccess,
+      autoPlayer,
+      displayPlayer,
     };
   },
 });

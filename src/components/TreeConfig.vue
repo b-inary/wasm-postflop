@@ -2,50 +2,90 @@
   <div v-if="!isEditMode">
     <div class="flex">
       <div class="shrink-0">
-        <div class="flex my-1">
+        <div class="flex my-1 gap-8">
           <div>
-            Starting pot:
-            <input
-              v-model="config.startingPot"
-              type="number"
-              :class="
-                'ml-2 w-24 px-2 py-1 rounded-lg text-sm text-center ' +
-                (config.startingPot <= 0 ||
-                config.startingPot > 100000 ||
-                config.startingPot % 1 !== 0
-                  ? 'input-error'
-                  : '')
-              "
-              :disabled="hasEdit"
-              min="0"
-              max="100000"
-            />
+            <div class="my-1">
+              <span class="inline-block w-[7.25rem]">Starting pot:</span>
+              <input
+                v-model="config.startingPot"
+                type="number"
+                :class="
+                  'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
+                  (config.startingPot <= 0 ||
+                  config.startingPot > 100000 ||
+                  config.startingPot % 1 !== 0
+                    ? 'input-error'
+                    : '')
+                "
+                :disabled="hasEdit"
+                min="0"
+                max="100000"
+              />
+            </div>
+
+            <div class="my-1">
+              <span class="inline-block w-[7.25rem]">Effective stack:</span>
+              <input
+                v-model="config.effectiveStack"
+                type="number"
+                :class="
+                  'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
+                  (config.effectiveStack <= 0 ||
+                  config.effectiveStack > 100000 ||
+                  config.effectiveStack % 1 !== 0
+                    ? 'input-error'
+                    : '')
+                "
+                :disabled="hasEdit"
+                min="0"
+                max="100000"
+              />
+            </div>
           </div>
 
-          <div class="ml-5">
-            Effective stack:
-            <input
-              v-model="config.effectiveStack"
-              type="number"
-              :class="
-                'ml-2 w-24 px-2 py-1 rounded-lg text-sm text-center ' +
-                (config.effectiveStack <= 0 ||
-                config.effectiveStack > 100000 ||
-                config.effectiveStack % 1 !== 0
-                  ? 'input-error'
-                  : '')
-              "
-              :disabled="hasEdit"
-              min="0"
-              max="100000"
-            />
+          <div>
+            <div class="my-1">
+              <span class="inline-block w-20">Rake:</span>
+              <input
+                v-model="config.rakePercent"
+                type="number"
+                :class="
+                  'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
+                  (config.rakePercent < 0 || config.rakePercent > 100
+                    ? 'input-error'
+                    : '')
+                "
+                :disabled="hasEdit"
+                min="0"
+                max="100"
+                step="0.5"
+              />
+              %
+            </div>
+
+            <div class="my-1">
+              <span class="inline-block w-20">Rake cap:</span>
+              <input
+                v-model="config.rakeCap"
+                type="number"
+                :class="
+                  'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
+                  (config.rakeCap < 0 || config.rakeCap > 100000
+                    ? 'input-error'
+                    : '')
+                "
+                :disabled="hasEdit"
+                min="0"
+                max="100000"
+              />
+            </div>
           </div>
 
-          <div class="flex-grow"></div>
-
-          <button class="button-base button-blue" @click="clearConfig">
-            Clear
-          </button>
+          <div class="ml-auto p-1">
+            <button class="button-base button-blue" @click="clearConfig">
+              Clear
+            </button>
+          </div>
         </div>
 
         <div class="mt-6">
@@ -63,7 +103,8 @@
               </span>
             </label>
           </p>
-          <div class="flex flex-row">
+
+          <div class="flex gap-5">
             <div>
               <p class="my-1 underline">Flop</p>
               <p class="my-1">
@@ -102,7 +143,7 @@
               </p>
             </div>
 
-            <div class="ml-5">
+            <div>
               <p class="my-1 underline">Turn</p>
               <p class="my-1">
                 <span class="inline-block w-14">Bet:</span>
@@ -157,7 +198,7 @@
               </p>
             </div>
 
-            <div class="ml-5">
+            <div>
               <p class="my-1 underline">River</p>
               <p class="my-1">
                 <span class="inline-block w-14">Bet:</span>
@@ -235,7 +276,7 @@
             </div>
           </div>
 
-          <div class="flex flex-row">
+          <div class="flex gap-5">
             <div>
               <p class="my-1 underline">Flop</p>
               <p class="my-1">
@@ -274,7 +315,7 @@
               </p>
             </div>
 
-            <div class="ml-5">
+            <div>
               <p class="my-1 underline">Turn</p>
               <p class="my-1">
                 <span class="inline-block w-14">Bet:</span>
@@ -312,7 +353,7 @@
               </p>
             </div>
 
-            <div class="ml-5">
+            <div>
               <p class="my-1 underline">River</p>
               <p class="my-1">
                 <span class="inline-block w-14">Bet:</span>
@@ -355,12 +396,14 @@
         <div class="flex mt-6 gap-4">
           <div>
             <p class="my-1">
-              <span class="inline-block w-40">Add all-in threshold:</span>
+              <span class="inline-block w-[10.5rem]">
+                Add all-in threshold:
+              </span>
               <input
                 v-model="config.addAllInThreshold"
                 type="number"
                 :class="
-                  'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+                  'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
                   (config.addAllInThreshold < 0 ? 'input-error' : '')
                 "
                 :disabled="hasEdit"
@@ -371,12 +414,14 @@
             </p>
 
             <p class="my-1">
-              <span class="inline-block w-40">Force all-in threshold:</span>
+              <span class="inline-block w-[10.5rem]">
+                Force all-in threshold:
+              </span>
               <input
                 v-model="config.forceAllInThreshold"
                 type="number"
                 :class="
-                  'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+                  'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
                   (config.forceAllInThreshold < 0 ? 'input-error' : '')
                 "
                 :disabled="hasEdit"
@@ -387,12 +432,12 @@
             </p>
 
             <p class="my-1">
-              <span class="inline-block w-40">Merging threshold:</span>
+              <span class="inline-block w-[10.5rem]">Merging threshold:</span>
               <input
                 v-model="config.mergingThreshold"
                 type="number"
                 :class="
-                  'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+                  'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
                   (config.mergingThreshold < 0 ? 'input-error' : '')
                 "
                 :disabled="hasEdit"
@@ -478,6 +523,8 @@ import TreeEditor from "./TreeEditor.vue";
 type ConfigValue = {
   startingPot: number;
   effectiveStack: number;
+  rakePercent: number;
+  rakeCap: number;
   donkOption: number;
   oopFlopBet: string;
   oopFlopRaise: string;
@@ -558,6 +605,10 @@ export default defineComponent({
         config.effectiveStack > 0 &&
         config.effectiveStack <= 100000 &&
         config.effectiveStack % 1 === 0 &&
+        config.rakePercent >= 0 &&
+        config.rakePercent <= 100 &&
+        config.rakeCap >= 0 &&
+        config.rakeCap <= 100000 &&
         !isOopError.value &&
         !isIpError.value &&
         config.addAllInThreshold >= 0 &&
@@ -568,6 +619,8 @@ export default defineComponent({
     const clearConfig = () => {
       config.startingPot = 0;
       config.effectiveStack = 0;
+      config.rakePercent = 0;
+      config.rakeCap = 0;
       config.donkOption = false;
       config.oopFlopBet = "";
       config.oopFlopRaise = "";
@@ -613,6 +666,8 @@ export default defineComponent({
       (): ConfigValue => ({
         startingPot: config.startingPot,
         effectiveStack: config.effectiveStack,
+        rakePercent: config.rakePercent,
+        rakeCap: config.rakeCap,
         donkOption: Number(config.donkOption),
         oopFlopBet: config.oopFlopBet,
         oopFlopRaise: config.oopFlopRaise,
@@ -641,6 +696,8 @@ export default defineComponent({
       const configValue = value as ConfigValue;
       config.startingPot = configValue.startingPot;
       config.effectiveStack = configValue.effectiveStack;
+      config.rakePercent = configValue.rakePercent;
+      config.rakeCap = configValue.rakeCap;
       config.donkOption = Boolean(configValue.donkOption);
       config.oopFlopBet = configValue.oopFlopBet;
       config.oopFlopRaise = configValue.oopFlopRaise;

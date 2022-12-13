@@ -22,6 +22,8 @@ function createHandler(mod: Mod) {
       flop: Uint8Array,
       startingPot: number,
       effectiveStack: number,
+      rakePercent: number,
+      rakeCap: number,
       donkOption: boolean,
       oopFlopBet: string,
       oopFlopRaise: string,
@@ -49,6 +51,8 @@ function createHandler(mod: Mod) {
         flop,
         startingPot,
         effectiveStack,
+        rakePercent,
+        rakeCap,
         donkOption,
         oopFlopBet,
         oopFlopRaise,
@@ -104,20 +108,20 @@ function createHandler(mod: Mod) {
       this.game.apply_history(history);
     },
 
-    totalBetAmount() {
-      return this.game.total_bet_amount();
+    totalBetAmount(append: Uint32Array) {
+      return this.game.total_bet_amount(append);
     },
 
     currentPlayer() {
-      return this.game.current_player();
+      return this.game.current_player() as "oop" | "ip" | "chance" | "terminal";
     },
 
-    actions() {
-      return this.game.actions();
+    numActions() {
+      return this.game.num_actions();
     },
 
-    actionsAfterChance() {
-      return this.game.actions_after_chance();
+    actionsAfterHistory(append: Uint32Array) {
+      return this.game.actions_after_history(append);
     },
 
     possibleCards() {
@@ -126,6 +130,14 @@ function createHandler(mod: Mod) {
 
     getResults(): ReadonlyBuffer {
       const ret = this.game.get_results();
+      return {
+        ptr: ret.pointer,
+        byteLength: ret.byte_length,
+      };
+    },
+
+    getChanceReports(append: Uint32Array, num_actions: number): ReadonlyBuffer {
+      const ret = this.game.get_chance_reports(append, num_actions);
       return {
         ptr: ret.pointer,
         byteLength: ret.byte_length,
