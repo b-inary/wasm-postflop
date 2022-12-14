@@ -130,7 +130,7 @@ impl GameManager {
         if !added_lines.is_empty() {
             for added_line in added_lines.split(',') {
                 let line = added_line
-                    .split(&['>', '|'][..])
+                    .split(&['-', '|'][..])
                     .map(decode_action)
                     .collect::<Vec<_>>();
                 action_tree.add_line(&line).unwrap();
@@ -140,7 +140,7 @@ impl GameManager {
         if !removed_lines.is_empty() {
             for removed_line in removed_lines.split(',') {
                 let line = removed_line
-                    .split(&['>', '|'][..])
+                    .split(&['-', '|'][..])
                     .map(decode_action)
                     .collect::<Vec<_>>();
                 action_tree.remove_line(&line).unwrap();

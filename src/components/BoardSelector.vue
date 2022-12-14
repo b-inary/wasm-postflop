@@ -21,13 +21,14 @@
 
   <div
     v-if="
+      config.board.length >= 3 &&
       config.expectedBoardLength > 0 &&
       config.board.length !== config.expectedBoardLength
     "
-    class="mt-5 text-red-600"
+    class="mt-5 font-bold text-orange-500"
   >
-    <span class="font-bold underline">Warning:</span>
-    Edited tree assumes a {{ config.expectedBoardLength }}-card board.
+    <span class="underline">Warning:</span>
+    The edited tree assumes a {{ config.expectedBoardLength }}-card board.
   </div>
 </template>
 

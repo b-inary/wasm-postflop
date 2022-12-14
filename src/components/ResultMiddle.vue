@@ -1,50 +1,82 @@
 <template>
   <div class="flex h-12 border-y border-gray-500">
     <button
-      v-for="mode in ['Basics', 'Graphs', 'Scatter', 'Compare']"
+      v-for="mode in ['basics', 'compare', 'graphs', 'scatter'] as const"
       :key="mode"
       :class="
-        'flex w-[10%] h-full items-center justify-center font-bold text-lg transition ' +
-        (statsMode === ''
-          ? displayMode === mode.toLowerCase()
+        'flex w-[9%] h-full items-center justify-center font-bold text-lg transition ' +
+        (chanceMode === ''
+          ? displayMode === mode
             ? 'bg-blue-100 underline'
             : 'hover:bg-blue-100'
-          : displayMode === mode.toLowerCase()
+          : displayMode === mode
           ? 'bg-red-100 underline'
-          : 'bg-red-100')
+          : 'hover:bg-red-100')
       "
-      @click="updateDisplayMode(mode.toLowerCase())"
+      @click="updateDisplayMode(mode)"
     >
-      {{ mode }}
+      {{ mode[0].toUpperCase() + mode.slice(1) }}
     </button>
     <button
       :class="
-        'flex w-[10%] h-full items-center justify-center font-bold text-lg transition enabled:hover:bg-blue-100 ' +
-        (displayMode === 'stats' ? 'bg-blue-100 underline' : '')
+        'flex w-[9%] h-full items-center justify-center font-bold text-lg transition enabled:hover:bg-blue-100 ' +
+        (displayMode === 'chance' ? 'bg-blue-100 underline' : '')
       "
-      :disabled="statsMode === ''"
-      @click="updateDisplayMode('stats')"
+      :disabled="chanceMode === ''"
+      @click="updateDisplayMode('chance')"
     >
-      {{ statsMode }}
+      {{
+        chanceMode !== ""
+          ? chanceMode[0].toUpperCase() + chanceMode.slice(1)
+          : ""
+      }}
     </button>
 
     <div
-      class="flex flex-grow shrink-0 h-full pl-2 items-center justify-start gap-2 snug"
+      class="flex flex-grow shrink-0 h-full pl-4 items-center justify-start gap-2 snug"
     >
-      <div class="flex flex-col items-start justify-center h-full">
+      <div class="flex-grow"></div>
+
+      <div
+        v-if="displayMode === 'basics'"
+        class="flex flex-col items-start justify-center h-full"
+      >
         <div class="text-sm">Player:</div>
         <select
-          v-model="displayOptions.player"
+          v-model="displayOptions.playerBasics"
           class="w-28 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
           @change="updateDisplayOptions"
         >
-          <option value="auto">Auto ({{ autoPlayer.toUpperCase() }})</option>
+          <option value="auto">
+            Auto ({{ autoPlayerBasics.toUpperCase() }})
+          </option>
           <option value="oop">OOP</option>
           <option value="ip">IP</option>
         </select>
       </div>
 
-      <div class="flex flex-col items-start justify-center h-full">
+      <div
+        v-if="displayMode === 'chance'"
+        class="flex flex-col items-start justify-center h-full"
+      >
+        <div class="text-sm">Player:</div>
+        <select
+          v-model="displayOptions.playerChance"
+          class="w-28 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+          @change="updateDisplayOptions"
+        >
+          <option value="auto">
+            Auto ({{ autoPlayerChance.toUpperCase() }})
+          </option>
+          <option value="oop">OOP</option>
+          <option value="ip">IP</option>
+        </select>
+      </div>
+
+      <div
+        v-if="['basics', 'compare'].includes(displayMode)"
+        class="flex flex-col items-start justify-center h-full"
+      >
         <div class="text-sm">Bar Height:</div>
         <select
           v-model="displayOptions.barHeight"
@@ -57,7 +89,10 @@
         </select>
       </div>
 
-      <div class="flex flex-col items-start justify-center h-full">
+      <div
+        v-if="['basics', 'compare'].includes(displayMode)"
+        class="flex flex-col items-start justify-center h-full"
+      >
         <div class="text-sm">Suit:</div>
         <select
           v-model="displayOptions.suit"
@@ -69,7 +104,10 @@
         </select>
       </div>
 
-      <div class="flex flex-col items-start justify-center h-full">
+      <div
+        v-if="['basics', 'compare'].includes(displayMode)"
+        class="flex flex-col items-start justify-center h-full"
+      >
         <div class="text-sm">Display:</div>
         <select
           v-model="strategyContentPair"
@@ -87,9 +125,25 @@
         </select>
       </div>
 
-      <div class="flex-grow"></div>
+      <div
+        v-if="displayMode === 'chance'"
+        class="flex flex-col items-start justify-center h-full"
+      >
+        <div class="text-sm">Display:</div>
+        <select
+          v-model="displayOptions.contentChance"
+          class="w-24 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+          @change="updateDisplayOptions"
+        >
+          <option value="strategy">Strategy</option>
+          <option value="combos">Combos</option>
+          <option value="eq">Equity</option>
+          <option value="ev">EV</option>
+          <option value="eqr">EQR</option>
+        </select>
+      </div>
 
-      <div class="flex items-center pr-4 gap-4">
+      <div class="flex items-center px-4 gap-4">
         <Tippy content="Copy range text to clipboard">
           <button
             :class="
@@ -127,7 +181,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, ref } from "vue";
+import { defineComponent, reactive, ref, toRefs, watch } from "vue";
 import { Tippy } from "vue-tippy";
 
 import { ComputerDesktopIcon } from "@heroicons/vue/24/solid";
@@ -136,7 +190,7 @@ import {
   ClipboardDocumentCheckIcon,
 } from "@heroicons/vue/24/outline";
 
-import { DisplayMode, DisplayOptions } from "../result-types";
+import * as Types from "../result-types";
 
 export default defineComponent({
   components: {
@@ -148,14 +202,18 @@ export default defineComponent({
 
   props: {
     displayMode: {
+      type: String as () => Types.DisplayMode,
+      required: true,
+    },
+    chanceMode: {
       type: String,
       required: true,
     },
-    statsMode: {
-      type: String,
+    autoPlayerBasics: {
+      type: String as () => "oop" | "ip",
       required: true,
     },
-    autoPlayer: {
+    autoPlayerChance: {
       type: String as () => "oop" | "ip",
       required: true,
     },
@@ -166,55 +224,76 @@ export default defineComponent({
   },
 
   emits: {
-    "update:display-mode": (_displayMode: DisplayMode) => true,
-    "update:display-options": (_displayOptions: DisplayOptions) => true,
+    "update:display-mode": (_displayMode: Types.DisplayMode) => true,
+    "update:display-options": (_displayOptions: Types.DisplayOptions) => true,
     "copy-to-clipboard": () => true,
     "reset-copy-success": () => true,
   },
 
-  setup(_, context) {
+  setup(props, context) {
+    const { chanceMode } = toRefs(props);
+    let displayModeOld = "basics" as Types.DisplayMode;
+
+    watch(chanceMode, (newValue, oldValue) => {
+      if (newValue && !oldValue) {
+        displayModeOld = props.displayMode;
+        context.emit("update:display-mode", "chance");
+      } else if (!newValue && oldValue) {
+        context.emit("update:display-mode", displayModeOld);
+      }
+    });
+
     const displayOptions = reactive({
-      player: "auto",
+      playerBasics: "auto",
+      playerChance: "auto",
       barHeight: "normalized",
       suit: "grouped",
       strategy: "show",
-      content: "default",
-    } as DisplayOptions);
+      contentBasics: "default",
+      contentChance: "strategy",
+    } as Types.DisplayOptions);
 
     const strategyContentPair = ref("show,default");
 
     const savedDisplayOptions = localStorage.getItem("display-options");
     if (savedDisplayOptions) {
-      const parsed = JSON.parse(savedDisplayOptions);
-      if (["normalized", "full", "absolute"].includes(parsed?.barHeight)) {
+      const parsed = JSON.parse(savedDisplayOptions) as Types.DisplayOptions;
+      if (Types.barHeightList.includes(parsed?.barHeight)) {
         displayOptions.barHeight = parsed.barHeight;
       }
-      if (["grouped", "individual"].includes(parsed?.suit)) {
+      if (Types.suitList.includes(parsed?.suit)) {
         displayOptions.suit = parsed.suit;
       }
-      if (["show", "none"].includes(parsed?.strategy)) {
+      if (Types.strategyList.includes(parsed?.strategy)) {
         displayOptions.strategy = parsed.strategy;
       }
-      if (["default", "eq", "ev", "eqr"].includes(parsed?.content)) {
-        displayOptions.content = parsed.content;
+      if (Types.contentBasicsList.includes(parsed?.contentBasics)) {
+        displayOptions.contentBasics = parsed.contentBasics;
+      }
+      if (Types.contentChanceList.includes(parsed?.contentChance)) {
+        displayOptions.contentChance = parsed.contentChance;
       }
       strategyContentPair.value = [
         displayOptions.strategy,
-        displayOptions.content,
+        displayOptions.contentBasics,
       ].join(",");
       context.emit("update:display-options", displayOptions);
     }
 
-    const updateDisplayMode = (displayMode: string) => {
-      context.emit("update:display-mode", displayMode as DisplayMode);
+    const updateDisplayMode = (displayMode: Types.DisplayMode) => {
+      if (displayMode !== "chance") {
+        displayModeOld = displayMode;
+      }
+      context.emit("update:display-mode", displayMode);
     };
 
     const updateDisplayOptions = () => {
+      const options = displayOptions;
       const [strategy, content] = strategyContentPair.value.split(",");
-      displayOptions.strategy = strategy as DisplayOptions["strategy"];
-      displayOptions.content = content as DisplayOptions["content"];
-      localStorage.setItem("display-options", JSON.stringify(displayOptions));
-      context.emit("update:display-options", displayOptions);
+      options.strategy = strategy as Types.DisplayOptions["strategy"];
+      options.contentBasics = content as Types.DisplayOptions["contentBasics"];
+      localStorage.setItem("display-options", JSON.stringify(options));
+      context.emit("update:display-options", options);
     };
 
     const copyToClipboard = () => {

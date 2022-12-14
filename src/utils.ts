@@ -91,6 +91,9 @@ const parseFloat = (s: string): number => {
   }
 };
 
+export const MAX_AMOUNT = 30000;
+export const MAX_BET_SIZES = 30;
+
 export const sanitizeBetString = (
   s: string,
   is_raise: boolean
@@ -98,15 +101,15 @@ export const sanitizeBetString = (
   const trimmed = s.trim();
   if (trimmed === "") return { s: "", valid: true };
 
-  const split = trimmed.split(",");
-  const elements = split.map((s) => s.trim().toLowerCase());
+  const split = trimmed.split(",").flatMap((s) => s.trim().split(" "));
+  const elements = split.map((s) => s.toLowerCase());
 
   if (elements[elements.length - 1] === "") {
     elements.pop();
   }
 
-  if (elements.length > 30) {
-    return { s: "Too many specifications", valid: false };
+  if (elements.length > MAX_BET_SIZES) {
+    return { s: "Too many bet sizes", valid: false };
   }
 
   let sanitized = "";
@@ -127,7 +130,7 @@ export const sanitizeBetString = (
       } else {
         const float = parseFloat(e.slice(0, -1));
         if (Number.isNaN(float)) {
-          return { s: `Invalid number: ${e}`, valid: false };
+          return { s: `Invalid multiplicative size: ${e}`, valid: false };
         } else if (float <= 1.0) {
           return { s: `Multiplier must be greater than 1: ${e}`, valid: false };
         } else {
@@ -138,10 +141,10 @@ export const sanitizeBetString = (
       // Additive
       const float = parseFloat(e.slice(0, -1));
       if (Number.isNaN(float)) {
-        return { s: `Invalid number: ${e}`, valid: false };
+        return { s: `Invalid additive size: ${e}`, valid: false };
       } else if (float % 1 !== 0) {
         return { s: `Addition size must be an integer: ${e}`, valid: false };
-      } else if (float > 100000) {
+      } else if (float > MAX_AMOUNT) {
         return { s: `Addition size too large: ${e}`, valid: false };
       } else {
         sanitized += `${float}c`;
@@ -150,13 +153,13 @@ export const sanitizeBetString = (
       // Geometric
       const split = e.split("e");
       if (split.length !== 2) {
-        return { s: `Invalid geometric specification: ${e}`, valid: false };
+        return { s: `Invalid geometric size: ${e}`, valid: false };
       }
       const float1 = split[0] === "" ? null : parseFloat(split[0]);
       const float2 = split[1] === "" ? null : parseFloat(split[1]);
       if (float1 !== null) {
         if (Number.isNaN(float1)) {
-          return { s: `Invalid number: ${e}`, valid: false };
+          return { s: `Invalid geometric size: ${e}`, valid: false };
         } else if (float1 % 1 !== 0 || float1 === 0) {
           return {
             s: `Geometric size must be a positive integer: ${e}`,
@@ -167,7 +170,7 @@ export const sanitizeBetString = (
         }
       }
       if (float2 !== null && Number.isNaN(float2)) {
-        return { s: `Invalid number: ${e}`, valid: false };
+        return { s: `Invalid geometric size: ${e}`, valid: false };
       }
       sanitized += `${float1 ?? ""}e${float2 ?? ""}`;
     } else if (e === "a") {
@@ -177,7 +180,7 @@ export const sanitizeBetString = (
       // Pot relative
       const float = parseFloat(e);
       if (Number.isNaN(float)) {
-        return { s: `Invalid number: ${e}`, valid: false };
+        return { s: `Invalid bet size: ${e}`, valid: false };
       }
       sanitized += `${float}`;
     }
@@ -211,11 +214,11 @@ export const readableLineString = (s: string): string => {
   let index = 0;
 
   while (index < s.length) {
-    if (s[index] === ">") {
-      ret += " > ";
+    if (s[index] === "-") {
+      ret += " - ";
       index += 1;
     } else if (s[index] === "|") {
-      ret += " | ";
+      ret += ", ";
       index += 1;
     } else if (s[index] === "F") {
       ret += "Fold";

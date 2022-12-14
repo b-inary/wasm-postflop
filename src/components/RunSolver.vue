@@ -203,7 +203,7 @@ import {
   saveConfig,
   saveConfigTmp,
 } from "../store";
-import { convertBetString } from "../utils";
+import { MAX_AMOUNT, convertBetString } from "../utils";
 import { detect } from "detect-browser";
 
 const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024;
@@ -221,7 +221,7 @@ const checkConfig = (
     return "Starting pot must be positive";
   }
 
-  if (config.startingPot > 100000) {
+  if (config.startingPot > MAX_AMOUNT) {
     return "Starting pot is too large";
   }
 
@@ -233,7 +233,7 @@ const checkConfig = (
     return "Effective stack must be positive";
   }
 
-  if (config.effectiveStack > 100000) {
+  if (config.effectiveStack > MAX_AMOUNT) {
     return "Effective stack is too large";
   }
 

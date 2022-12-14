@@ -9,12 +9,12 @@ pub struct TreeManager {
 
 fn action_to_string(action: Action) -> String {
     match action {
-        Action::Fold => "Fold".to_string(),
-        Action::Check => "Check".to_string(),
-        Action::Call => "Call".to_string(),
-        Action::Bet(amount) => format!("Bet {}", amount),
-        Action::Raise(amount) => format!("Raise {}", amount),
-        Action::AllIn(amount) => format!("All-in {}", amount),
+        Action::Fold => "Fold:0".to_string(),
+        Action::Check => "Check:0".to_string(),
+        Action::Call => "Call:0".to_string(),
+        Action::Bet(amount) => format!("Bet:{}", amount),
+        Action::Raise(amount) => format!("Raise:{}", amount),
+        Action::AllIn(amount) => format!("Allin:{}", amount),
         _ => unreachable!(),
     }
 }
@@ -41,7 +41,7 @@ fn encode_line(line: &[Action]) -> String {
 
     for &action in line {
         if !encoded.is_empty() {
-            let delimiter = if flag == 2 { "|" } else { ">" };
+            let delimiter = if flag == 2 { "|" } else { "-" };
             encoded.push_str(delimiter);
         }
         match action {
@@ -144,7 +144,7 @@ impl TreeManager {
         if !added_lines.is_empty() {
             for line in added_lines.split(',') {
                 let line = line
-                    .split(&['>', '|'][..])
+                    .split(&['-', '|'][..])
                     .map(decode_action)
                     .collect::<Vec<_>>();
                 tree.add_line(&line).unwrap();
@@ -154,7 +154,7 @@ impl TreeManager {
         if !removed_lines.is_empty() {
             for line in removed_lines.split(',') {
                 let line = line
-                    .split(&['>', '|'][..])
+                    .split(&['-', '|'][..])
                     .map(decode_action)
                     .collect::<Vec<_>>();
                 tree.remove_line(&line).unwrap();
@@ -186,7 +186,6 @@ impl TreeManager {
         self.tree
             .invalid_terminals()
             .iter()
-            .rev()
             .map(|l| encode_line(l))
             .collect::<Vec<_>>()
             .join(",")
@@ -194,36 +193,48 @@ impl TreeManager {
 
     pub fn actions(&self) -> String {
         self.tree
-            .actions()
+            .available_actions()
             .iter()
-            .rev()
             .cloned()
             .map(action_to_string)
             .collect::<Vec<_>>()
             .join("/")
     }
 
-    pub fn is_terminal_action(&self) -> u32 {
-        self.tree
-            .is_terminal_action()
-            .iter()
-            .rev()
-            .enumerate()
-            .fold(0, |acc, (i, &x)| acc | (x as u32) << i)
+    pub fn is_terminal_node(&self) -> bool {
+        self.tree.is_terminal_node()
     }
 
     pub fn is_chance_node(&self) -> bool {
         self.tree.is_chance_node()
     }
 
-    pub fn play(&mut self, index: usize) {
-        let actions = self.tree.actions();
-        let action = actions[actions.len() - index - 1];
-        self.tree.play(action).unwrap();
+    pub fn back_to_root(&mut self) {
+        self.tree.back_to_root();
     }
 
-    pub fn undo(&mut self) {
-        self.tree.undo().unwrap();
+    pub fn apply_history(&mut self, line: &str) {
+        let line = if line.is_empty() {
+            vec![]
+        } else {
+            line.split('-').map(decode_action).collect::<Vec<_>>()
+        };
+        self.tree.apply_history(&line).unwrap();
+    }
+
+    pub fn play(&mut self, action: &str) -> i32 {
+        let action = decode_action(action);
+        let available_actions = self.tree.available_actions();
+        if let Some(index) = available_actions.iter().position(|&a| a == action) {
+            self.tree.play(action).unwrap();
+            index as i32
+        } else {
+            -1
+        }
+    }
+
+    pub fn total_bet_amount(&self) -> Box<[i32]> {
+        self.tree.total_bet_amount().to_vec().into_boxed_slice()
     }
 
     pub fn add_bet_action(&mut self, amount: i32, is_raise: bool) {
@@ -240,7 +251,7 @@ impl TreeManager {
 
     pub fn delete_added_line(&mut self, line: &str) {
         let line = line
-            .split(&['>', '|'][..])
+            .split(&['-', '|'][..])
             .map(decode_action)
             .collect::<Vec<_>>();
         self.tree.remove_line(&line).unwrap();
@@ -248,7 +259,7 @@ impl TreeManager {
 
     pub fn delete_removed_line(&mut self, line: &str) {
         let line = line
-            .split(&['>', '|'][..])
+            .split(&['-', '|'][..])
             .map(decode_action)
             .collect::<Vec<_>>();
         self.tree.add_line(&line).unwrap();

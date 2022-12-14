@@ -12,14 +12,14 @@
                 :class="
                   'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
                   (config.startingPot <= 0 ||
-                  config.startingPot > 100000 ||
+                  config.startingPot > MAX_AMOUNT ||
                   config.startingPot % 1 !== 0
                     ? 'input-error'
                     : '')
                 "
                 :disabled="hasEdit"
                 min="0"
-                max="100000"
+                :max="MAX_AMOUNT"
               />
             </div>
 
@@ -31,14 +31,14 @@
                 :class="
                   'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
                   (config.effectiveStack <= 0 ||
-                  config.effectiveStack > 100000 ||
+                  config.effectiveStack > MAX_AMOUNT ||
                   config.effectiveStack % 1 !== 0
                     ? 'input-error'
                     : '')
                 "
                 :disabled="hasEdit"
                 min="0"
-                max="100000"
+                :max="MAX_AMOUNT"
               />
             </div>
           </div>
@@ -70,13 +70,13 @@
                 type="number"
                 :class="
                   'w-24 px-2 py-1 rounded-lg text-sm text-center ' +
-                  (config.rakeCap < 0 || config.rakeCap > 100000
+                  (config.rakeCap < 0 || config.rakeCap > 3 * MAX_AMOUNT
                     ? 'input-error'
                     : '')
                 "
                 :disabled="hasEdit"
                 min="0"
-                max="100000"
+                :max="3 * MAX_AMOUNT"
               />
             </div>
           </div>
@@ -85,6 +85,15 @@
             <button class="button-base button-blue" @click="clearConfig">
               Clear
             </button>
+          </div>
+        </div>
+
+        <div v-if="errorBasics.length > 0" class="flex font-bold text-red-500">
+          <div class="underline">Error:</div>
+          <div class="ml-2">
+            <div v-for="error in errorBasics" :key="error">
+              {{ error }}
+            </div>
           </div>
         </div>
 
@@ -261,14 +270,14 @@
             <div class="flex flex-grow items-center justify-center gap-6">
               <button
                 class="mt-3 button-base button-blue button-arrow"
-                :disabled="isIpError || hasEdit"
+                :disabled="errorIp.length > 0 || hasEdit"
                 @click="ipToOop"
               >
                 ↑
               </button>
               <button
                 class="mt-3 button-base button-blue button-arrow"
-                :disabled="isOopError || hasEdit"
+                :disabled="errorOop.length > 0 || hasEdit"
                 @click="oopToIp"
               >
                 ↓
@@ -393,6 +402,21 @@
           </div>
         </div>
 
+        <div
+          v-if="errorOop.length > 0 || errorIp.length > 0"
+          class="flex mt-1 font-bold text-red-500"
+        >
+          <div class="underline">Error:</div>
+          <div class="ml-2">
+            <div v-for="error in errorOop" :key="error">
+              {{ error }}
+            </div>
+            <div v-for="error in errorIp" :key="error">
+              {{ error }}
+            </div>
+          </div>
+        </div>
+
         <div class="flex mt-6 gap-4">
           <div>
             <p class="my-1">
@@ -408,7 +432,7 @@
                 "
                 :disabled="hasEdit"
                 min="0"
-                max="10000000"
+                :max="MAX_AMOUNT * 100"
               />
               %
             </p>
@@ -426,7 +450,7 @@
                 "
                 :disabled="hasEdit"
                 min="0"
-                max="10000000"
+                :max="MAX_AMOUNT * 100"
               />
               %
             </p>
@@ -442,7 +466,7 @@
                 "
                 :disabled="hasEdit"
                 min="0"
-                max="10000000"
+                :max="MAX_AMOUNT * 100"
               />
               %
             </p>
@@ -468,6 +492,34 @@
             </div>
           </div>
         </div>
+
+        <div
+          v-if="errorMisc.length > 0"
+          class="flex mt-1 font-bold text-red-500"
+        >
+          <div class="underline">Error:</div>
+          <div class="ml-2">
+            <div v-for="error in errorMisc" :key="error">
+              {{ error }}
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-if="warningMisc.length > 0"
+          class="flex mt-1 font-bold text-orange-500"
+        >
+          <div class="underline">Warning:</div>
+          <div class="ml-2">
+            <div
+              v-for="warning in warningMisc"
+              :key="warning"
+              class="whitespace-pre-line"
+            >
+              {{ warning }}
+            </div>
+          </div>
+        </div>
       </div>
 
       <DbItemPicker
@@ -483,8 +535,8 @@
       v-if="addedLinesArray.length > 0 || removedLinesArray.length > 0"
       class="mt-6"
     >
-      <div v-if="addedLinesArray.length > 0" class="flex mt-3">
-        <div class="font-bold underline w-32">
+      <div v-if="addedLinesArray.length > 0" class="flex">
+        <div class="font-bold underline w-[7.75rem]">
           Added line{{ addedLinesArray.length > 1 ? "s" : "" }}:
         </div>
         <div class="flex flex-col">
@@ -494,14 +546,31 @@
         </div>
       </div>
 
-      <div v-if="removedLinesArray.length > 0" class="flex mt-3">
-        <div class="font-bold underline w-32">
+      <div v-if="removedLinesArray.length > 0" class="flex mt-2">
+        <div class="font-bold underline w-[7.75rem]">
           Removed line{{ removedLinesArray.length > 1 ? "s" : "" }}:
         </div>
         <div class="flex flex-col">
           <div v-for="removedLine in removedLinesArray" :key="removedLine">
             {{ removedLine }}
           </div>
+        </div>
+      </div>
+
+      <div
+        v-if="
+          config.board.length >= 3 &&
+          config.expectedBoardLength > 0 &&
+          config.board.length !== config.expectedBoardLength
+        "
+        class="flex mt-2 font-bold text-orange-500"
+      >
+        <div class="underline">Warning:</div>
+        <div class="ml-2">
+          The edited tree assumes a {{ config.expectedBoardLength }}-card board,
+          but the current board consists of {{ config.board.length }} cards.
+          <br />
+          To reset the edited tree, click the "Clear Edit & Unlock" button.
         </div>
       </div>
     </div>
@@ -515,7 +584,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { useConfigStore } from "../store";
-import { readableLineString } from "../utils";
+import { MAX_AMOUNT, readableLineString } from "../utils";
 
 import DbItemPicker from "./DbItemPicker.vue";
 import TreeEditor from "./TreeEditor.vue";
@@ -575,45 +644,109 @@ export default defineComponent({
         : config.removedLines.split(",").map(readableLineString)
     );
 
-    const isOopError = computed(
-      () =>
-        !config.oopFlopBetSanitized.valid ||
-        !config.oopFlopRaiseSanitized.valid ||
-        !config.oopTurnBetSanitized.valid ||
-        !config.oopTurnRaiseSanitized.valid ||
-        !config.oopRiverBetSanitized.valid ||
-        !config.oopRiverRaiseSanitized.valid ||
-        (config.donkOption && !config.oopTurnDonkSanitized.valid) ||
-        (config.donkOption && !config.oopRiverDonkSanitized.valid)
-    );
+    const errorBasics = computed(() => {
+      const errors: string[] = [];
+      if (config.startingPot <= 0) {
+        errors.push("Starting pot must be positive");
+      }
+      if (config.startingPot > MAX_AMOUNT) {
+        errors.push(`Starting pot must not exceed ${MAX_AMOUNT}`);
+      }
+      if (config.startingPot % 1 !== 0) {
+        errors.push("Starting pot must be an integer");
+      }
+      if (config.effectiveStack <= 0) {
+        errors.push("Effective stack must be positive");
+      }
+      if (config.effectiveStack > MAX_AMOUNT) {
+        errors.push(`Effective stack must not exceed ${MAX_AMOUNT}`);
+      }
+      if (config.effectiveStack % 1 !== 0) {
+        errors.push("Effective stack must be an integer");
+      }
+      if (config.rakePercent < 0) {
+        errors.push("Rake must be non-negative");
+      }
+      if (config.rakePercent > 100) {
+        errors.push("Rake must not exceed 100%");
+      }
+      if (config.rakeCap < 0) {
+        errors.push("Rake cap must be non-negative");
+      }
+      if (config.rakeCap > 3 * MAX_AMOUNT) {
+        errors.push(`Rake cap must not exceed ${3 * MAX_AMOUNT}`);
+      }
+      return errors;
+    });
 
-    const isIpError = computed(
-      () =>
-        !config.ipFlopBetSanitized.valid ||
-        !config.ipFlopRaiseSanitized.valid ||
-        !config.ipTurnBetSanitized.valid ||
-        !config.ipTurnRaiseSanitized.valid ||
-        !config.ipRiverBetSanitized.valid ||
-        !config.ipRiverRaiseSanitized.valid
-    );
+    const errorOop = computed(() => {
+      const errors: string[] = [];
+      const betConfig = [
+        { name: "OOP flop bet", value: config.oopFlopBetSanitized },
+        { name: "OOP flop raise", value: config.oopFlopRaiseSanitized },
+        { name: "OOP turn bet", value: config.oopTurnBetSanitized },
+        { name: "OOP turn raise", value: config.oopTurnRaiseSanitized },
+        { name: "OOP turn donk", value: config.oopTurnDonkSanitized },
+        { name: "OOP river bet", value: config.oopRiverBetSanitized },
+        { name: "OOP river raise", value: config.oopRiverRaiseSanitized },
+        { name: "OOP river donk", value: config.oopRiverDonkSanitized },
+      ];
+      for (const { name, value } of betConfig) {
+        if (!value.valid) {
+          errors.push(`${name}: ${value.s}`);
+        }
+      }
+      return errors;
+    });
+
+    const errorIp = computed(() => {
+      const errors: string[] = [];
+      const betConfig = [
+        { name: "IP flop bet", value: config.ipFlopBetSanitized },
+        { name: "IP flop raise", value: config.ipFlopRaiseSanitized },
+        { name: "IP turn bet", value: config.ipTurnBetSanitized },
+        { name: "IP turn raise", value: config.ipTurnRaiseSanitized },
+        { name: "IP river bet", value: config.ipRiverBetSanitized },
+        { name: "IP river raise", value: config.ipRiverRaiseSanitized },
+      ];
+      for (const { name, value } of betConfig) {
+        if (!value.valid) {
+          errors.push(`${name}: ${value.s}`);
+        }
+      }
+      return errors;
+    });
+
+    const errorMisc = computed(() => {
+      const errors: string[] = [];
+      if (config.addAllInThreshold < 0) {
+        errors.push("Add all-in threshold must be non-negative");
+      }
+      if (config.forceAllInThreshold < 0) {
+        errors.push("Force all-in threshold must be non-negative");
+      }
+      if (config.mergingThreshold < 0) {
+        errors.push("Merging threshold must be non-negative");
+      }
+      return errors;
+    });
+
+    const warningMisc = computed(() => {
+      const warnings: string[] = [];
+      if (config.forceAllInThreshold > 30) {
+        warnings.push(
+          "Force all-in threshold higher than 30% is not recommended.\nPlease see help to confirm the meaning."
+        );
+      }
+      return warnings;
+    });
 
     const isInputValid = computed(
       () =>
-        config.startingPot > 0 &&
-        config.startingPot <= 100000 &&
-        config.startingPot % 1 === 0 &&
-        config.effectiveStack > 0 &&
-        config.effectiveStack <= 100000 &&
-        config.effectiveStack % 1 === 0 &&
-        config.rakePercent >= 0 &&
-        config.rakePercent <= 100 &&
-        config.rakeCap >= 0 &&
-        config.rakeCap <= 100000 &&
-        !isOopError.value &&
-        !isIpError.value &&
-        config.addAllInThreshold >= 0 &&
-        config.forceAllInThreshold >= 0 &&
-        config.mergingThreshold >= 0
+        errorBasics.value.length == 0 &&
+        errorOop.value.length == 0 &&
+        errorIp.value.length == 0 &&
+        errorMisc.value.length == 0
     );
 
     const clearConfig = () => {
@@ -751,13 +884,17 @@ export default defineComponent({
     };
 
     return {
+      MAX_AMOUNT,
       config,
       isEditMode,
       addedLinesArray,
       removedLinesArray,
       hasEdit,
-      isOopError,
-      isIpError,
+      errorBasics,
+      errorOop,
+      errorIp,
+      errorMisc,
+      warningMisc,
       isInputValid,
       clearConfig,
       oopToIp,

@@ -30,8 +30,9 @@
 
     <ResultMiddle
       :display-mode="displayMode"
-      :stats-mode="statsMode"
-      :auto-player="autoPlayer"
+      :chance-mode="chanceMode"
+      :auto-player-basics="autoPlayerBasics"
+      :auto-player-chance="autoPlayerChance"
       :copy-success="copySuccess"
       @update:display-mode="updateDisplayMode"
       @update:display-options="updateDisplayOptions"
@@ -50,7 +51,7 @@
           :total-bet-amount="totalBetAmount"
           :results="results"
           :display-options="displayOptions"
-          :display-player="displayPlayer"
+          :display-player="displayPlayerBasics"
           :is-compare-mode="false"
         />
         <div class="bg-gray-300" style="flex: 4"></div>
@@ -97,6 +98,7 @@ import {
   ChanceReports,
   Spot,
   SpotChance,
+  SpotPlayer,
   DisplayMode,
   DisplayOptions,
 } from "../result-types";
@@ -180,24 +182,22 @@ export default defineComponent({
       totalBetAmount.value = newTotalBetAmount;
       isLocked.value = false;
 
-      if (chanceReports.value) {
-        console.log("chance reports recieved!");
-      } else {
-        console.log("null chance reports");
-      }
+      chanceMode.value = newSelectedChance?.player ?? "";
     };
 
     /* Middle Bar */
 
-    const displayMode = ref("basics");
-    const statsMode = ref("");
+    const displayMode = ref<DisplayMode>("basics");
+    const chanceMode = ref("");
 
     const displayOptions = ref<DisplayOptions>({
-      player: "auto",
+      playerBasics: "auto",
+      playerChance: "auto",
       barHeight: "normalized",
       suit: "grouped",
       strategy: "show",
-      content: "default",
+      contentBasics: "default",
+      contentChance: "strategy",
     });
 
     const copySuccess = ref(0);
@@ -224,7 +224,7 @@ export default defineComponent({
 
     /* Computed */
 
-    const autoPlayer = computed(() => {
+    const autoPlayerBasics = computed(() => {
       const spot = selectedSpot.value;
       const chance = selectedChance.value;
       if (!spot) return "oop";
@@ -234,14 +234,33 @@ export default defineComponent({
       } else if (spot.type == "terminal") {
         return spot.prevPlayer;
       } else {
-        return spot.player as "oop" | "ip";
+        return (spot as SpotPlayer).player;
       }
     });
 
-    const displayPlayer = computed(() => {
-      const optionPlayer = displayOptions.value.player;
+    const autoPlayerChance = computed(() => {
+      const spot = selectedSpot.value;
+      if (!spot) return "oop";
+      if (spot.type === "terminal") {
+        return spot.prevPlayer;
+      } else {
+        return (spot as SpotPlayer).player;
+      }
+    });
+
+    const displayPlayerBasics = computed(() => {
+      const optionPlayer = displayOptions.value.playerBasics;
       if (optionPlayer === "auto") {
-        return autoPlayer.value;
+        return autoPlayerBasics.value;
+      } else {
+        return optionPlayer;
+      }
+    });
+
+    const displayPlayerChance = computed(() => {
+      const optionPlayer = displayOptions.value.playerChance;
+      if (optionPlayer === "auto") {
+        return autoPlayerChance.value;
       } else {
         return optionPlayer;
       }
@@ -260,15 +279,17 @@ export default defineComponent({
       totalBetAmount,
       onUpdateSpot,
       displayMode,
-      statsMode,
+      chanceMode,
       displayOptions,
       updateDisplayMode,
       updateDisplayOptions,
       copySuccess,
       copyRangeTextToClipboard,
       resetCopySuccess,
-      autoPlayer,
-      displayPlayer,
+      autoPlayerBasics,
+      autoPlayerChance,
+      displayPlayerBasics,
+      displayPlayerChance,
     };
   },
 });

@@ -1,3 +1,5 @@
+import { MAX_AMOUNT } from "./utils";
+
 export type ConfigValue1 = {
   startingPot: number;
   effectiveStack: number;
@@ -56,8 +58,8 @@ const migrateBetString1to2 = (s: string): string => {
 
 export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
   return {
-    startingPot: value.startingPot,
-    effectiveStack: value.effectiveStack,
+    startingPot: Math.min(value.startingPot, MAX_AMOUNT),
+    effectiveStack: Math.min(value.effectiveStack, MAX_AMOUNT),
     rakePercent: 0,
     rakeCap: 0,
     donkOption: 0,

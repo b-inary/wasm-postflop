@@ -1,23 +1,26 @@
 <template>
-  <div class="flex h-40 gap-0.5 p-0.5 overflow-x-auto whitespace-nowrap snug">
+  <div
+    ref="navDiv"
+    class="flex h-[10.25rem] gap-1 p-1 overflow-x-auto whitespace-nowrap snug"
+  >
     <div
       v-for="spot in spots"
       :key="spot.index"
       :class="
-        'flex flex-col h-full p-0.5 justify-start ' +
-        'rounded-md shadow-md border-2 transition group ' +
+        'flex flex-col h-full px-1 py-0.5 justify-start ' +
+        'rounded-lg shadow-md border-[3px] transition group ' +
         (spot.type === 'chance'
-          ? spot.index === pendingChanceIndex
+          ? isSelectedChanceSkipped
             ? ''
             : 'hover:border-red-600 '
           : 'hover:border-blue-600 ') +
         (spot.index === selectedChanceIndex
-          ? 'border-red-600'
+          ? 'border-red-600 cursor-default'
           : spot.index === selectedSpotIndex
-          ? 'border-blue-600'
-          : spot.index === pendingChanceIndex
-          ? 'border-gray-500'
-          : 'border-gray-500 cursor-pointer')
+          ? 'border-blue-600 cursor-default'
+          : spot.type === 'chance' && isSelectedChanceSkipped
+          ? 'border-gray-400 cursor-default'
+          : 'border-gray-400 cursor-pointer')
       "
       @click="selectSpot(spot.index, false)"
     >
@@ -25,8 +28,12 @@
       <template v-if="spot.type === 'root' || spot.type === 'chance'">
         <div
           :class="
-            'px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 ' +
-            (spot.index === selectedChanceIndex ? '' : 'opacity-70')
+            'px-1.5 pt-1 pb-0.5 font-bold ' +
+            (spot.index === selectedChanceIndex
+              ? ''
+              : isSelectedChanceSkipped
+              ? 'opacity-70'
+              : 'group-hover:opacity-100 opacity-70')
           "
         >
           {{ spot.player.toUpperCase() }}
@@ -38,15 +45,18 @@
             <span
               v-for="card of spotCards(spot)"
               :key="card.rank + card.suit"
-              :class="card.colorClass"
+              :class="'mx-px ' + card.colorClass"
             >
               {{ card.rank + card.suit }}
             </span>
           </div>
           <div
             :class="
-              'group-hover:opacity-100 ' +
-              (spot.index === selectedChanceIndex ? '' : 'opacity-70')
+              spot.index === selectedChanceIndex
+                ? ''
+                : isSelectedChanceSkipped
+                ? 'opacity-70'
+                : 'group-hover:opacity-100 opacity-70'
             "
           >
             <div>Pot {{ spot.pot }}</div>
@@ -73,7 +83,7 @@
               'flex w-full px-1.5 rounded-md transition-colors hover:bg-blue-100 ' +
               (action.isSelected ? 'bg-blue-100 ' : '')
             "
-            @click.prevent="play(spot.index, action.index)"
+            @click.stop="play(spot.index, action.index)"
           >
             <span class="inline-block relative w-4 mr-0.5">
               <span
@@ -105,7 +115,7 @@
                   : 'opacity-70')
               "
             >
-              [{{ (100 * rates[action.index]).toFixed(1) }}%]
+              [{{ (rates[action.index] * 100).toFixed(1) }}%]
             </span>
           </button>
         </div>
@@ -135,13 +145,13 @@
             <div class="flex w-full px-1.5">
               <span>OOP</span>
               <span class="ml-auto pl-2">
-                {{ (100 * spot.equityOop).toFixed(1) }}%
+                {{ (spot.equityOop * 100).toFixed(1) }}%
               </span>
             </div>
             <div class="flex w-full px-1.5">
               <span>IP</span>
               <span class="ml-auto pl-2">
-                {{ (100 * (1 - spot.equityOop)).toFixed(1) }}%
+                {{ ((1 - spot.equityOop) * 100).toFixed(1) }}%
               </span>
             </div>
           </div>
@@ -153,7 +163,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, toRefs, ref, watch } from "vue";
+import { computed, defineComponent, nextTick, toRefs, ref, watch } from "vue";
 import { useSavedConfigStore } from "../store";
 import { cardText, average, colorString } from "../utils";
 import { handler, memory, ReadonlyBuffer } from "../global-worker";
@@ -251,15 +261,15 @@ export default defineComponent({
   },
 
   setup(props, context) {
-    const { isHandlerUpdated } = toRefs(props);
+    const navDiv = ref<HTMLDivElement | null>(null);
 
     const config = useSavedConfigStore();
+    const { isHandlerUpdated } = toRefs(props);
 
     const spots = ref<Spot[]>([]);
     const rates = ref<number[] | null>(null);
     const selectedSpotIndex = ref(-1);
     const selectedChanceIndex = ref(-1);
-    const pendingChanceIndex = ref(-1);
 
     const selectedSpot = computed(() =>
       selectedSpotIndex.value === -1 ||
@@ -273,6 +283,10 @@ export default defineComponent({
         ? null
         : (spots.value[selectedChanceIndex.value] as SpotChance)
     );
+
+    const isSelectedChanceSkipped = computed(() => {
+      return selectedChance.value?.selectedIndex === -1;
+    });
 
     const currentBoard = computed(() => {
       const board = [...config.board];
@@ -289,7 +303,6 @@ export default defineComponent({
 
     let selectedSpotIndexTmp = -1;
     let selectedChanceIndexTmp = -1;
-    let pendingChanceIndexTmp = -1;
 
     let results: Results | null = null;
     let chanceReports: ChanceReports | null = null;
@@ -322,7 +335,9 @@ export default defineComponent({
         (!needSplice &&
           (spotIndex === selectedSpotIndex.value ||
             spotIndex === selectedChanceIndex.value ||
-            spotIndex === pendingChanceIndex.value))
+            (spotIndex < spots.value.length &&
+              spots.value[spotIndex].type === "chance" &&
+              isSelectedChanceSkipped.value)))
       ) {
         return;
       }
@@ -336,7 +351,6 @@ export default defineComponent({
 
       selectedSpotIndexTmp = selectedSpotIndex.value;
       selectedChanceIndexTmp = selectedChanceIndex.value;
-      pendingChanceIndexTmp = pendingChanceIndex.value;
 
       if (!needSplice && spots.value[spotIndex].type === "chance") {
         selectedChanceIndexTmp = spotIndex;
@@ -345,18 +359,14 @@ export default defineComponent({
         }
       } else {
         selectedSpotIndexTmp = spotIndex;
-        selectedChanceIndexTmp = -1;
-        pendingChanceIndexTmp = -1;
-
-        for (let i = 3; i < spotIndex; ++i) {
-          const spot = spots.value[i];
-          if (spot.type === "chance" && spot.selectedIndex === -1) {
-            if (selectedChanceIndexTmp === -1) {
-              selectedChanceIndexTmp = i;
-            } else {
-              pendingChanceIndexTmp = i;
-            }
-          }
+        if (spotIndex <= selectedChanceIndexTmp) {
+          selectedChanceIndexTmp = -1;
+        } else if (selectedChanceIndexTmp === -1) {
+          selectedChanceIndexTmp = spots.value
+            .slice(0, spotIndex)
+            .findIndex(
+              (spot) => spot.type === "chance" && spot.selectedIndex === -1
+            );
         }
       }
 
@@ -430,7 +440,7 @@ export default defineComponent({
         } else if (nextActionsStr === "chance") {
           await updateResultsChance(spotIndex);
         } else {
-          await updateResultsPlayer(spotIndex, nextActionsStr);
+          updateResultsPlayer(spotIndex, nextActionsStr);
         }
       }
 
@@ -449,7 +459,6 @@ export default defineComponent({
 
       selectedSpotIndex.value = selectedSpotIndexTmp;
       selectedChanceIndex.value = selectedChanceIndexTmp;
-      pendingChanceIndex.value = pendingChanceIndexTmp;
 
       context.emit(
         "trigger-update",
@@ -460,6 +469,17 @@ export default defineComponent({
         chanceReports,
         totalBetAmount
       );
+
+      await nextTick();
+      if (navDiv.value) {
+        const selectedChild = navDiv.value.children[selectedSpotIndex.value];
+        if (selectedChild) {
+          selectedChild.scrollIntoView({
+            behavior: "smooth",
+            inline: "center",
+          });
+        }
+      }
     };
 
     const getResults = async (
@@ -689,19 +709,14 @@ export default defineComponent({
 
       if (selectedChanceIndexTmp === -1) {
         selectedChanceIndexTmp = spotIndex;
-      } else {
-        pendingChanceIndexTmp = spotIndex;
       }
     };
 
-    const updateResultsPlayer = async (
-      spotIndex: number,
-      actionsStr: string
-    ) => {
+    const updateResultsPlayer = (spotIndex: number, actionsStr: string) => {
       if (!handler) throw new Error("null handler");
 
-      const lastSpot = spots.value[spotIndex - 1];
-      const player = lastSpot.player === "oop" ? "ip" : "oop";
+      const prevSpot = spots.value[spotIndex - 1];
+      const player = prevSpot.player === "oop" ? "ip" : "oop";
 
       const actions = actionsStr.split("/");
       let numBetActions = actions.length;
@@ -748,8 +763,7 @@ export default defineComponent({
       spot.cards[card].isSelected = true;
       spot.selectedIndex = card;
 
-      selectedChanceIndex.value = pendingChanceIndex.value;
-      pendingChanceIndex.value = -1;
+      selectedChanceIndex.value = -1;
 
       // const spot = selectedSpot.value as SpotTerminal;
       // if (!chanceSkipped && !results.isEmpty && spot.equityOop == -1) {
@@ -772,11 +786,12 @@ export default defineComponent({
     };
 
     return {
+      navDiv,
       spots,
       rates,
       selectedSpotIndex,
       selectedChanceIndex,
-      pendingChanceIndex,
+      isSelectedChanceSkipped,
       selectSpot,
       play,
       deal,

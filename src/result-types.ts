@@ -73,12 +73,36 @@ export type SpotTerminal = {
 
 export type Spot = SpotRoot | SpotChance | SpotPlayer | SpotTerminal;
 
-export type DisplayMode = "basics" | "graphs" | "scatter" | "compare" | "stats";
+export const displayModeList = [
+  "basics",
+  "compare",
+  "graphs",
+  "scatter",
+  "chance",
+] as const;
+
+export type DisplayMode = typeof displayModeList[number];
+
+export const playerBasicsList = ["auto", "oop", "ip"] as const;
+export const playerChanceList = ["auto", "oop", "ip"] as const;
+export const barHeightList = ["normalized", "absolute", "full"] as const;
+export const suitList = ["grouped", "individual"] as const;
+export const strategyList = ["show", "none"] as const;
+export const contentBasicsList = ["default", "eq", "ev", "eqr"] as const;
+export const contentChanceList = [
+  "strategy",
+  "combos",
+  "eq",
+  "ev",
+  "eqr",
+] as const;
 
 export type DisplayOptions = {
-  player: "auto" | "oop" | "ip";
-  barHeight: "normalized" | "absolute" | "full";
-  suit: "grouped" | "individual";
-  strategy: "show" | "none";
-  content: "default" | "eq" | "ev" | "eqr";
+  playerBasics: typeof playerBasicsList[number];
+  playerChance: typeof playerChanceList[number];
+  barHeight: typeof barHeightList[number];
+  suit: typeof suitList[number];
+  strategy: typeof strategyList[number];
+  contentBasics: typeof contentBasicsList[number];
+  contentChance: typeof contentChanceList[number];
 };

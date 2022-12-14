@@ -208,11 +208,11 @@ export default defineComponent({
         target.normalizer += normalizer;
 
         if (!isEmpty) {
-          if (options.content === "eq") {
+          if (options.contentBasics === "eq") {
             target.value += results.equity[playerIndex][i] * normalizer;
-          } else if (options.content === "ev") {
+          } else if (options.contentBasics === "ev") {
             target.value += results.ev[playerIndex][i] * normalizer;
-          } else if (options.content === "eqr") {
+          } else if (options.contentBasics === "eqr") {
             target.value += results.eqr[playerIndex][i] * normalizer;
           } else {
             target.value += weight;
@@ -284,18 +284,18 @@ export default defineComponent({
       let highest = 0;
 
       if (!showStrategy) {
-        if (options.content === "eq") {
+        if (options.contentBasics === "eq") {
           lowest = 0;
           middle = 0.5;
           highest = 1;
-        } else if (options.content === "ev") {
+        } else if (options.contentBasics === "ev") {
           const amounts = props.totalBetAmount;
           const amountSum = Math.min(...amounts) + amounts[playerIndex];
           const pot = config.startingPot + amountSum;
           lowest = 0;
           middle = pot / 2;
           highest = pot;
-        } else if (options.content === "eqr") {
+        } else if (options.contentBasics === "eqr") {
           lowest = 0;
           middle = 1;
           highest = 2;
@@ -322,7 +322,7 @@ export default defineComponent({
 
           if (!showStrategy) {
             let color;
-            if (isEmpty || options.content === "default") {
+            if (isEmpty || options.contentBasics === "default") {
               color = amber500;
             } else {
               const value = suit.value / normalizer;
@@ -391,7 +391,7 @@ export default defineComponent({
       const displayOptions = props.displayOptions;
       if (
         displayOptions.strategy === "show" &&
-        displayOptions.content === "default"
+        displayOptions.contentBasics === "default"
       ) {
         return "";
       }
@@ -409,13 +409,13 @@ export default defineComponent({
       }
 
       let value;
-      if (displayOptions.content === "default") {
+      if (displayOptions.contentBasics === "default") {
         value = valueSum / cellDenominator.value[cellIndex];
       } else {
         value = valueSum / normalizerSum;
       }
 
-      if (displayOptions.content === "ev") {
+      if (displayOptions.contentBasics === "ev") {
         const ret = value >= 999.95 ? value.toFixed(0) : value.toFixed(1);
         return ret === "-0.0" ? "0.0" : ret;
       } else {

@@ -1,78 +1,135 @@
 <template>
+  <!-- Navigation -->
+
   <div
-    ref="divTreeNav"
-    class="flex pl-0.5 overflow-x-auto divide-x divide-black"
+    ref="navDiv"
+    class="flex h-[10.25rem] gap-1 p-1 overflow-x-auto whitespace-nowrap snug"
   >
     <div
-      v-for="street in streets"
-      :key="street.name"
-      :class="{
-        'pl-3': street.name !== streets[0].name,
-        'pr-3': street.name !== streets[streets.length - 1].name,
-      }"
+      v-for="spot in spots"
+      :key="spot.index"
+      :class="
+        'flex flex-col h-full px-1 py-0.5 justify-start ' +
+        'rounded-lg shadow-md border-[3px] transition group ' +
+        (spot.type === 'chance'
+          ? 'hover:border-red-600 '
+          : 'hover:border-blue-600 ') +
+        (spot.index === selectedSpotIndex
+          ? 'border-blue-600 cursor-default'
+          : 'border-gray-400 cursor-pointer')
+      "
+      @click="selectSpot(spot.index, false, false, true)"
     >
-      <p class="font-bold underline">{{ street.name }}</p>
-      <div class="flex pt-2 gap-x-2">
+      <!-- Root or Chance -->
+      <template v-if="spot.type === 'root' || spot.type === 'chance'">
         <div
-          v-for="decision in street.decisions"
-          :key="decision.index"
-          class="flex flex-col items-start"
+          class="px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 opacity-70"
         >
+          {{ spot.player.toUpperCase() }}
+        </div>
+        <div
+          class="flex flex-col flex-grow px-3 items-center justify-evenly font-bold"
+        >
+          <div class="group-hover:opacity-100 opacity-70">
+            <div>Pot {{ spot.pot }}</div>
+            <div>Stack {{ spot.stack }}</div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Player -->
+      <template v-if="spot.type === 'player'">
+        <div
+          :class="
+            'px-1.5 py-1 font-bold group-hover:opacity-100 ' +
+            (spot.index === selectedSpotIndex ? '' : 'opacity-70')
+          "
+        >
+          {{ spot.player.toUpperCase() }}
+        </div>
+        <div class="flex-grow overflow-y-auto">
           <button
-            v-for="action in decision.actions"
-            :key="action.name"
+            v-for="action of spot.actions"
+            :key="action.index"
             :class="
-              'w-full my-[0.1875rem] px-2 py-[0.0625rem] whitespace-nowrap border rounded-lg shadow text-center select-none ' +
-              (!action.isSelected &&
-              (street.index - selected.street ||
-                decision.index - selected.decision) <= 0
-                ? 'opacity-40 '
-                : '') +
-              (action.isSelected &&
-              street.index === selected.street &&
-              decision.index === selected.decision
-                ? 'ring-1 ring-red-600 border-red-600 '
-                : 'border-black')
+              'flex w-full px-1.5 rounded-md transition-colors hover:bg-blue-100 ' +
+              (action.isSelected ? 'bg-blue-100 ' : '')
             "
-            @click="moveNode(street.index, decision.index, action.index)"
+            @click.stop="play(spot.index, action.index)"
           >
-            {{ action.name }}
+            <span class="inline-block relative w-4 mr-0.5">
+              <span v-if="action.isSelected">
+                <CheckIcon class="absolute top-[0.1875rem] -left-0.5 w-4 h-4" />
+              </span>
+            </span>
+            <span
+              :class="
+                'pr-0.5 font-bold group-hover:opacity-100 ' +
+                (action.isSelected || spot.index === selectedSpotIndex
+                  ? ''
+                  : 'opacity-70')
+              "
+            >
+              {{ action.name }}
+              {{ action.amount === "0" ? "" : action.amount }}
+            </span>
           </button>
         </div>
-      </div>
+      </template>
+
+      <!-- Terminal -->
+      <template v-else-if="spot.type === 'terminal'">
+        <div
+          :class="
+            'px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 ' +
+            (spot.index === selectedSpotIndex ? '' : 'opacity-70')
+          "
+        >
+          {{ spot.player.toUpperCase() }}
+        </div>
+        <div
+          :class="
+            'flex flex-col flex-grow items-center justify-evenly font-bold group-hover:opacity-100 ' +
+            (spot.index === selectedSpotIndex ? '' : 'opacity-70')
+          "
+        >
+          <div v-if="spot.equityOop === 0 || spot.equityOop === 1" class="px-3">
+            {{ ["IP", "OOP"][spot.equityOop] }} Wins
+          </div>
+          <div class="px-3">Pot {{ spot.pot }}</div>
+        </div>
+      </template>
     </div>
   </div>
 
-  <div class="mt-4">
-    Decision: {{ ["-", "OOP", "IP"][nodeInfo.player + 1] }} / Pot:
-    {{ nodeInfo.pot }} / Stack: {{ nodeInfo.stack }}
-    {{ nodeInfo.toCall ? `/ To Call: ${nodeInfo.toCall}` : "" }}
-  </div>
+  <!-- Invalid lines error -->
 
   <div
     v-if="invalidLinesArray.length > 0"
-    class="flex mt-4 font-bold text-red-600"
+    class="flex mt-4 font-bold text-red-500"
   >
     <div class="underline">
       Invalid Terminal{{ invalidLinesArray.length > 1 ? "s" : "" }}:
     </div>
-    <div class="flex flex-col ml-2">
+    <div class="ml-2">
       <div v-for="invalidLine in invalidLinesArray" :key="invalidLine">
         {{ invalidLine }}
       </div>
     </div>
   </div>
 
-  <div class="flex my-5 justify-center">
-    <hr class="border-gray-400 w-2/5" />
+  <div class="flex mx-6 my-6 justify-center">
+    <hr class="border-gray-400 w-full" />
   </div>
 
-  <div class="mt-5">
+  <!-- Edit -->
+
+  <div class="flex gap-3">
     <button
       class="button-base button-blue"
       :disabled="
-        isSelectedTerminal ||
-        maxAmount === 0 ||
+        spots[selectedSpotIndex].type === 'terminal' ||
+        isAfterAllin ||
         betAmount < minAmount ||
         betAmount > maxAmount ||
         betAmount % 1 !== 0 ||
@@ -82,17 +139,23 @@
     >
       Add Bet Action
     </button>
-    <span class="ml-3">
+
+    <button
+      class="button-base button-red"
+      :disabled="selectedSpotIndex === 1"
+      @click="removeSelectedNode"
+    >
+      Remove Selected Node
+    </button>
+
+    <div class="pl-3">
       Bet amount:
       <input
         v-model="betAmount"
         type="number"
         :class="
           'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (betAmount < minAmount ||
-          betAmount > maxAmount ||
-          betAmount % 1 !== 0 ||
-          existingAmounts.includes(betAmount)
+          (betAmount < minAmount || betAmount > maxAmount || betAmount % 1 !== 0
             ? 'input-error'
             : '')
         "
@@ -100,27 +163,19 @@
         :max="maxAmount"
         @keydown.enter="addBetAction"
       />
-      <span v-if="maxAmount !== 0" class="ml-1">
-        ({{ (100 * amountPercent).toFixed(1) }}% of the pot)
+      <span v-if="maxAmount !== 0" class="ml-2">
+        ({{ (amountRate * 100).toFixed(1) }}% of the pot)
       </span>
-    </span>
+    </div>
   </div>
 
-  <div class="mt-3">
-    <button
-      class="button-base button-blue"
-      :disabled="selected.street === 0 && selected.decision === 0"
-      @click="removeSelectedNode"
-    >
-      Remove Selected Node
-    </button>
+  <div class="flex mx-6 my-6 justify-center">
+    <hr class="border-gray-400 w-full" />
   </div>
 
-  <div class="flex my-5 justify-center">
-    <hr class="border-gray-400 w-2/5" />
-  </div>
+  <!-- Save/Cancel -->
 
-  <div class="flex my-5 gap-3">
+  <div class="flex my-6 gap-3">
     <button
       class="button-base button-blue"
       :disabled="invalidLinesArray.length > 0"
@@ -128,35 +183,48 @@
     >
       Save Edit
     </button>
-    <button class="button-base button-red" @click="cancelEdit">Cancel</button>
+
+    <button class="button-base button-red" @click="cancelEdit">
+      Cancel Edit
+    </button>
   </div>
 
-  <div v-if="addedLinesArray.length > 0" class="flex mt-3">
-    <div class="font-bold underline w-32">
-      Added line{{ addedLinesArray.length > 1 ? "s" : "" }}:
-    </div>
-    <div class="flex flex-col">
-      <div v-for="(addedLine, index) in addedLinesArray" :key="addedLine">
-        <button class="relative w-6 mr-2" @click="deleteAddedLine(index)">
-          &nbsp;
-          <div class="cross-icon"></div>
-        </button>
-        {{ addedLine }}
+  <!-- Lines -->
+
+  <div v-if="addedLinesArray.length > 0 || removedLinesArray.length > 0">
+    <div v-if="addedLinesArray.length > 0" class="flex">
+      <div class="font-bold underline w-[7.75rem]">
+        Added line{{ addedLinesArray.length > 1 ? "s" : "" }}:
+      </div>
+      <div class="flex flex-col">
+        <div
+          v-for="(addedLine, index) in addedLinesArray"
+          :key="addedLine"
+          class="flex items-center"
+        >
+          <button class="mr-2" @click="deleteAddedLine(index)">
+            <TrashIcon class="w-5 h-5 text-gray-600" />
+          </button>
+          <span>{{ addedLine }}</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div v-if="removedLinesArray.length > 0" class="flex mt-3">
-    <div class="font-bold underline w-32">
-      Removed line{{ removedLinesArray.length > 1 ? "s" : "" }}:
-    </div>
-    <div class="flex flex-col">
-      <div v-for="(removedLine, index) in removedLinesArray" :key="removedLine">
-        <button class="relative w-6 mr-2" @click="deleteRemovedLine(index)">
-          &nbsp;
-          <div class="cross-icon"></div>
-        </button>
-        {{ removedLine }}
+    <div v-if="removedLinesArray.length > 0" class="flex mt-2">
+      <div class="font-bold underline w-[7.75rem]">
+        Removed line{{ removedLinesArray.length > 1 ? "s" : "" }}:
+      </div>
+      <div class="flex flex-col">
+        <div
+          v-for="(removedLine, index) in removedLinesArray"
+          :key="removedLine"
+          class="flex items-center"
+        >
+          <button class="mr-2" @click="deleteRemovedLine(index)">
+            <TrashIcon class="w-5 h-5 text-gray-600" />
+          </button>
+          <span>{{ removedLine }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -166,10 +234,17 @@
 import { computed, defineComponent, nextTick, ref } from "vue";
 import { useConfigStore } from "../store";
 import { convertBetString, readableLineString } from "../utils";
+import { Spot, SpotRoot, SpotChance, SpotPlayer } from "../result-types";
 import { TreeManager } from "../../pkg/tree/tree";
 
+import { CheckIcon } from "@heroicons/vue/20/solid";
+import { TrashIcon } from "@heroicons/vue/24/outline";
+
 export default defineComponent({
-  name: "TreeEditor",
+  components: {
+    CheckIcon,
+    TrashIcon,
+  },
 
   emits: {
     save: (_addedLines: string, _removedLines: string) => true,
@@ -177,7 +252,7 @@ export default defineComponent({
   },
 
   setup(_, context) {
-    const divTreeNav = ref(null as HTMLDivElement | null);
+    const navDiv = ref(null as HTMLDivElement | null);
 
     const config = useConfigStore();
 
@@ -207,178 +282,56 @@ export default defineComponent({
       config.removedLines
     );
 
-    const streets = ref([
-      {
-        index: 0,
-        name: ["Flop", "Turn", "River"][config.expectedBoardLength - 3],
-        decisions: [
-          {
-            index: 0,
-            actions: [
-              {
-                index: 0,
-                name: "Root",
-                isTerminal: false,
-                isSelected: true,
-              },
-            ],
-          },
-        ],
-      },
-    ]);
-
-    const selected = ref({
-      street: 0,
-      decision: 0,
-      action: 0,
-    });
-
-    const isSelectedTerminal = computed(() => {
-      if (selected.value.street === -1) return false;
-      const street = streets.value[selected.value.street];
-      const decision = street.decisions[selected.value.decision];
-      const action = decision.actions[selected.value.action];
-      return action.isTerminal;
-    });
-
-    const nodeInfo = ref({
-      player: -1,
-      pot: -1,
-      stack: [-1, -1],
-      toCall: -1,
-      lastAmount: -1,
-    });
-
+    const boardLength = config.expectedBoardLength;
+    const rootSpot: SpotRoot = {
+      type: "root",
+      index: 0,
+      player: boardLength === 3 ? "flop" : boardLength === 4 ? "turn" : "river",
+      selectedIndex: -1,
+      board: config.board,
+      pot: config.startingPot,
+      stack: config.effectiveStack,
+    };
+    const spots = ref<Spot[]>([rootSpot]);
+    const selectedSpotIndex = ref(-1);
     const betAmount = ref(0);
 
+    const totalBetAmount = ref([0, 0]);
+    const prevBetAmount = ref(0);
+
+    const isAfterAllin = computed(() => {
+      const maxTotalBetAmount = Math.max(...totalBetAmount.value);
+      return maxTotalBetAmount === config.effectiveStack;
+    });
+
     const maxAmount = computed(() => {
-      const info = nodeInfo.value;
-      const minStack = Math.min(...info.stack);
-      return minStack === 0 ? 0 : minStack + info.lastAmount;
+      const maxTotalBetAmount = Math.max(...totalBetAmount.value);
+      return config.effectiveStack - (maxTotalBetAmount - prevBetAmount.value);
     });
 
     const minAmount = computed(() => {
-      const info = nodeInfo.value;
-      return Math.min(
-        maxAmount.value,
-        Math.max(1, info.lastAmount + info.toCall)
-      );
+      const betMinus = config.effectiveStack - maxAmount.value;
+      const min = Math.min(...totalBetAmount.value) - betMinus;
+      const max = Math.max(...totalBetAmount.value) - betMinus;
+      return Math.min(Math.max(2 * max - min, 1), maxAmount.value);
     });
 
-    const amountPercent = computed(() => {
-      const info = nodeInfo.value;
-      const pot = info.pot + info.toCall;
-      return (betAmount.value - info.lastAmount) / pot;
+    const amountRate = computed(() => {
+      const pot = config.startingPot + 2 * Math.max(...totalBetAmount.value);
+      const amount = betAmount.value - prevBetAmount.value;
+      return amount / pot;
     });
 
     const existingAmounts = computed(() => {
-      if (streets.value.length === 0) return [];
-      const street = streets.value[streets.value.length - 1];
-      if (street.decisions.length === 0) return [];
-      const decision = street.decisions[street.decisions.length - 1];
-      if (decision.actions.find((a) => a.isSelected)) return [];
-      return decision.actions
-        .filter((action) => {
-          const name = action.name;
-          return (
-            name.slice(0, 3) === "Bet" ||
-            name.slice(0, 5) === "Raise" ||
-            name.slice(0, 6) === "All-in"
-          );
-        })
-        .map((action) => Number(action.name.split(" ")[1]));
-    });
-
-    const updateNodeInfo = () => {
-      let player = 0;
-      let lastAmount = 0;
-      const pot = [0, 0];
-
-      for (const street of streets.value) {
-        player = 0;
-
-        for (const decision of street.decisions) {
-          const action = decision.actions.find((a) => a.isSelected);
-          if (!action) break;
-          if (action.name === "Root") continue;
-
-          if (action.name === "Check") {
-            lastAmount = 0;
-          } else if (action.name === "Call") {
-            pot[player] = pot[1 - player];
-            lastAmount = 0;
-          } else if (action.name.slice(0, 3) === "Bet") {
-            const amount = Number(action.name.slice(4));
-            pot[player] += amount;
-            lastAmount = amount;
-          } else if (
-            action.name.slice(0, 5) === "Raise" ||
-            action.name.slice(0, 6) === "All-in"
-          ) {
-            const amount = Number(action.name.slice(6).trimStart());
-            const potDiff = pot[1 - player] - pot[player];
-            pot[player] += amount - lastAmount + potDiff;
-            lastAmount = amount;
-          }
-
-          if (action.isTerminal) {
-            player = -1;
-            break;
-          }
-
-          player = 1 - player;
+      const ret: number[] = [];
+      const spot = spots.value[selectedSpotIndex.value] as SpotPlayer;
+      for (const action of spot.actions) {
+        if (action.amount !== "0") {
+          ret.push(Number(action.amount));
         }
       }
-
-      nodeInfo.value = {
-        player,
-        pot: config.startingPot + pot[0] + pot[1],
-        stack: [config.effectiveStack - pot[0], config.effectiveStack - pot[1]],
-        toCall: Math.max(...pot) - Math.min(...pot),
-        lastAmount,
-      };
-
-      betAmount.value = minAmount.value;
-    };
-
-    updateNodeInfo();
-
-    const updateStreets = async () => {
-      let decisions = streets.value[streets.value.length - 1].decisions;
-
-      const isChance = treeManager.is_chance_node();
-      if (isChance) {
-        decisions = [];
-        const curStreet = streets.value[streets.value.length - 1].name;
-        const nextStreet = { Flop: "Turn", Turn: "River" }[curStreet] ?? "";
-        streets.value.push({
-          index: streets.value.length,
-          name: nextStreet,
-          decisions,
-        });
-      }
-
-      const actionStr = treeManager.actions();
-      if (actionStr === "") return;
-
-      const isTerminal = treeManager.is_terminal_action();
-      const actions = actionStr.split("/").map((action, index) => ({
-        index,
-        name: action,
-        isTerminal: !!(isTerminal & (1 << index)),
-        isSelected: false,
-      }));
-
-      decisions.push({ index: decisions.length, actions });
-
-      await nextTick();
-      if (divTreeNav.value) {
-        const div = divTreeNav.value;
-        div.scrollLeft = div.scrollWidth - div.clientWidth;
-      }
-    };
-
-    updateStreets();
+      return ret;
+    });
 
     const addedLines = ref(config.addedLines);
     const removedLines = ref(config.removedLines);
@@ -402,108 +355,258 @@ export default defineComponent({
         : invalidLines.value.split(",").map(readableLineString)
     );
 
-    const play = (actionIndex: number) => {
-      const sel = selected.value;
-      let street, decision;
-
-      if (sel.decision === streets.value[sel.street].decisions.length - 1) {
-        street = sel.street + 1;
-        decision = 0;
-      } else {
-        street = sel.street;
-        decision = sel.decision + 1;
-      }
-
-      const selectedDecision = streets.value[street].decisions[decision];
-      selectedDecision.actions[actionIndex].isSelected = true;
-
-      selected.value = { street, decision, action: actionIndex };
-
-      treeManager?.play(actionIndex);
-      updateNodeInfo();
-    };
-
-    const undo = (doNotUpdate = false) => {
-      const sel = selected.value;
-      let street, decision;
-      if (sel.decision === 0) {
-        street = sel.street - 1;
-        decision = streets.value[street].decisions.length - 1;
-      } else {
-        street = sel.street;
-        decision = sel.decision - 1;
-      }
-
-      const oldDecision = streets.value[sel.street].decisions[sel.decision];
-      oldDecision.actions[sel.action].isSelected = false;
-
-      const newDecision = streets.value[street].decisions[decision];
-      const actionIndex = newDecision.actions.findIndex((a) => a.isSelected);
-
-      selected.value = { street, decision, action: actionIndex };
-
-      if (!doNotUpdate) treeManager?.undo();
-    };
-
-    const moveNode = (street: number, decision: number, action: number) => {
-      if (!treeManager) return;
-
-      const compare = () =>
-        street - selected.value.street || decision - selected.value.decision;
-
-      while (compare() < 0) undo();
-
-      if (compare() === 0) {
-        if (action === selected.value.action) {
-          if (treeManager.is_chance_node()) {
-            streets.value.splice(street + 2);
-            if (streets.value.length === street + 2) {
-              streets.value[street + 1].decisions.splice(1);
-            }
-          } else {
-            streets.value.splice(street + 1);
-            streets.value[street].decisions.splice(decision + 2);
+    const encodeLine = (spotIndex: number) => {
+      const ret: string[] = [];
+      for (let i = 1; i < spotIndex; ++i) {
+        const spot = spots.value[i];
+        if (spot.type === "player") {
+          const action = spot.actions[spot.selectedIndex];
+          if (action.name === "Fold") {
+            ret.push("F");
+          } else if (action.name === "Check") {
+            ret.push("X");
+          } else if (action.name === "Call") {
+            ret.push("C");
+          } else if (action.name === "Bet") {
+            ret.push("B" + action.amount);
+          } else if (action.name === "Raise") {
+            ret.push("R" + action.amount);
+          } else if (action.name === "Allin") {
+            ret.push("A" + action.amount);
           }
-          updateNodeInfo();
-          return;
+        }
+      }
+      return ret;
+    };
+
+    const selectSpot = (
+      spotIndex: number,
+      needSplice: boolean,
+      needRebuild: boolean,
+      needAmountUpdate: boolean
+    ) => {
+      if (
+        !needSplice &&
+        !needRebuild &&
+        spotIndex === selectedSpotIndex.value
+      ) {
+        return;
+      }
+
+      if (spotIndex === 0) {
+        selectSpot(1, true, false, selectedSpotIndex.value !== 1);
+        return;
+      }
+
+      if (!needSplice && spots.value[spotIndex]?.type === "chance") {
+        selectSpot(spotIndex + 1, false, false, true);
+        return;
+      }
+
+      if (needRebuild) {
+        const selectedSpotIndexTmp = selectedSpotIndex.value;
+        const line = encodeLine(spots.value.length - 1);
+        spots.value = [rootSpot];
+
+        selectedSpotIndex.value = 1;
+        totalBetAmount.value = [0, 0];
+
+        treeManager.back_to_root();
+        pushResultsPlayer();
+
+        for (let i = 0; i < line.length; ++i) {
+          const index = treeManager.play(line[i]);
+          if (index === -1) {
+            needAmountUpdate = true;
+            break;
+          }
+
+          const spot = spots.value[selectedSpotIndex.value] as SpotPlayer;
+          const action = spot.actions[index];
+          spot.selectedIndex = index;
+          action.isSelected = true;
+
+          ++selectedSpotIndex.value;
+          totalBetAmount.value = Array.from(treeManager.total_bet_amount());
+
+          if (treeManager.is_terminal_node()) {
+            pushResultsTerminal();
+          } else if (treeManager.is_chance_node()) {
+            pushResultsChance();
+            ++selectedSpotIndex.value;
+          } else {
+            pushResultsPlayer();
+          }
         }
 
-        undo();
-        streets.value.splice(street + 1);
-        streets.value[street].decisions.splice(decision + 1);
+        if (selectedSpotIndexTmp < selectedSpotIndex.value) {
+          selectedSpotIndex.value = selectedSpotIndexTmp;
+        }
+      } else {
+        selectedSpotIndex.value = spotIndex;
       }
 
-      play(action);
+      const line = encodeLine(selectedSpotIndex.value);
+      treeManager.apply_history(line.join("-"));
+      totalBetAmount.value = Array.from(treeManager.total_bet_amount());
 
-      if (isSelectedTerminal.value) return;
-      updateStreets();
+      if (needSplice) {
+        spots.value.splice(selectedSpotIndex.value);
+        if (treeManager.is_terminal_node()) {
+          pushResultsTerminal();
+        } else if (treeManager.is_chance_node()) {
+          pushResultsChance();
+          ++selectedSpotIndex.value;
+        } else {
+          pushResultsPlayer();
+        }
+      }
+
+      const prev = spots.value[selectedSpotIndex.value - 1];
+      if (prev.type === "player") {
+        prevBetAmount.value = Number(prev.actions[prev.selectedIndex].amount);
+      } else {
+        prevBetAmount.value = 0;
+      }
+
+      if (needAmountUpdate) {
+        betAmount.value = minAmount.value;
+      }
+
+      autoScrollNav();
+    };
+
+    const autoScrollNav = async () => {
+      await nextTick();
+      if (navDiv.value) {
+        const selectedChild = navDiv.value.children[selectedSpotIndex.value];
+        if (selectedChild) {
+          selectedChild.scrollIntoView({
+            behavior: "smooth",
+            inline: "center",
+          });
+        }
+      }
+    };
+
+    const pushResultsTerminal = () => {
+      const prevSpot = spots.value[selectedSpotIndex.value - 1] as SpotPlayer;
+      const prevAction = prevSpot.actions[prevSpot.selectedIndex];
+
+      let equityOop = -1;
+      if (prevAction.name === "Fold") {
+        equityOop = prevSpot.player === "oop" ? 0 : 1;
+      }
+
+      spots.value.push({
+        type: "terminal",
+        index: selectedSpotIndex.value,
+        player: "end",
+        selectedIndex: -1,
+        prevPlayer: prevSpot.player,
+        equityOop,
+        pot:
+          config.startingPot +
+          totalBetAmount.value[0] +
+          totalBetAmount.value[1],
+      });
+    };
+
+    const pushResultsChance = () => {
+      type SpotTurn = SpotRoot | SpotChance;
+      const prevSpot = spots.value[selectedSpotIndex.value - 1] as SpotPlayer;
+      const turnSpot = spots.value.find((spot) => spot.player === "turn") as
+        | SpotTurn
+        | undefined;
+
+      const nextActions = treeManager.actions().split("/");
+      spots.value.push(
+        {
+          type: "chance",
+          index: selectedSpotIndex.value,
+          player: turnSpot ? "river" : "turn",
+          selectedIndex: -1,
+          prevPlayer: prevSpot.player,
+          cards: Array.from({ length: 52 }, (_, i) => ({
+            card: i,
+            isSelected: false,
+            isDead: true,
+          })),
+          pot: config.startingPot + 2 * totalBetAmount.value[0],
+          stack: config.effectiveStack - totalBetAmount.value[0],
+        },
+        {
+          type: "player",
+          index: selectedSpotIndex.value + 1,
+          player: "oop",
+          selectedIndex: -1,
+          actions: nextActions.map((action, i) => {
+            const [name, amount] = action.split(":");
+            return {
+              index: i,
+              name,
+              amount,
+              rate: -1,
+              isSelected: false,
+              color: "#000",
+            };
+          }),
+        }
+      );
+    };
+
+    const pushResultsPlayer = () => {
+      const prevSpot = spots.value[selectedSpotIndex.value - 1];
+      const player = prevSpot.player === "oop" ? "ip" : "oop";
+
+      const actions = treeManager.actions().split("/");
+      spots.value.push({
+        type: "player",
+        index: selectedSpotIndex.value,
+        player,
+        selectedIndex: -1,
+        actions: actions.map((action, i) => {
+          const [name, amount] = action.split(":");
+          return {
+            index: i,
+            name,
+            amount,
+            isSelected: false,
+            color: "#000",
+          };
+        }),
+      });
+    };
+
+    const play = (spotIndex: number, actionIndex: number) => {
+      const spot = spots.value[spotIndex] as SpotPlayer;
+
+      if (spot.selectedIndex !== -1) {
+        spot.actions[spot.selectedIndex].isSelected = false;
+      }
+      spot.actions[actionIndex].isSelected = true;
+      spot.selectedIndex = actionIndex;
+
+      selectSpot(spotIndex + 1, true, false, true);
     };
 
     const addBetAction = () => {
-      treeManager.add_bet_action(betAmount.value, nodeInfo.value.toCall > 0);
+      const isRaise = totalBetAmount.value[0] !== totalBetAmount.value[1];
+      treeManager.add_bet_action(betAmount.value, isRaise);
+      selectSpot(selectedSpotIndex.value, false, true, false);
       addedLines.value = treeManager.added_lines();
       removedLines.value = treeManager.removed_lines();
       invalidLines.value = treeManager.invalid_terminals();
-      if (treeManager.is_chance_node()) {
-        streets.value.splice(streets.value.length - 1);
-      } else {
-        const decisions = streets.value[selected.value.street].decisions;
-        decisions.splice(selected.value.decision + 1);
-      }
-      updateStreets();
     };
 
     const removeSelectedNode = () => {
       treeManager.remove_current_node();
-      undo(true);
+      let prevIndex = selectedSpotIndex.value - 1;
+      if (spots.value[prevIndex].type === "chance") --prevIndex;
+      selectSpot(prevIndex, false, true, true);
       addedLines.value = treeManager.added_lines();
       removedLines.value = treeManager.removed_lines();
       invalidLines.value = treeManager.invalid_terminals();
-      const sel = selected.value;
-      streets.value.splice(sel.street + 1);
-      streets.value[sel.street].decisions.splice(sel.decision + 1);
-      updateNodeInfo();
-      updateStreets();
     };
 
     const saveEdit = () => {
@@ -516,47 +619,12 @@ export default defineComponent({
       context.emit("cancel");
     };
 
-    const popHistory = (): string[] => {
-      const history = [];
-      while (!(selected.value.street === 0 && selected.value.decision === 0)) {
-        const sel = selected.value;
-        const decision = streets.value[sel.street].decisions[sel.decision];
-        history.push(decision.actions[sel.action].name);
-        undo();
-      }
-      streets.value.splice(1);
-      streets.value[0].decisions.splice(1);
-      return history.reverse();
-    };
-
-    const applyHistory = (history: string[]) => {
-      updateStreets();
-      for (const action of history) {
-        const sel = selected.value;
-        const decisions = streets.value[sel.street].decisions;
-        let actions;
-        if (sel.decision === decisions.length - 1) {
-          if (sel.street === streets.value.length - 1) return;
-          if (streets.value[sel.street + 1].decisions.length === 0) return;
-          actions = streets.value[sel.street + 1].decisions[0].actions;
-        } else {
-          actions = decisions[sel.decision + 1].actions;
-        }
-        const actionIndex = actions.findIndex((a) => a.name === action);
-        if (actionIndex === -1) return;
-        play(actionIndex);
-        if (isSelectedTerminal.value) return;
-        updateStreets();
-      }
-    };
-
     const deleteAddedLine = (index: number) => {
       const addedLinesArray = addedLines.value.split(",");
       const line = addedLinesArray[index];
 
-      const history = popHistory();
       treeManager.delete_added_line(line);
-      applyHistory(history);
+      selectSpot(selectedSpotIndex.value, false, true, false);
 
       addedLines.value = treeManager.added_lines();
       removedLines.value = treeManager.removed_lines();
@@ -567,30 +635,31 @@ export default defineComponent({
       const removedLinesArray = removedLines.value.split(",");
       const line = removedLinesArray[index];
 
-      const history = popHistory();
       treeManager.delete_removed_line(line);
-      applyHistory(history);
+      selectSpot(selectedSpotIndex.value, false, true, false);
 
       addedLines.value = treeManager.added_lines();
       removedLines.value = treeManager.removed_lines();
       invalidLines.value = treeManager.invalid_terminals();
     };
 
+    selectSpot(0, true, false, true);
+
     return {
-      divTreeNav,
-      streets,
-      selected,
-      isSelectedTerminal,
-      nodeInfo,
+      navDiv,
+      spots,
+      selectedSpotIndex,
       betAmount,
+      isAfterAllin,
       maxAmount,
       minAmount,
-      amountPercent,
+      amountRate,
       existingAmounts,
       addedLinesArray,
       removedLinesArray,
       invalidLinesArray,
-      moveNode,
+      selectSpot,
+      play,
       addBetAction,
       removeSelectedNode,
       saveEdit,
