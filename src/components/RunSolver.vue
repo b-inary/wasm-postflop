@@ -1,5 +1,5 @@
 <template>
-  <p class="flex my-1 items-center">
+  <div class="flex my-1 items-center">
     Number of threads:
     <input
       v-model="numThreads"
@@ -22,12 +22,45 @@
     >
       Build tree
     </button>
-  </p>
+  </div>
 
-  <p class="my-1">Status: {{ treeStatus }}</p>
+  <div class="my-1">Status: {{ treeStatus }}</div>
 
-  <div v-if="isTreeBuilt" class="mt-4">
-    <p>
+  <div v-if="isTreeBuilt" class="mt-3">
+    <div>
+      Precision mode:
+      <Tippy
+        class="inline-block cursor-help"
+        max-width="500px"
+        placement="bottom"
+        trigger="mouseenter click"
+        :delay="[200, 0]"
+        :interactive="true"
+      >
+        <QuestionMarkCircleIcon class="w-5 h-5 text-gray-600" />
+        <template #content>
+          <div class="px-1 py-0.5 text-justify">
+            Precision mode mainly affects memory usage, but it also has several
+            other effects.
+            <ul class="pl-6 list-disc">
+              <li class="mt-1">
+                32-bit FP (floating-point): This is recommended if the memory
+                usage is below the limit (= 3.9GB). The significant figures are
+                about 7 digits, and the calculation speed is fast.
+              </li>
+              <li class="mt-1">
+                16-bit integer: This setting may help avoid the memory limit
+                even when the 32-bit FP mode is not usable. Since the
+                significant figures are about 4 digits, it is not suitable for
+                satisfying a target exploitability below 0.1%. The calculation
+                speed is also slower than the 32-bit FP mode.
+              </li>
+            </ul>
+          </div>
+        </template>
+      </Tippy>
+    </div>
+    <div class="mt-1 ml-2">
       <label
         :class="
           memoryUsage > maxMemoryUsage
@@ -45,17 +78,18 @@
           :value="false"
           :disabled="store.hasSolverRun || memoryUsage > maxMemoryUsage"
         />
-        No compression: requires
+        <span class="inline-block w-[6.5rem] ml-1">32-bit FP:</span>
+        needs
         {{
           memoryUsage >= 1023.5 * 1024 * 1024
-            ? (memoryUsage / (1024 * 1024 * 1024)).toFixed(2) + " GB"
-            : (memoryUsage / (1024 * 1024)).toFixed(0) + " MB"
+            ? (memoryUsage / (1024 * 1024 * 1024)).toFixed(2) + "GB"
+            : (memoryUsage / (1024 * 1024)).toFixed(0) + "MB"
         }}
-        of RAM
-        {{ memoryUsage <= maxMemoryUsage ? "(fast)" : "(limit exceeded)" }}
+        RAM
+        {{ memoryUsage > maxMemoryUsage ? "(limit exceeded)" : "" }}
       </label>
-    </p>
-    <p>
+    </div>
+    <div class="ml-2">
       <label
         :class="
           memoryUsageCompressed > maxMemoryUsage
@@ -75,24 +109,62 @@
             store.hasSolverRun || memoryUsageCompressed > maxMemoryUsage
           "
         />
-        Use compression: requires
+        <span class="inline-block w-[6.5rem] ml-1">16-bit integer:</span>
+        needs
         {{
           memoryUsageCompressed >= 1023.5 * 1024 * 1024
-            ? (memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) + " GB"
-            : (memoryUsageCompressed / (1024 * 1024)).toFixed(0) + " MB"
+            ? (memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) + "GB"
+            : (memoryUsageCompressed / (1024 * 1024)).toFixed(0) + "MB"
         }}
-        of RAM
-        {{ memoryUsageCompressed <= maxMemoryUsage ? "" : "(limit exceeded)" }}
+        RAM
+        {{ memoryUsageCompressed > maxMemoryUsage ? "(limit exceeded)" : "" }}
       </label>
-    </p>
+    </div>
+    <div v-if="memoryUsage > maxMemoryUsage" class="mt-1.5">
+      RAM limit: 3.9GB (= 4GB Wasm limit - 0.1GB margin)
+    </div>
 
-    <p class="mt-4">
+    <div class="mt-4">
       Target exploitability:
+      <Tippy
+        class="inline-block cursor-help"
+        max-width="500px"
+        placement="bottom"
+        trigger="mouseenter click"
+        :delay="[200, 0]"
+        :interactive="true"
+      >
+        <QuestionMarkCircleIcon class="w-5 h-5 text-gray-600" />
+        <template #content>
+          <div class="px-1 py-0.5 text-justify">
+            <div>
+              Specifies the acceptable distance to the Nash equilibrium. A lower
+              value produces more accurate results but also requires more
+              computation time.
+            </div>
+            <div class="mt-3">
+              <span class="underline">A more detailed description:</span>
+              If a Nash equilibrium solution is obtained, the strategies of both
+              players become MESs (Maximally Exploitative Strategies). Using
+              this property, we define the distance to the Nash equilibrium of
+              the obtained strategy as follows:
+            </div>
+            <div class="my-1 text-center">
+              Distance = (Opponent's MES EV) - (Opponent's obtained EV).
+            </div>
+            <div>
+              This distance is always non-negative and is zero if and only if
+              the obtained strategy is a part of a certain Nash equilibrium. The
+              exploitability is defined as the average distance of both players.
+            </div>
+          </div>
+        </template>
+      </Tippy>
       <input
         v-model="targetExploitability"
         type="number"
         :class="
-          'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+          'w-20 ml-3 px-2 py-1 rounded-lg text-sm text-center ' +
           (targetExploitability <= 0
             ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
             : '')
@@ -102,9 +174,9 @@
         step="0.05"
       />
       %
-    </p>
+    </div>
 
-    <p class="mt-1">
+    <div class="mt-1">
       Maximum number of iterations:
       <input
         v-model="maxIterations"
@@ -121,9 +193,9 @@
         min="0"
         max="100000"
       />
-    </p>
+    </div>
 
-    <p class="flex mt-6 gap-3">
+    <div class="flex mt-6 gap-3">
       <button
         class="button-base button-blue"
         :disabled="
@@ -166,7 +238,7 @@
       >
         Resume
       </button>
-    </p>
+    </div>
 
     <div v-if="store.hasSolverRun" class="mt-6">
       <div class="flex items-center">
@@ -205,6 +277,9 @@ import {
 } from "../store";
 import { MAX_AMOUNT, convertBetString } from "../utils";
 import { detect } from "detect-browser";
+
+import { Tippy } from "vue-tippy";
+import { QuestionMarkCircleIcon } from "@heroicons/vue/20/solid";
 
 const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024;
 const browser = detect();
@@ -294,6 +369,11 @@ const checkConfig = (
 };
 
 export default defineComponent({
+  components: {
+    Tippy,
+    QuestionMarkCircleIcon,
+  },
+
   setup() {
     const store = useStore();
     const config = useConfigStore();
