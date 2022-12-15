@@ -1,27 +1,46 @@
 <template>
   <div class="flex mt-1">
     <div class="shrink-0 ml-1">
-      <table class="bg-neutral-800 shadow-md" @mouseleave="dragEnd">
+      <table class="shadow-md select-none snug" @mouseleave="dragEnd">
         <tr v-for="row in 13" :key="row" class="h-9">
           <td
             v-for="col in 13"
             :key="col"
-            class="relative w-[2.625rem] border border-black select-none"
+            class="relative w-[2.625rem] border border-black"
             @mousedown="dragStart(row, col)"
             @mouseup="dragEnd"
             @mouseenter="mouseEnter(row, col)"
           >
             <div
-              class="absolute bottom-0 left-0 w-full bg-amber-500"
-              :style="{ height: weightPercent(row, col) }"
-            ></div>
+              :class="
+                'absolute w-full h-full left-0 top-0 ' +
+                (row === col ? 'bg-neutral-700' : 'bg-neutral-800')
+              "
+            >
+              <div
+                class="absolute w-full h-full left-0 top-0 bg-bottom bg-no-repeat"
+                :style="{
+                  'background-image': `linear-gradient(${amber500} 0% 100%)`,
+                  'background-size': `auto ${cellValue(row, col)}%`,
+                }"
+              ></div>
+            </div>
             <div
               :class="
-                'absolute -top-1 left-0.5 z-10 text-shadow ' +
-                (hasWeight(row, col) ? 'text-white' : 'text-neutral-500')
+                'absolute -top-px left-[0.1875rem] z-10 text-shadow ' +
+                (cellValue(row, col) > 0 ? 'text-white' : 'text-neutral-500')
               "
             >
               {{ cellText(row, col) }}
+            </div>
+            <div
+              class="absolute bottom-px right-1 z-10 text-sm text-shadow text-white"
+            >
+              {{
+                cellValue(row, col) > 0 && cellValue(row, col) < 100
+                  ? cellValue(row, col).toFixed(1)
+                  : ""
+              }}
             </div>
           </td>
         </tr>
@@ -106,6 +125,8 @@ import { RangeManager } from "../../pkg/range/range";
 
 import DbItemPicker from "./DbItemPicker.vue";
 
+const amber500 = "#f59e0b";
+
 const rankPat = "[AaKkQqJjTt2-9]";
 const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
 const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
@@ -141,6 +162,20 @@ export default defineComponent({
 
     let draggingMode = "none" as DraggingMode;
 
+    const cellText = (row: number, col: number) => {
+      const r1 = 13 - Math.min(row, col);
+      const r2 = 13 - Math.max(row, col);
+      return ranks[r1] + ranks[r2] + ["s", "", "o"][Math.sign(row - col) + 1];
+    };
+
+    const cellIndex = (row: number, col: number) => {
+      return 13 * (row - 1) + col - 1;
+    };
+
+    const cellValue = (row: number, col: number) => {
+      return rangeStore[cellIndex(row, col)];
+    };
+
     const onUpdate = () => {
       rangeStoreRaw.set(range.raw_data());
       rangeText.value = range.to_string();
@@ -153,12 +188,6 @@ export default defineComponent({
       range.update(row, col, weight / 100);
       rangeStore[idx] = weight;
       onUpdate();
-    };
-
-    const cellText = (row: number, col: number) => {
-      const r1 = 13 - Math.min(row, col);
-      const r2 = 13 - Math.max(row, col);
-      return ranks[r1] + ranks[r2] + ["s", "", "o"][Math.sign(row - col) + 1];
     };
 
     const onRangeTextChange = () => {
@@ -215,14 +244,6 @@ export default defineComponent({
       }
     };
 
-    const hasWeight = (row: number, col: number) => {
-      return rangeStore[13 * (row - 1) + col - 1] > 0;
-    };
-
-    const weightPercent = (row: number, col: number) => {
-      return rangeStore[13 * (row - 1) + col - 1].toFixed(0) + "%";
-    };
-
     const onWeightChange = () => {
       weight.value = Math.round(Math.max(0, Math.min(100, weight.value)));
     };
@@ -243,17 +264,18 @@ export default defineComponent({
     };
 
     return {
+      amber500,
+      cellText,
+      cellValue,
+      rangeStore,
       rangeText,
       rangeTextError,
       weight,
       numCombos,
-      cellText,
       onRangeTextChange,
       dragStart,
       dragEnd,
       mouseEnter,
-      hasWeight,
-      weightPercent,
       onWeightChange,
       clearRange,
       loadRange,

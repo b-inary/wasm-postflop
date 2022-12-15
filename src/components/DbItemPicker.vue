@@ -31,7 +31,7 @@
           <input
             v-if="item0.isEditing"
             ref="nameInput"
-            v-model="edittingName"
+            v-model="editingName"
             type="text"
             :class="'px-1 py-0 text-sm ' + (!isNameValid ? 'input-error' : '')"
             style="width: calc(100% - 1.25rem)"
@@ -92,7 +92,7 @@
                 <input
                   v-if="item1.isEditing"
                   ref="nameInput"
-                  v-model="edittingName"
+                  v-model="editingName"
                   type="text"
                   :class="
                     'px-1 py-0 text-sm ' + (!isNameValid ? 'input-error' : '')
@@ -157,7 +157,7 @@
                       <input
                         v-if="item2.isEditing"
                         ref="nameInput"
-                        v-model="edittingName"
+                        v-model="editingName"
                         type="text"
                         :class="
                           'px-1 py-0 text-sm ' +
@@ -217,7 +217,7 @@
                           <input
                             v-if="item3.isEditing"
                             ref="nameInput"
-                            v-model="edittingName"
+                            v-model="editingName"
                             type="text"
                             :class="
                               'px-1 py-0 w-full text-sm ' +
@@ -258,7 +258,7 @@
                       <input
                         v-if="item2.isEditing"
                         ref="nameInput"
-                        v-model="edittingName"
+                        v-model="editingName"
                         type="text"
                         :class="
                           'px-1 py-0 w-full text-sm ' +
@@ -300,7 +300,7 @@
                 <input
                   v-if="item1.isEditing"
                   ref="nameInput"
-                  v-model="edittingName"
+                  v-model="editingName"
                   type="text"
                   :class="
                     'px-1 py-0 w-full text-sm ' +
@@ -342,7 +342,7 @@
           <input
             v-if="item0.isEditing"
             ref="nameInput"
-            v-model="edittingName"
+            v-model="editingName"
             type="text"
             :class="
               'px-1 py-0 w-full text-sm ' + (!isNameValid ? 'input-error' : '')
@@ -393,7 +393,7 @@
 
         <button
           class="flex-grow button-base button-blue button-overrides"
-          :disabled="errorOccured || !allowSave"
+          :disabled="errorOccured || !allowSave || isEditing"
           @click="addOrOverwriteItem()"
         >
           {{ selectedItem?.item?.isGroup === false ? "Overwrite" : "Save" }}
@@ -716,7 +716,8 @@ export default defineComponent({
       }
     };
 
-    const edittingName = ref("");
+    const isEditing = ref(false);
+    const editingName = ref("");
     const duplicateName = ref([] as string[]);
     const nameInput = ref(null as HTMLInputElement[] | null);
 
@@ -833,7 +834,7 @@ export default defineComponent({
     };
 
     const isNameValid = computed(() => {
-      const name = edittingName.value.trim();
+      const name = editingName.value.trim();
       return name !== "" && !duplicateName.value.includes(name);
     });
 
@@ -841,20 +842,21 @@ export default defineComponent({
       if (!selectedItem.value || errorOccured.value) return;
       const item = selectedItem.value.item;
       item.isEditing = true;
-      edittingName.value = item.path[item.path.length - 1];
+      isEditing.value = true;
+      editingName.value = item.path[item.path.length - 1];
       duplicateName.value = selectedItem.value.parentItems
         .map((item) => item.path[item.path.length - 1])
-        .filter((name) => name !== edittingName.value);
+        .filter((name) => name !== editingName.value);
       const defaultName = item.isGroup
         ? "New group"
         : `New ${props.storeName.slice(0, -1)}`; // remove "s" hack
-      if (edittingName.value === "") {
+      if (editingName.value === "") {
         let i = 2;
         let newName = defaultName;
         while (duplicateName.value.includes(newName)) {
           newName = `${defaultName} (${i++})`;
         }
-        edittingName.value = newName;
+        editingName.value = newName;
       }
       selectedValue.value = false;
       await nextTick();
@@ -877,17 +879,18 @@ export default defineComponent({
       if (newName === undefined) {
         // is user action
         item.isEditing = false;
+        isEditing.value = false;
 
         if (!isNameValid.value) {
-          edittingName.value = "";
+          editingName.value = "";
           if (item.path[item.path.length - 1] === "") {
             await deleteItem(false);
           }
           return;
         }
 
-        newName = edittingName.value.trim();
-        edittingName.value = "";
+        newName = editingName.value.trim();
+        editingName.value = "";
       }
 
       if (errorOccured.value) return;
@@ -994,7 +997,7 @@ export default defineComponent({
 
     const cancelRename = async (item: Item | Group) => {
       item.isEditing = false;
-      edittingName.value = "";
+      editingName.value = "";
       if (item.path[item.path.length - 1] === "") {
         selectedValue.value = item.pathStr;
         await deleteItem(false);
@@ -1071,7 +1074,8 @@ export default defineComponent({
       selectedValue,
       selectedItem,
       errorOccured,
-      edittingName,
+      isEditing,
+      editingName,
       nameInput,
       unselect,
       toggleGroup,

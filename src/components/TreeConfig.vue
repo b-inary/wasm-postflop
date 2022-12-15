@@ -98,7 +98,7 @@
         </div>
 
         <div class="mt-6">
-          <p>
+          <div class="flex">
             <span class="font-bold">OOP bet sizes</span>
             <label class="inline-block ml-8">
               <input
@@ -111,12 +111,61 @@
                 Use different sizes for donk bets
               </span>
             </label>
-          </p>
+            <div class="flex flex-grow justify-center">
+              <Tippy
+                class="inline-block cursor-help text-gray-600"
+                max-width="500px"
+                trigger="mouseenter click"
+                placement="bottom"
+                :delay="[200, 0]"
+                :interactive="true"
+              >
+                <QuestionMarkCircleIcon class="inline w-5 h-5" />
+                <div class="inline-block ml-0.5 text-sm underline">
+                  How to input
+                </div>
+                <template #content>
+                  <div class="px-1 py-0.5 text-justify">
+                    Multiple bet sizes can be input, separated by commas or
+                    spaces, in any of the following sizes. If left blank, no bet
+                    or raise will be made.
+                    <ul class="pl-6 list-disc">
+                      <li class="mt-1">
+                        A number representing a percentage of the pot (e.g.,
+                        "50"). For raises, the size is calculated by first
+                        calling and then combining a betting action of the
+                        specified percentage. For example, if the pot before the
+                        opponent's bet is 100 and the opponent bets 75, a raise
+                        of 50% would result in a bet size of 75 + (100 + 75 +
+                        75) * 50% = 200.
+                      </li>
+                      <li class="mt-1">
+                        Multiple of the previous bet size (e.g., "2.5x"). Only
+                        valid for raises.
+                      </li>
+                      <li class="mt-1">All-in (e.g., "a").</li>
+                      <li class="mt-1">Constant addition (e.g., "100c").</li>
+                      <li class="mt-1">
+                        Geometric size, i.e., divide the remaining stack into a
+                        specified number of equal percentage bets (e.g., "3e").
+                        For example, if the current pot is 100 and the effective
+                        stack is 400, "2e" would result in a bet size of 100. If
+                        the number before "e" is omitted, the number of
+                        remaining streets is used (flop=3, turn=2, river=1). You
+                        can also specify a maximum percentage limit by adding a
+                        number after "e" (e.g., "2e200").
+                      </li>
+                    </ul>
+                  </div>
+                </template>
+              </Tippy>
+            </div>
+          </div>
 
           <div class="flex gap-5">
             <div>
-              <p class="my-1 underline">Flop</p>
-              <p class="my-1">
+              <div class="my-1 underline">Flop</div>
+              <div class="my-1">
                 <span class="inline-block w-14">Bet:</span>
                 <input
                   v-model="config.oopFlopBet"
@@ -132,8 +181,8 @@
                   "
                 />
                 %
-              </p>
-              <p class="my-1">
+              </div>
+              <div class="my-1">
                 <span class="inline-block w-14">Raise:</span>
                 <input
                   v-model="config.oopFlopRaise"
@@ -149,12 +198,12 @@
                   "
                 />
                 %
-              </p>
+              </div>
             </div>
 
             <div>
-              <p class="my-1 underline">Turn</p>
-              <p class="my-1">
+              <div class="my-1 underline">Turn</div>
+              <div class="my-1">
                 <span class="inline-block w-14">Bet:</span>
                 <input
                   v-model="config.oopTurnBet"
@@ -170,8 +219,8 @@
                   "
                 />
                 %
-              </p>
-              <p class="my-1">
+              </div>
+              <div class="my-1">
                 <span class="inline-block w-14">Raise:</span>
                 <input
                   v-model="config.oopTurnRaise"
@@ -187,8 +236,8 @@
                   "
                 />
                 %
-              </p>
-              <p v-if="config.donkOption" class="my-1">
+              </div>
+              <div v-if="config.donkOption" class="my-1">
                 <span class="inline-block w-14">Donk:</span>
                 <input
                   v-model="config.oopTurnDonk"
@@ -204,12 +253,12 @@
                   "
                 />
                 %
-              </p>
+              </div>
             </div>
 
             <div>
-              <p class="my-1 underline">River</p>
-              <p class="my-1">
+              <div class="my-1 underline">River</div>
+              <div class="my-1">
                 <span class="inline-block w-14">Bet:</span>
                 <input
                   v-model="config.oopRiverBet"
@@ -225,8 +274,8 @@
                   "
                 />
                 %
-              </p>
-              <p class="my-1">
+              </div>
+              <div class="my-1">
                 <span class="inline-block w-14">Raise:</span>
                 <input
                   v-model="config.oopRiverRaise"
@@ -242,8 +291,8 @@
                   "
                 />
                 %
-              </p>
-              <p v-if="config.donkOption" class="my-1">
+              </div>
+              <div v-if="config.donkOption" class="my-1">
                 <span class="inline-block w-14">Donk:</span>
                 <input
                   v-model="config.oopRiverDonk"
@@ -259,14 +308,14 @@
                   "
                 />
                 %
-              </p>
+              </div>
             </div>
           </div>
         </div>
 
         <div>
           <div class="flex">
-            <p class="mt-6 font-bold">IP bet sizes</p>
+            <div class="mt-6 font-bold">IP bet sizes</div>
             <div class="flex flex-grow items-center justify-center gap-6">
               <button
                 class="mt-3 button-base button-blue button-arrow"
@@ -287,8 +336,8 @@
 
           <div class="flex gap-5">
             <div>
-              <p class="my-1 underline">Flop</p>
-              <p class="my-1">
+              <div class="my-1 underline">Flop</div>
+              <div class="my-1">
                 <span class="inline-block w-14">Bet:</span>
                 <input
                   v-model="config.ipFlopBet"
@@ -304,8 +353,8 @@
                   "
                 />
                 %
-              </p>
-              <p class="my-1">
+              </div>
+              <div class="my-1">
                 <span class="inline-block w-14">Raise:</span>
                 <input
                   v-model="config.ipFlopRaise"
@@ -321,12 +370,12 @@
                   "
                 />
                 %
-              </p>
+              </div>
             </div>
 
             <div>
-              <p class="my-1 underline">Turn</p>
-              <p class="my-1">
+              <div class="my-1 underline">Turn</div>
+              <div class="my-1">
                 <span class="inline-block w-14">Bet:</span>
                 <input
                   v-model="config.ipTurnBet"
@@ -342,8 +391,8 @@
                   "
                 />
                 %
-              </p>
-              <p class="my-1">
+              </div>
+              <div class="my-1">
                 <span class="inline-block w-14">Raise:</span>
                 <input
                   v-model="config.ipTurnRaise"
@@ -359,12 +408,12 @@
                   "
                 />
                 %
-              </p>
+              </div>
             </div>
 
             <div>
-              <p class="my-1 underline">River</p>
-              <p class="my-1">
+              <div class="my-1 underline">River</div>
+              <div class="my-1">
                 <span class="inline-block w-14">Bet:</span>
                 <input
                   v-model="config.ipRiverBet"
@@ -380,8 +429,8 @@
                   "
                 />
                 %
-              </p>
-              <p class="my-1">
+              </div>
+              <div class="my-1">
                 <span class="inline-block w-14">Raise:</span>
                 <input
                   v-model="config.ipRiverRaise"
@@ -397,7 +446,7 @@
                   "
                 />
                 %
-              </p>
+              </div>
             </div>
           </div>
         </div>
@@ -419,10 +468,26 @@
 
         <div class="flex mt-6 gap-4">
           <div>
-            <p class="my-1">
-              <span class="inline-block w-[10.5rem]">
+            <div class="my-1">
+              <div class="inline-block w-48">
                 Add all-in threshold:
-              </span>
+                <Tippy
+                  class="inline-block cursor-help"
+                  max-width="420px"
+                  trigger="mouseenter click"
+                  :delay="[200, 0]"
+                  :interactive="true"
+                >
+                  <QuestionMarkCircleIcon class="w-5 h-5 text-gray-600" />
+                  <template #content>
+                    <div class="px-1 py-0.5 text-justify">
+                      Add all-in action at all spots such that the ratio of the
+                      maximum possible bet size to the pot is below this
+                      threshold.
+                    </div>
+                  </template>
+                </Tippy>
+              </div>
               <input
                 v-model="config.addAllInThreshold"
                 type="number"
@@ -435,12 +500,44 @@
                 :max="MAX_AMOUNT * 100"
               />
               %
-            </p>
+            </div>
 
-            <p class="my-1">
-              <span class="inline-block w-[10.5rem]">
+            <div class="my-1">
+              <div class="inline-block w-48">
                 Force all-in threshold:
-              </span>
+                <Tippy
+                  class="inline-block cursor-help"
+                  max-width="500px"
+                  trigger="mouseenter click"
+                  :delay="[200, 0]"
+                  :interactive="true"
+                >
+                  <QuestionMarkCircleIcon class="w-5 h-5 text-gray-600" />
+                  <template #content>
+                    <div class="px-1 py-0.5 text-justify">
+                      <div>
+                        Replace betting action with all-in action if the SPR
+                        (Stack/Pot Ratio) is below this threshold after the
+                        betting action is called by the opponent. The
+                        recommended value is around 15% - 20%.
+                      </div>
+                      <div class="mt-3">
+                        This option is somewhat similar to the "all-in
+                        threshold" in PioSOLVER. PioSOLVER replaces the betting
+                        action with all-in if the percentage of one's pot
+                        commitment to the initial stack exceeds the threshold.
+                      </div>
+                      <div class="mt-3">
+                        The conversion formula when ignoring decimal rounding is
+                        as follows (s = initial SPR, r = PioSOLVER's threshold):
+                      </div>
+                      <div class="mt-1 text-center">
+                        Threshold = s * (1 - r) / (1 + 2 * s * r).
+                      </div>
+                    </div>
+                  </template>
+                </Tippy>
+              </div>
               <input
                 v-model="config.forceAllInThreshold"
                 type="number"
@@ -453,10 +550,42 @@
                 :max="MAX_AMOUNT * 100"
               />
               %
-            </p>
+            </div>
 
-            <p class="my-1">
-              <span class="inline-block w-[10.5rem]">Merging threshold:</span>
+            <div class="my-1">
+              <div class="inline-block w-48">
+                Merging threshold:
+                <Tippy
+                  class="inline-block cursor-help"
+                  max-width="500px"
+                  trigger="mouseenter click"
+                  :delay="[200, 0]"
+                  :interactive="true"
+                >
+                  <QuestionMarkCircleIcon class="w-5 h-5 text-gray-600" />
+                  <template #content>
+                    <div class="px-1 py-0.5 text-justify">
+                      <div>
+                        Merge betting actions if there are any betting actions
+                        with similar sizes.
+                      </div>
+                      <div class="mt-3">
+                        The algorithm is the same as PioSOLVER. That is, select
+                        the highest bet size (= X% of the pot) and remove all
+                        betting actions with sizes (= Y% of the pot) satisfying
+                        the following inequality:
+                      </div>
+                      <div class="my-1 text-center">
+                        (100 + X) / (100 + Y) &lt; 1.0 + Threshold.
+                      </div>
+                      <div>
+                        Repeat this process with the next highest bet size among
+                        the remainder.
+                      </div>
+                    </div>
+                  </template>
+                </Tippy>
+              </div>
               <input
                 v-model="config.mergingThreshold"
                 type="number"
@@ -469,7 +598,7 @@
                 :max="MAX_AMOUNT * 100"
               />
               %
-            </p>
+            </div>
           </div>
 
           <div class="flex justify-center flex-grow">
@@ -588,6 +717,8 @@ import { MAX_AMOUNT, readableLineString } from "../utils";
 
 import DbItemPicker from "./DbItemPicker.vue";
 import TreeEditor from "./TreeEditor.vue";
+import { Tippy } from "vue-tippy";
+import { QuestionMarkCircleIcon } from "@heroicons/vue/20/solid";
 
 type ConfigValue = {
   startingPot: number;
@@ -621,6 +752,8 @@ export default defineComponent({
   components: {
     DbItemPicker,
     TreeEditor,
+    Tippy,
+    QuestionMarkCircleIcon,
   },
 
   setup() {

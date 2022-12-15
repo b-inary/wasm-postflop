@@ -1,6 +1,6 @@
 <template>
   <table
-    class="w-full h-full table-fixed"
+    class="w-full h-full table-fixed select-none snug"
     :style="{
       '--font-scale': isCompareMode ? 0.875 : 1,
       '--pair-font-size':
@@ -10,14 +10,10 @@
     }"
   >
     <tr v-for="row in 13" :key="row">
-      <td
-        v-for="col in 13"
-        :key="col"
-        class="relative border border-black snug"
-      >
+      <td v-for="col in 13" :key="col" class="relative border border-black">
         <div
           :class="
-            'flex absolute w-full h-full top-0 left-0 ' +
+            'flex absolute w-full h-full left-0 top-0 ' +
             (row === col ? 'bg-neutral-700' : 'bg-neutral-800')
           "
         >
@@ -33,7 +29,7 @@
         </div>
         <div
           :class="
-            'absolute -top-px left-[0.1875rem] z-10 text-shadow select-none ' +
+            'absolute -top-px left-[0.1875rem] z-10 text-shadow ' +
             (hasWeight(row, col) ? 'text-white' : 'text-neutral-500')
           "
           style="font-size: var(--pair-font-size)"
@@ -41,7 +37,7 @@
           {{ cellText(row, col) }}
         </div>
         <div
-          class="absolute bottom-px right-1 z-10 text-shadow text-white select-none overflow-hidden"
+          class="absolute bottom-px right-1 z-10 text-shadow text-white overflow-hidden"
           style="
             max-width: calc(100% - 0.25rem);
             font-size: var(--value-font-size);

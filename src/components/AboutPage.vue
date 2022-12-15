@@ -3,9 +3,10 @@
     <span class="font-bold">WASM Postflop</span> is a free, open-source
     <span class="font-bold">GTO solver</span> that works on web browsers.<br />
     <span class="font-bold">WASM</span> stands for
-    <a href="https://webassembly.org/" class="font-bold link">WebAssembly</a>.
-    It is a modern technology that allows us to distribute a fast, portable, and
-    secure program across the web.
+    <a href="https://webassembly.org/" class="font-bold link" target="_blank"
+      >WebAssembly</a
+    >. It is a modern technology that allows us to distribute a fast, portable,
+    and secure program across the web.
   </p>
 
   <ul class="mt-4 ml-8 list-disc">
@@ -25,7 +26,12 @@
 
   <p class="mt-4">
     For more detailed information about this project, please see
-    <a href="https://github.com/b-inary/wasm-postflop" class="link">GitHub</a>.
+    <a
+      href="https://github.com/b-inary/wasm-postflop"
+      class="link"
+      target="_blank"
+      >GitHub</a
+    >.
   </p>
 
   <p class="mt-4 underline">See also:</p>
@@ -35,6 +41,7 @@
       <a
         href="https://github.com/b-inary/desktop-postflop"
         class="font-bold link"
+        target="_blank"
         >Desktop Postflop</a
       >: A native desktop application for Windows. Faster and no memory
       limitations.
@@ -49,7 +56,10 @@
         >Multithreading is not supported on iOS and Safari</span
       >
       because nested workers are
-      <a href="https://bugs.webkit.org/show_bug.cgi?id=22723" class="link"
+      <a
+        href="https://bugs.webkit.org/show_bug.cgi?id=22723"
+        class="link"
+        target="_blank"
         >not implemented</a
       >
       <ul class="ml-8" style="list-style-type: circle">
@@ -71,14 +81,6 @@
   <p class="mt-4 underline">Change log:</p>
 
   <ul class="mt-4 ml-8 list-disc">
-    <li>
-      <span class="font-bold">2022-07</span>: Added turn/river statistics
-      feature | Added option to show EV of each action
-    </li>
-    <li>
-      <span class="font-bold">2022-06</span>: Save/Load ranges and
-      configurations | Added equity calculation feature
-    </li>
     <li><span class="font-bold">2022-06-01</span>: Initial release</li>
   </ul>
 </template>

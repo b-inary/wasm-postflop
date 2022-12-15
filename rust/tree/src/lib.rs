@@ -42,6 +42,7 @@ fn encode_line(line: &[Action]) -> String {
     for &action in line {
         if !encoded.is_empty() {
             let delimiter = if flag == 2 { "|" } else { "-" };
+            flag = if flag == 2 { 0 } else { flag };
             encoded.push_str(delimiter);
         }
         match action {
@@ -215,7 +216,7 @@ impl TreeManager {
 
     pub fn apply_history(&mut self, line: &str) {
         let line = if line.is_empty() {
-            vec![]
+            Vec::new()
         } else {
             line.split('-').map(decode_action).collect::<Vec<_>>()
         };

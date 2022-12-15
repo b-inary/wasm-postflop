@@ -8,7 +8,7 @@
       >
         <div
           class="absolute left-0 top-0 w-full h-full"
-          :style="{ background: bgGradient(row, col) }"
+          :style="{ background: bgImage(row, col) }"
         ></div>
       </td>
     </tr>
@@ -20,6 +20,7 @@ import { defineComponent } from "vue";
 import { useConfigStore } from "../store";
 
 const amber500 = "#f59e0b";
+const neutral700 = "#404040";
 const neutral800 = "#262626";
 
 export default defineComponent({
@@ -35,12 +36,13 @@ export default defineComponent({
     const range = config.range[props.player];
     const index = (row: number, col: number) => (row - 1) * 13 + (col - 1);
 
-    const bgGradient = (row: number, col: number) => {
+    const bgImage = (row: number, col: number) => {
       const weight = range[index(row, col)];
-      return `linear-gradient(to top, ${amber500} ${weight}%, ${neutral800} ${weight}%)`;
+      const neutral = row === col ? neutral700 : neutral800;
+      return `linear-gradient(to top, ${amber500} ${weight}%, ${neutral} ${weight}%)`;
     };
 
-    return { bgGradient };
+    return { bgImage };
   },
 });
 </script>

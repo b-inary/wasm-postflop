@@ -74,6 +74,15 @@
               {{ action.amount === "0" ? "" : action.amount }}
             </span>
           </button>
+          <div
+            v-if="spot.actions.length === 0"
+            :class="
+              'flex w-full px-1.5 font-bold group-hover:opacity-100 ' +
+              (spot.index === selectedSpotIndex ? '' : 'opacity-70')
+            "
+          >
+            (No actions)
+          </div>
         </div>
       </template>
 
@@ -128,7 +137,7 @@
     <button
       class="button-base button-blue"
       :disabled="
-        spots[selectedSpotIndex].type === 'terminal' ||
+        isSelectedTerminal ||
         isAfterAllin ||
         betAmount < minAmount ||
         betAmount > maxAmount ||
@@ -163,7 +172,7 @@
         :max="maxAmount"
         @keydown.enter="addBetAction"
       />
-      <span v-if="maxAmount !== 0" class="ml-2">
+      <span v-if="!isSelectedTerminal && !isAfterAllin" class="ml-2">
         ({{ (amountRate * 100).toFixed(1) }}% of the pot)
       </span>
     </div>
@@ -294,8 +303,14 @@ export default defineComponent({
     };
     const spots = ref<Spot[]>([rootSpot]);
     const selectedSpotIndex = ref(-1);
-    const betAmount = ref(0);
 
+    const isSelectedTerminal = computed(() => {
+      if (selectedSpotIndex.value === -1) return false;
+      const selectedSpot = spots.value[selectedSpotIndex.value];
+      return selectedSpot.type === "terminal";
+    });
+
+    const betAmount = ref(0);
     const totalBetAmount = ref([0, 0]);
     const prevBetAmount = ref(0);
 
@@ -305,6 +320,7 @@ export default defineComponent({
     });
 
     const maxAmount = computed(() => {
+      if (isSelectedTerminal.value) return 0;
       const maxTotalBetAmount = Math.max(...totalBetAmount.value);
       return config.effectiveStack - (maxTotalBetAmount - prevBetAmount.value);
     });
@@ -323,6 +339,7 @@ export default defineComponent({
     });
 
     const existingAmounts = computed(() => {
+      if (selectedSpotIndex.value === -1) return [];
       const ret: number[] = [];
       const spot = spots.value[selectedSpotIndex.value] as SpotPlayer;
       for (const action of spot.actions) {
@@ -520,6 +537,8 @@ export default defineComponent({
         | undefined;
 
       const nextActions = treeManager.actions().split("/");
+      if (nextActions[0] === "") nextActions.pop();
+
       spots.value.push(
         {
           type: "chance",
@@ -560,6 +579,8 @@ export default defineComponent({
       const player = prevSpot.player === "oop" ? "ip" : "oop";
 
       const actions = treeManager.actions().split("/");
+      if (actions[0] === "") actions.pop();
+
       spots.value.push({
         type: "player",
         index: selectedSpotIndex.value,
@@ -649,6 +670,7 @@ export default defineComponent({
       navDiv,
       spots,
       selectedSpotIndex,
+      isSelectedTerminal,
       betAmount,
       isAfterAllin,
       maxAmount,
