@@ -14,7 +14,7 @@ export type Results = {
 export type ChanceReports = {
   currentPlayer: "oop" | "ip" | "terminal";
   numActions: number;
-  isValid: Float64Array;
+  status: Float64Array;
   combos: Float64Array[];
   equity: Float64Array[];
   ev: Float64Array[];

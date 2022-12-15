@@ -174,7 +174,10 @@ export default defineComponent({
       const data = Array.from({ length: 13 * 13 }, (_, i) => {
         const row = Math.floor(i / 13);
         const col = i % 13;
-        const len = !isSuitIndividual ? 1 : row == col ? 6 : row < col ? 4 : 12;
+        let len = 1;
+        if (isSuitIndividual) {
+          len = row === col ? 6 : row < col ? 4 : 12;
+        }
         return Array.from({ length: len }, () => ({
           weight: 0,
           normalizer: 0,

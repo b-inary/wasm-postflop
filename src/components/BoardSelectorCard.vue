@@ -1,16 +1,35 @@
 <template>
   <button
     :class="
-      'relative w-10 h-14 rounded-lg border shadow select-none ' +
+      'relative rounded-lg border select-none enabled:shadow ' +
       (isSelected
         ? 'bg-yellow-300 ring-1 ring-red-600 border-red-600'
         : 'bg-white border-black')
     "
+    :style="{
+      '--width': width,
+      '--font-size': fontSize,
+      width: 'var(--width)',
+      'padding-top': 'calc(var(--width) * 1.4 - 2px)',
+    }"
   >
-    <span :class="'absolute top-0.5 left-1.5 text-xl font-bold ' + colorClass">
+    <span
+      :class="'absolute top-0 font-bold ' + colorClass"
+      :style="{
+        left: '15%',
+        'font-size': 'calc(var(--font-size) * 1.25)',
+      }"
+    >
       {{ rank }}
     </span>
-    <span :class="'absolute bottom-0.5 right-1 ' + colorClass">
+    <span
+      :class="'absolute ' + colorClass"
+      :style="{
+        bottom: '5%',
+        right: '10%',
+        'font-size': 'var(--font-size)',
+      }"
+    >
       {{ suit }}
     </span>
   </button>
@@ -30,6 +49,14 @@ export default defineComponent({
     isSelected: {
       type: Boolean,
       default: false,
+    },
+    width: {
+      type: String,
+      default: "40px",
+    },
+    fontSize: {
+      type: String,
+      default: "1rem",
     },
   },
 

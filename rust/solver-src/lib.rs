@@ -308,7 +308,7 @@ impl GameManager {
         let game = &mut self.game;
         let history = game.history().to_vec();
 
-        let mut is_valid = vec![false; 52];
+        let mut status = vec![0.0; 52]; // 0: empty range, 1: not empty range
         let mut combos = [vec![0.0; 52], vec![0.0; 52]];
         let mut equity = [vec![0.0; 52], vec![0.0; 52]];
         let mut ev = [vec![0.0; 52], vec![0.0; 52]];
@@ -330,6 +330,18 @@ impl GameManager {
 
             let weights = [game.weights(0), game.weights(1)];
             let normalizer = [game.normalized_weights(0), game.normalized_weights(1)];
+
+            if !game.is_terminal_node() {
+                let strategy_tmp = game.strategy();
+                let current_player = game.current_player();
+                let num_hands = game.private_cards(current_player).len();
+                for action in 0..num_actions {
+                    let slice = &strategy_tmp[action * num_hands..(action + 1) * num_hands];
+                    let strategy_summary = weighted_average(slice, &normalizer[current_player]);
+                    strategy[chance * num_actions + action] = round(strategy_summary);
+                }
+            }
+
             let is_oop_empty = weights[0].iter().all(|&w| w < 0.0005);
             let is_ip_empty = weights[1].iter().all(|&w| w < 0.0005);
 
@@ -338,7 +350,7 @@ impl GameManager {
                 continue;
             }
 
-            is_valid[chance] = true;
+            status[chance] = 1.0;
 
             let total_bet_amount = game.total_bet_amount();
             let pot_base = game.tree_config().starting_pot + total_bet_amount.iter().min().unwrap();
@@ -363,24 +375,13 @@ impl GameManager {
                 eqr[player][chance] = round(weighted_average(&eqr_tmp, &normalizer[player]));
             }
 
-            if !game.is_terminal_node() {
-                let strategy_tmp = game.strategy();
-                let current_player = game.current_player();
-                let num_hands = game.private_cards(current_player).len();
-                for action in 0..num_actions {
-                    let slice = &strategy_tmp[action * num_hands..(action + 1) * num_hands];
-                    let strategy_summary = weighted_average(slice, &normalizer[current_player]);
-                    strategy[chance * num_actions + action] = round(strategy_summary);
-                }
-            }
-
             game.apply_history(&history);
         }
 
         let buf = &mut self.report_buffer;
         buf.clear();
 
-        buf.extend(is_valid.iter().map(|&x| x as usize as f64));
+        buf.extend_from_slice(&status);
         buf.extend_from_slice(&combos[0]);
         buf.extend_from_slice(&combos[1]);
         buf.extend_from_slice(&equity[0]);

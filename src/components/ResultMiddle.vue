@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-12 border-y border-gray-500">
+  <div class="flex shrink-0 h-12 border-y border-gray-500">
     <button
       v-for="mode in ['basics', 'compare', 'graphs', 'scatter'] as const"
       :key="mode"

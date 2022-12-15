@@ -145,7 +145,7 @@ checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
 [[package]]
 name = "postflop-solver"
 version = "0.1.0"
-source = "git+https://github.com/b-inary/postflop-solver#1828a86519ce370570eb9273067b96e1d1239ec8"
+source = "git+https://github.com/b-inary/postflop-solver#5b4027d7abf16a4da23a3140f4c41078c46ba3ce"
 dependencies = [
  "once_cell",
  "rayon",

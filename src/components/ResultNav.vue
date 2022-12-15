@@ -1,16 +1,16 @@
 <template>
   <div
     ref="navDiv"
-    class="flex h-[10.25rem] gap-1 p-1 overflow-x-auto whitespace-nowrap snug"
+    class="flex shrink-0 h-[10.25rem] gap-1 p-1 overflow-x-auto whitespace-nowrap snug"
   >
     <div
       v-for="spot in spots"
       :key="spot.index"
       :class="
-        'flex flex-col h-full px-1 py-0.5 justify-start ' +
+        'flex flex-col relative h-full px-1 py-0.5 justify-start ' +
         'rounded-lg shadow-md border-[3px] transition group ' +
         (spot.type === 'chance'
-          ? isSelectedChanceSkipped
+          ? isSelectedChanceSkipped && spot.index > selectedChanceIndex
             ? ''
             : 'hover:border-red-600 '
           : 'hover:border-blue-600 ') +
@@ -18,7 +18,9 @@
           ? 'border-red-600 cursor-default'
           : spot.index === selectedSpotIndex
           ? 'border-blue-600 cursor-default'
-          : spot.type === 'chance' && isSelectedChanceSkipped
+          : spot.type === 'chance' &&
+            isSelectedChanceSkipped &&
+            spot.index > selectedChanceIndex
           ? 'border-gray-400 cursor-default'
           : 'border-gray-400 cursor-pointer')
       "
@@ -31,7 +33,7 @@
             'px-1.5 pt-1 pb-0.5 font-bold ' +
             (spot.index === selectedChanceIndex
               ? ''
-              : isSelectedChanceSkipped
+              : isSelectedChanceSkipped && spot.index > selectedChanceIndex
               ? 'opacity-70'
               : 'group-hover:opacity-100 opacity-70')
           "
@@ -54,7 +56,7 @@
             :class="
               spot.index === selectedChanceIndex
                 ? ''
-                : isSelectedChanceSkipped
+                : isSelectedChanceSkipped && spot.index > selectedChanceIndex
                 ? 'opacity-70'
                 : 'group-hover:opacity-100 opacity-70'
             "
@@ -63,6 +65,18 @@
             <div>Stack {{ spot.stack }}</div>
           </div>
         </div>
+
+        <button
+          v-if="
+            spot.index === selectedChanceIndex &&
+            spot.selectedIndex !== -1 &&
+            !isDealing
+          "
+          class="absolute top-1.5 right-1.5 opacity-70 hover:opacity-100 text-gray-600"
+          @click="deal(spot.selectedIndex)"
+        >
+          <XMarkIcon class="w-6 h-6" />
+        </button>
       </template>
 
       <!-- Player -->
@@ -176,7 +190,7 @@ import {
   SpotPlayer,
 } from "../result-types";
 
-import { CheckIcon } from "@heroicons/vue/20/solid";
+import { CheckIcon, XMarkIcon } from "@heroicons/vue/20/solid";
 
 const foldColor = { red: 0x3b, green: 0x82, blue: 0xf6 }; // blue-500
 const checkColor = { red: 0x10, green: 0xb9, blue: 0x81 }; // emerald-500
@@ -230,6 +244,7 @@ const actionColor = (
 export default defineComponent({
   components: {
     CheckIcon,
+    XMarkIcon,
   },
 
   props: {
@@ -243,6 +258,10 @@ export default defineComponent({
     },
     cards: {
       type: Array as () => Uint16Array[],
+      required: true,
+    },
+    dealtCard: {
+      type: Number,
       required: true,
     },
   },
@@ -264,12 +283,13 @@ export default defineComponent({
     const navDiv = ref<HTMLDivElement | null>(null);
 
     const config = useSavedConfigStore();
-    const { isHandlerUpdated } = toRefs(props);
+    const { isHandlerUpdated, dealtCard } = toRefs(props);
 
     const spots = ref<Spot[]>([]);
     const rates = ref<number[] | null>(null);
     const selectedSpotIndex = ref(-1);
     const selectedChanceIndex = ref(-1);
+    const isDealing = ref(false);
 
     const selectedSpot = computed(() =>
       selectedSpotIndex.value === -1 ||
@@ -328,16 +348,21 @@ export default defineComponent({
       context.emit("update:is-handler-updated", false);
     });
 
-    const selectSpot = async (spotIndex: number, needSplice: boolean) => {
+    const selectSpot = async (
+      spotIndex: number,
+      needSplice: boolean,
+      fromDeal = false
+    ) => {
       if (!handler) throw new Error("null handler");
+
       if (
         props.isLocked ||
         (!needSplice &&
-          (spotIndex === selectedSpotIndex.value ||
+          ((spotIndex === selectedSpotIndex.value && !fromDeal) ||
             spotIndex === selectedChanceIndex.value ||
-            (spotIndex < spots.value.length &&
-              spots.value[spotIndex].type === "chance" &&
-              isSelectedChanceSkipped.value)))
+            (spots.value[spotIndex].type === "chance" &&
+              isSelectedChanceSkipped.value &&
+              spotIndex > selectedChanceIndex.value)))
       ) {
         return;
       }
@@ -347,11 +372,67 @@ export default defineComponent({
         return;
       }
 
+      // start processing
       context.emit("update:is-locked", true);
 
+      // avoid unnecessary update of refs
       selectedSpotIndexTmp = selectedSpotIndex.value;
       selectedChanceIndexTmp = selectedChanceIndex.value;
 
+      // when from deal, update river dead cards and terminal equity
+      if (fromDeal) {
+        const findRiverIndex = spots.value
+          .slice(selectedChanceIndexTmp + 3)
+          .findIndex((spot) => spot.type === "chance");
+        let riverIndex = -1;
+        if (findRiverIndex !== -1) {
+          riverIndex = findRiverIndex + selectedChanceIndexTmp + 3;
+        }
+        const riverSpot =
+          riverIndex === -1 ? null : (spots.value[riverIndex] as SpotChance);
+        selectedChanceIndexTmp = -1;
+
+        if (riverSpot) {
+          const history = new Uint32Array(
+            spots.value.slice(1, riverIndex).map((spot) => spot.selectedIndex)
+          );
+          await handler.applyHistory(history);
+          const possibleCards = await handler.possibleCards();
+          for (let i = 0; i < 52; ++i) {
+            const isDead = !(possibleCards & (1n << BigInt(i)));
+            riverSpot.cards[i].isDead = isDead;
+            if (riverSpot.selectedIndex === i && isDead) {
+              riverSpot.cards[i].isSelected = false;
+              riverSpot.selectedIndex = -1;
+            }
+          }
+        }
+
+        const riverSkipped = riverSpot?.selectedIndex === -1;
+        const lastSpot = spots.value[spots.value.length - 1];
+
+        if (
+          !riverSkipped &&
+          lastSpot.type === "terminal" &&
+          lastSpot.equityOop !== 0 &&
+          lastSpot.equityOop !== 1
+        ) {
+          const history = new Uint32Array(
+            spots.value.slice(1, -1).map((spot) => spot.selectedIndex)
+          );
+          await handler.applyHistory(history);
+          const buffer = await handler.getResults();
+          const results = await getResults(buffer, "terminal", 0);
+          if (!results.isEmpty) {
+            lastSpot.equityOop = average(
+              results.equity[0],
+              results.normalizer[0]
+            );
+          }
+        }
+      }
+
+      // update indices of selected spot and selected chance
       if (!needSplice && spots.value[spotIndex].type === "chance") {
         selectedChanceIndexTmp = spotIndex;
         if (selectedSpotIndexTmp < spotIndex + 1) {
@@ -381,6 +462,7 @@ export default defineComponent({
         spots.value.slice(1, endIndex).map((spot) => spot.selectedIndex)
       );
 
+      // apply history
       await handler.applyHistory(history);
 
       const currentPlayer = await handler.currentPlayer();
@@ -391,6 +473,7 @@ export default defineComponent({
         numActions = await handler.numActions();
       }
 
+      // obtain results
       const buffer = await handler.getResults();
       results = await getResults(buffer, currentPlayer, numActions);
 
@@ -404,6 +487,7 @@ export default defineComponent({
         append = new Uint32Array(appendArray);
       }
 
+      // obtain actions after skipped chances
       const nextActionsStr = await handler.actionsAfterHistory(append);
 
       const canChanceReports =
@@ -413,6 +497,7 @@ export default defineComponent({
           .every((spot) => spot.type !== "chance") &&
         nextActionsStr !== "chance";
 
+      // if possible, obtain chance reports
       if (canChanceReports) {
         let player: "oop" | "ip" | "terminal";
         if (nextActionsStr === "terminal") {
@@ -430,10 +515,12 @@ export default defineComponent({
         chanceReports = null;
       }
 
+      // update total bet amounts
       const emptyAppend = new Uint32Array();
       totalBetAmount = Array.from(await handler.totalBetAmount(emptyAppend));
       totalBetAmountAppended = Array.from(await handler.totalBetAmount(append));
 
+      // if need to splice, splice spots
       if (needSplice) {
         if (nextActionsStr === "terminal") {
           updateResultsTerminal(spotIndex);
@@ -444,6 +531,7 @@ export default defineComponent({
         }
       }
 
+      // update action rates if necessary
       const spot = spots.value[selectedSpotIndexTmp];
       if (spot.type === "player" && selectedChanceIndexTmp === -1) {
         const playerIndex = spot.player === "oop" ? 0 : 1;
@@ -457,9 +545,12 @@ export default defineComponent({
         rates.value = null;
       }
 
+      // update refs
       selectedSpotIndex.value = selectedSpotIndexTmp;
       selectedChanceIndex.value = selectedChanceIndexTmp;
+      isDealing.value = false;
 
+      // emit event
       context.emit(
         "trigger-update",
         selectedSpot.value,
@@ -470,6 +561,7 @@ export default defineComponent({
         totalBetAmount
       );
 
+      // scroll to selected spot
       await nextTick();
       if (navDiv.value) {
         const selectedChild = navDiv.value.children[selectedSpotIndex.value];
@@ -559,7 +651,7 @@ export default defineComponent({
       const ptr = reportBuffer.ptr >>> 0;
       let offset = 0;
 
-      const isValid = new Float64Array(buffer, ptr + offset, 52);
+      const status = new Float64Array(buffer, ptr + offset, 52);
       offset += 8 * 52;
 
       const combosOop = new Float64Array(buffer, ptr + offset, 52);
@@ -591,7 +683,7 @@ export default defineComponent({
       return {
         currentPlayer,
         numActions,
-        isValid,
+        status,
         combos: [combosOop, combosIp],
         equity: [equityOop, equityIp],
         ev: [evOop, evIp],
@@ -755,7 +847,9 @@ export default defineComponent({
 
     const deal = async (card: number) => {
       const spot = selectedChance.value;
-      if (!spot || spot.selectedIndex === card) return;
+      if (!spot) throw new Error("null spot");
+
+      isDealing.value = true;
 
       if (spot.selectedIndex !== -1) {
         spot.cards[spot.selectedIndex].isSelected = false;
@@ -763,17 +857,13 @@ export default defineComponent({
       spot.cards[card].isSelected = true;
       spot.selectedIndex = card;
 
-      selectedChanceIndex.value = -1;
-
-      // const spot = selectedSpot.value as SpotTerminal;
-      // if (!chanceSkipped && !results.isEmpty && spot.equityOop == -1) {
-      //   spot.equityOop = average(results.equity[0], results.normalizer[0]);
-      // }
-
-      // update river dead cards
-
-      await selectSpot(selectedSpotIndex.value, false);
+      await selectSpot(selectedSpotIndex.value, false, true);
     };
+
+    watch(dealtCard, async (card) => {
+      if (card === -1) return;
+      await deal(card);
+    });
 
     const spotCards = (spot: SpotRoot | SpotChance) => {
       if (spot.type === "root") {
@@ -791,6 +881,7 @@ export default defineComponent({
       rates,
       selectedSpotIndex,
       selectedChanceIndex,
+      isDealing,
       isSelectedChanceSkipped,
       selectSpot,
       play,

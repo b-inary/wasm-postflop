@@ -23,6 +23,7 @@
       :is-handler-updated="isHandlerUpdated"
       :is-locked="isLocked"
       :cards="cards"
+      :dealt-card="dealtCard"
       @update:is-handler-updated="(value) => (isHandlerUpdated = value)"
       @update:is-locked="(value) => (isLocked = value)"
       @trigger-update="onUpdateSpot"
@@ -84,6 +85,14 @@
           :is-compare-mode="true"
         />
       </template>
+
+      <template v-else-if="displayMode === 'chance' && selectedChance">
+        <ResultChance
+          :selected-chance="selectedChance"
+          :chance-reports="chanceReports"
+          @deal-card="onDealCard"
+        />
+      </template>
     </div>
   </div>
 </template>
@@ -106,12 +115,14 @@ import {
 import ResultNav from "./ResultNav.vue";
 import ResultMiddle from "./ResultMiddle.vue";
 import ResultBasics from "./ResultBasics.vue";
+import ResultChance from "./ResultChance.vue";
 
 export default defineComponent({
   components: {
     ResultNav,
     ResultMiddle,
     ResultBasics,
+    ResultChance,
   },
 
   setup() {
@@ -124,6 +135,7 @@ export default defineComponent({
     const isLocked = ref(false);
 
     const cards = ref([new Uint16Array(), new Uint16Array()]);
+    const dealtCard = ref(-1);
 
     const selectedSpot = ref<Spot | null>(null);
     const selectedChance = ref<SpotChance | null>(null);
@@ -174,6 +186,7 @@ export default defineComponent({
       newChanceReports: ChanceReports | null,
       newTotalBetAmount: number[]
     ) => {
+      dealtCard.value = -1;
       selectedSpot.value = newSelectedSpot;
       selectedChance.value = newSelectedChance;
       currentBoard.value = newCurrentBoard;
@@ -231,7 +244,7 @@ export default defineComponent({
 
       if (chance) {
         return chance.prevPlayer;
-      } else if (spot.type == "terminal") {
+      } else if (spot.type === "terminal") {
         return spot.prevPlayer;
       } else {
         return (spot as SpotPlayer).player;
@@ -266,16 +279,24 @@ export default defineComponent({
       }
     });
 
+    /* Results */
+
+    const onDealCard = (card: number) => {
+      dealtCard.value = card;
+    };
+
     return {
       store,
       config,
       isHandlerUpdated,
       isLocked,
       cards,
+      dealtCard,
       selectedSpot,
       selectedChance,
       currentBoard,
       results,
+      chanceReports,
       totalBetAmount,
       onUpdateSpot,
       displayMode,
@@ -290,6 +311,7 @@ export default defineComponent({
       autoPlayerChance,
       displayPlayerBasics,
       displayPlayerChance,
+      onDealCard,
     };
   },
 });

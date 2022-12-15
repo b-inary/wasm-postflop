@@ -876,10 +876,10 @@ export default defineComponent({
 
     const isInputValid = computed(
       () =>
-        errorBasics.value.length == 0 &&
-        errorOop.value.length == 0 &&
-        errorIp.value.length == 0 &&
-        errorMisc.value.length == 0
+        errorBasics.value.length === 0 &&
+        errorOop.value.length === 0 &&
+        errorIp.value.length === 0 &&
+        errorMisc.value.length === 0
     );
 
     const clearConfig = () => {
