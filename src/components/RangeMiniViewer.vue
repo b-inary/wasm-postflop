@@ -4,7 +4,7 @@
       <td
         v-for="col in 13"
         :key="col"
-        class="relative w-2.5 border border-black"
+        class="relative w-2.5 border-[0.5px] border-black"
       >
         <div
           class="absolute left-0 top-0 w-full h-full"

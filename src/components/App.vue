@@ -93,9 +93,9 @@ export default defineComponent({
         }[store.sideView])
     );
 
-    const clientHeight = ref(document.documentElement.clientHeight);
+    const clientHeight = ref(document.documentElement.clientHeight - 0.01);
     window.addEventListener("resize", () => {
-      clientHeight.value = document.documentElement.clientHeight;
+      clientHeight.value = document.documentElement.clientHeight - 0.01;
     });
 
     return {
