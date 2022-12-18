@@ -143,7 +143,7 @@
           <tr
             v-for="item in resultRendered"
             :key="item[0]"
-            class="relative bg-white row-divider"
+            class="relative bg-white border-t border-gray-300"
             style="height: calc(1.9rem + 1px)"
           >
             <td class="sticky left-0 z-10 bg-white">
@@ -164,7 +164,7 @@
                 class="w-full h-full bg-neutral-800 bg-left bg-no-repeat"
                 :style="{
                   'background-image': strategyBarBgImage(item.slice(6)),
-                  'background-size': `${item[2] * 100}%`,
+                  'background-size': `${item[2] * 100}% 100%`,
                 }"
               ></div>
             </td>

@@ -378,7 +378,7 @@ export default defineComponent({
             }
 
             const bgImage = `linear-gradient(${color} 0% 100%)`;
-            const bgSize = `auto ${height * 100}%`;
+            const bgSize = `100% ${height * 100}%`;
             return { bgImage, bgSize };
           }
 
@@ -399,7 +399,7 @@ export default defineComponent({
             }
           } else {
             bgImage = "linear-gradient(to top";
-            bgSize = `auto ${height * 100}%`;
+            bgSize = `100% ${height * 100}%`;
             let prevPos = 0;
             for (let i = suit.strategy.length - 1; i >= 0; --i) {
               const pos = prevPos + suit.strategy[i] / normalizer;

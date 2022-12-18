@@ -78,7 +78,7 @@
           :value="false"
           :disabled="store.hasSolverRun || memoryUsage > maxMemoryUsage"
         />
-        <span class="inline-block w-[6.5rem] ml-1">32-bit FP:</span>
+        <span class="inline-block w-[6.75rem] ml-1">32-bit FP:</span>
         needs
         {{
           memoryUsage >= 1023.5 * 1024 * 1024
@@ -109,7 +109,7 @@
             store.hasSolverRun || memoryUsageCompressed > maxMemoryUsage
           "
         />
-        <span class="inline-block w-[6.5rem] ml-1">16-bit integer:</span>
+        <span class="inline-block w-[6.75rem] ml-1">16-bit integer:</span>
         needs
         {{
           memoryUsageCompressed >= 1023.5 * 1024 * 1024

@@ -7,9 +7,19 @@
         class="relative w-2.5 border-[0.5px] border-black"
       >
         <div
-          class="absolute left-0 top-0 w-full h-full"
-          :style="{ background: bgImage(row, col) }"
-        ></div>
+          :class="
+            'absolute w-full h-full left-0 top-0 ' +
+            (row === col ? 'bg-neutral-700' : 'bg-neutral-800')
+          "
+        >
+          <div
+            class="absolute w-full h-full left-0 top-0 bg-bottom bg-no-repeat"
+            :style="{
+              'background-image': `linear-gradient(${amber500} 0% 100%)`,
+              'background-size': `100% ${cellValue(row, col)}%`,
+            }"
+          ></div>
+        </div>
       </td>
     </tr>
   </table>
@@ -20,8 +30,6 @@ import { defineComponent } from "vue";
 import { useConfigStore } from "../store";
 
 const amber500 = "#f59e0b";
-const neutral700 = "#404040";
-const neutral800 = "#262626";
 
 export default defineComponent({
   props: {
@@ -33,16 +41,13 @@ export default defineComponent({
 
   setup(props) {
     const config = useConfigStore();
-    const range = config.range[props.player];
-    const index = (row: number, col: number) => (row - 1) * 13 + (col - 1);
 
-    const bgImage = (row: number, col: number) => {
-      const weight = range[index(row, col)];
-      const neutral = row === col ? neutral700 : neutral800;
-      return `linear-gradient(to top, ${amber500} ${weight}%, ${neutral} ${weight}%)`;
+    const cellValue = (row: number, col: number) => {
+      const cellIndex = (row - 1) * 13 + (col - 1);
+      return config.range[props.player][cellIndex];
     };
 
-    return { bgImage };
+    return { amber500, cellValue };
   },
 });
 </script>

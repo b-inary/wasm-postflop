@@ -21,7 +21,7 @@
                 class="absolute w-full h-full left-0 top-0 bg-bottom bg-no-repeat"
                 :style="{
                   'background-image': `linear-gradient(${amber500} 0% 100%)`,
-                  'background-size': `auto ${cellValue(row, col)}%`,
+                  'background-size': `100% ${cellValue(row, col)}%`,
                 }"
               ></div>
             </div>
