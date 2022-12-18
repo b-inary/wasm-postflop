@@ -27,7 +27,7 @@
       @scroll.passive="onTableScroll"
     >
       <table class="w-full h-full text-sm text-center align-middle">
-        <thead class="sticky top-0 z-30 bg-gray-100 shadow row-divider">
+        <thead class="sticky top-0 z-30 bg-gray-100 shadow">
           <tr style="height: calc(1.9rem + 1px)">
             <th
               v-for="(text, i) in headers"
@@ -53,18 +53,18 @@
           <tr style="height: calc(1.9rem + 1px)">
             <th
               scope="col"
-              class="sticky left-0 z-40 underline bg-gray-100 cursor-pointer"
+              class="sticky left-0 z-40 underline bg-gray-100 cursor-pointer header-divider"
               @click="sortBy(0)"
             >
               {{ hoverContent?.name ?? "Total" }}
             </th>
             <template v-if="summary == null">
-              <th scope="col"></th>
+              <th scope="col" class="relative header-divider"></th>
               <th
                 v-for="i in headers.length - 2"
                 :key="i"
                 scope="col"
-                class="cursor-pointer"
+                class="relative cursor-pointer header-divider"
               >
                 -
               </th>
@@ -72,7 +72,7 @@
             <template v-else>
               <th
                 scope="col"
-                class="pt-[0.3125rem] pb-1 px-1"
+                class="relative pt-[0.3125rem] pb-1 px-1 header-divider"
                 style="height: calc(1.9rem + 1px)"
               >
                 <div
@@ -87,7 +87,7 @@
                 v-for="(value, i) in summary.slice(2)"
                 :key="i"
                 scope="col"
-                class="relative cursor-pointer"
+                class="relative cursor-pointer header-divider"
                 @click="sortBy(i + 2)"
               >
                 <div class="inline-block w-12 text-right">
@@ -143,10 +143,10 @@
           <tr
             v-for="item in resultRendered"
             :key="item[0]"
-            class="relative bg-white border-t border-gray-300"
+            class="relative bg-white"
             style="height: calc(1.9rem + 1px)"
           >
-            <td class="sticky left-0 z-10 bg-white">
+            <td class="sticky left-0 pt-0.5 z-10 bg-white row-divider">
               <template
                 v-for="card in textPair(item[0])"
                 :key="card.rank + card.suit"
@@ -157,7 +157,7 @@
               </template>
             </td>
             <td
-              class="pt-[0.3125rem] pb-1 px-1"
+              class="relative pt-[0.3125rem] pb-1 px-1 row-divider"
               style="height: calc(1.9rem + 1px)"
             >
               <div
@@ -168,7 +168,11 @@
                 }"
               ></div>
             </td>
-            <td v-for="(value, i) in item.slice(2)" :key="i" class="relative">
+            <td
+              v-for="(value, i) in item.slice(2)"
+              :key="i"
+              class="relative pt-0.5 row-divider"
+            >
               <div class="inline-block w-12 text-right">
                 <span
                   v-if="results?.isEmpty && 1 <= i && i <= 3"
@@ -218,12 +222,12 @@
               height: 'calc(var(--num-rows) * (1.9rem + 1px))',
             }"
           >
-            <td :colspan="headers.length"></td>
+            <td :colspan="headers.length" class="relative row-divider"></td>
           </tr>
 
           <!-- Spacer -->
           <tr>
-            <td :colspan="headers.length"></td>
+            <td :colspan="headers.length" class="relative row-divider"></td>
           </tr>
         </tbody>
       </table>
@@ -623,8 +627,13 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.row-divider::after {
+.header-divider::before {
   content: "";
-  @apply absolute left-0 -bottom-px w-full z-20 border-b border-gray-300;
+  @apply absolute left-0 -bottom-px w-full border-b border-gray-300;
+}
+
+.row-divider::before {
+  content: "";
+  @apply absolute left-0 top-0 w-full border-t border-gray-300;
 }
 </style>
