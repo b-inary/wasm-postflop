@@ -25,18 +25,18 @@ const suitClasses = [
 
 export const cardText = (card: number) => {
   return {
-    rank: ranks[Math.floor(card / 4)],
-    suit: suits[card % 4],
-    colorClass: suitClasses[card % 4],
+    rank: ranks[card >>> 2],
+    suit: suits[card & 3],
+    colorClass: suitClasses[card & 3],
   };
 };
 
 export const cardPairCellIndex = (card1: number, card2: number) => {
   if (card1 > card2) [card1, card2] = [card2, card1];
-  const hr = Math.floor(card2 / 4);
-  const lr = Math.floor(card1 / 4);
-  const hs = card2 % 4;
-  const ls = card1 % 4;
+  const hr = card2 >>> 2;
+  const lr = card1 >>> 2;
+  const hs = card2 & 3;
+  const ls = card1 & 3;
   const isSuited = hs === ls;
   return {
     row: 12 - (isSuited ? hr : lr),
@@ -49,14 +49,19 @@ export const cardPairCellIndex = (card1: number, card2: number) => {
   };
 };
 
-export const cardPairOrder = (card1: number, card2: number) => {
+export const cardPairOrder = (pair: number) => {
+  let card1 = pair & 0xff;
+  let card2 = pair >>> 8;
+  if (card2 === 0xff) return card1;
   if (card1 > card2) [card1, card2] = [card2, card1];
-  const hr = Math.floor(card2 / 4);
-  const lr = Math.floor(card1 / 4);
-  const hs = card2 % 4;
-  const ls = card1 % 4;
+  const hr = card2 >>> 2;
+  const lr = card1 >>> 2;
+  let hs = card2 & 3;
+  let ls = card1 & 3;
+  const isPair = hr === lr;
   const isSuited = hs === ls;
-  return (((hr * 2 + +isSuited) * 16 + lr) * 4 + hs) * 4 + ls;
+  if (isPair) [hs, ls] = [ls, hs];
+  return ((((hr * 2 + +isPair) * 2 + +isSuited) * 16 + lr) * 4 + hs) * 4 + ls;
 };
 
 export const average = (
@@ -70,6 +75,31 @@ export const average = (
     totalWeight += weights[i];
   }
   return sum / totalWeight;
+};
+
+export const toFixed1 = (value: number) => {
+  if (!isFinite(value)) return (value < 0 ? "-" : "") + "∞";
+  if (-0.05 < value && value < 0.05) return "0.0";
+  return value.toFixed(1);
+};
+
+export const toFixed2 = (value: number) => {
+  if (-0.005 < value && value < 0.005) return "0.00";
+  return value.toFixed(2);
+};
+
+export const toFixed3 = (value: number) => {
+  if (-0.0005 < value && value < 0.0005) return "0.000";
+  return value.toFixed(3);
+};
+
+export const toFixed = [toFixed1, toFixed2, toFixed3];
+
+export const toFixedAdaptive = (value: number) => {
+  const abs = Math.abs(value);
+  if (abs < 10) return toFixed3(value);
+  if (abs < 100) return toFixed2(value);
+  return toFixed1(value);
 };
 
 export const colorString = (color: {

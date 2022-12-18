@@ -33,10 +33,8 @@
     </button>
 
     <div
-      class="flex flex-grow shrink-0 h-full pl-4 items-center justify-start gap-2 snug"
+      class="flex ml-auto shrink-0 h-full pl-4 items-center justify-start gap-2 snug"
     >
-      <div class="flex-grow"></div>
-
       <div
         v-if="displayMode === 'basics'"
         class="flex flex-col items-start justify-center h-full"

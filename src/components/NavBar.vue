@@ -28,9 +28,9 @@
           :class="
             'flex relative w-32 items-center justify-center font-semibold ' +
             'transition-colors hover:bg-slate-700 hover:text-blue-200 ' +
-            (store.navView === 'Solver' ? 'bg-slate-700 text-blue-200' : '')
+            (store.navView === 'solver' ? 'bg-slate-700 text-blue-200' : '')
           "
-          @click="store.navView = 'Solver'"
+          @click="store.navView = 'solver'"
         >
           <ComputerDesktopIcon class="w-6 h-6" />
           <span class="pl-3">Solver</span>
@@ -39,9 +39,9 @@
           :class="
             'flex relative w-32 items-center justify-center font-semibold ' +
             'transition-colors hover:bg-slate-700 hover:text-blue-200 ' +
-            (store.navView === 'Results' ? 'bg-slate-700 text-blue-200' : '')
+            (store.navView === 'results' ? 'bg-slate-700 text-blue-200' : '')
           "
-          @click="store.navView = 'Results'"
+          @click="store.navView = 'results'"
         >
           <ChartBarIcon class="w-6 h-6" />
           <span class="pl-3">Results</span>

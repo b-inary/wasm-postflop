@@ -8,9 +8,19 @@
       '--value-font-size':
         'calc(max(0.889rem, min(1.2vw, 2vh)) * var(--font-scale))',
     }"
+    @mouseleave="onMouseLeaveTable"
   >
     <tr v-for="row in 13" :key="row">
-      <td v-for="col in 13" :key="col" class="relative border border-black">
+      <td
+        v-for="col in 13"
+        :key="col"
+        :class="
+          'relative border border-black ' +
+          (clickedCellIndex === cellIndex(row, col) ? 'clicked-cell' : '')
+        "
+        @click="onClickCell(row, col)"
+        @mouseenter="onMouseEnterCell(row, col)"
+      >
         <div
           :class="
             'flex absolute w-full h-full left-0 top-0 ' +
@@ -43,7 +53,12 @@
             font-size: var(--value-font-size);
           "
         >
-          {{ cellValueText(row, col) }}
+          {{ cellValueText[cellIndex(row, col)].split(".")[0]
+          }}<span v-if="cellValueText[cellIndex(row, col)].includes('.')"
+            >.<span style="font-size: 85%">
+              {{ cellValueText[cellIndex(row, col)].split(".")[1] }}</span
+            ></span
+          >
         </div>
       </td>
     </tr>
@@ -51,9 +66,15 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent, ref, toRefs, watch } from "vue";
 import { useSavedConfigStore } from "../store";
-import { ranks, cardPairCellIndex, colorString } from "../utils";
+import {
+  ranks,
+  cardPairCellIndex,
+  toFixed1,
+  toFixed,
+  colorString,
+} from "../utils";
 
 import {
   Results,
@@ -61,6 +82,7 @@ import {
   SpotChance,
   SpotPlayer,
   DisplayOptions,
+  HoverContent,
 } from "../result-types";
 
 const amber500 = "#f59e0b";
@@ -117,7 +139,7 @@ export default defineComponent({
       required: true,
     },
     selectedSpot: {
-      type: Object as () => Spot | null,
+      type: Object as () => Spot,
       required: true,
     },
     selectedChance: {
@@ -150,13 +172,31 @@ export default defineComponent({
     },
   },
 
-  setup(props) {
+  emits: {
+    "update-hover-content": (_content: HoverContent | null) => true,
+  },
+
+  setup(props, context) {
     const config = useSavedConfigStore();
+
+    const clickedCellIndex = ref(-1);
+
+    const evDigits = computed(() => {
+      const results = props.results;
+      if (!results || results.isEmpty) return 1;
+      const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
+      const maxEv = Math.max(...results.ev[playerIndex]);
+      return maxEv < 10 ? 3 : maxEv < 100 ? 2 : 1;
+    });
+
+    const toFixedEv = computed(() => {
+      return toFixed[evDigits.value - 1];
+    });
 
     const cellData = computed(() => {
       const selectedSpot = props.selectedSpot;
       const results = props.results;
-      if (!selectedSpot || !results) return null;
+      if (!results) return null;
 
       const options = props.displayOptions;
       const player = props.displayPlayer;
@@ -179,9 +219,11 @@ export default defineComponent({
           len = row === col ? 6 : row < col ? 4 : 12;
         }
         return Array.from({ length: len }, () => ({
+          indices: [] as number[],
           weight: 0,
           normalizer: 0,
-          value: 0,
+          equity: 0,
+          ev: 0,
           strategy: Array.from({ length: numActions }, () => 0),
         }));
       });
@@ -197,25 +239,19 @@ export default defineComponent({
 
         const pair = props.cards[playerIndex][i];
         const card1 = pair & 0xff;
-        const card2 = pair >> 8;
+        const card2 = pair >>> 8;
         const { row, col, index } = cardPairCellIndex(card1, card2);
         const cellIndex = row * 13 + col;
         const suitIndex = isSuitIndividual ? index : 0;
         const target = data[cellIndex][suitIndex];
 
+        target.indices.push(i);
         target.weight += weight;
         target.normalizer += normalizer;
 
         if (!isEmpty) {
-          if (options.contentBasics === "eq") {
-            target.value += results.equity[playerIndex][i] * normalizer;
-          } else if (options.contentBasics === "ev") {
-            target.value += results.ev[playerIndex][i] * normalizer;
-          } else if (options.contentBasics === "eqr") {
-            target.value += results.eqr[playerIndex][i] * normalizer;
-          } else {
-            target.value += weight;
-          }
+          target.equity += results.equity[playerIndex][i] * normalizer;
+          target.ev += results.ev[playerIndex][i] * normalizer;
         }
 
         if (showStrategy) {
@@ -229,6 +265,12 @@ export default defineComponent({
       return data;
     });
 
+    const { selectedSpot, displayPlayer } = toRefs(props);
+    watch([selectedSpot, displayPlayer], () => {
+      clickedCellIndex.value = -1;
+      context.emit("update-hover-content", null);
+    });
+
     const cellDenominator = computed(() => {
       const ret = Array.from({ length: 13 * 13 }, () => 0);
 
@@ -236,9 +278,9 @@ export default defineComponent({
         if (props.currentBoard.includes(card1)) continue;
         for (let card2 = card1 + 1; card2 < 52; ++card2) {
           if (props.currentBoard.includes(card2)) continue;
-          const rank1 = Math.floor(card1 / 4);
-          const rank2 = Math.floor(card2 / 4);
-          const isSuited = card1 % 4 === card2 % 4;
+          const rank1 = card1 >>> 2;
+          const rank2 = card2 >>> 2;
+          const isSuited = (card1 & 3) === (card2 & 3);
           if (isSuited) {
             const index = (12 - rank2) * 13 + (12 - rank1);
             ++ret[index];
@@ -277,6 +319,7 @@ export default defineComponent({
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
       const showStrategy = cellData.value[0][0].strategy.length > 0;
       const isEmpty = results.isEmpty;
+      const eqrBase = results.eqrBase[playerIndex];
 
       let lowest = 0;
       let middle = 0;
@@ -305,10 +348,9 @@ export default defineComponent({
         const denominator = cell.length > 1 ? 1 : cellDenominator.value[i];
 
         return cell.map((suit) => {
-          const selectedSpot = props.selectedSpot;
           const weight = suit.weight;
           const normalizer = suit.normalizer;
-          if (!selectedSpot || weight === 0) return null;
+          if (weight === 0) return null;
 
           let height;
           if (barHeight === "normalized") {
@@ -324,7 +366,14 @@ export default defineComponent({
             if (isEmpty || options.contentBasics === "default") {
               color = amber500;
             } else {
-              const value = suit.value / normalizer;
+              let value: number;
+              if (options.contentBasics === "eq") {
+                value = suit.equity / normalizer;
+              } else if (options.contentBasics === "ev") {
+                value = suit.ev / normalizer;
+              } else {
+                value = suit.ev / (eqrBase * suit.equity);
+              }
               color = getColor(value, lowest, middle, highest);
             }
 
@@ -333,7 +382,7 @@ export default defineComponent({
             return { bgImage, bgSize };
           }
 
-          const spot = selectedSpot as SpotPlayer;
+          const spot = props.selectedSpot as SpotPlayer;
           const colors = spot.actions.map((action) => action.color);
 
           let bgImage, bgSize;
@@ -365,16 +414,20 @@ export default defineComponent({
       });
     });
 
+    const cellIndex = (row: number, col: number) => {
+      return (row - 1) * 13 + col - 1;
+    };
+
     const columns = (row: number, col: number) => {
-      const cellIndex = (row - 1) * 13 + col - 1;
       if (!cellContent.value) return null;
-      return cellContent.value[cellIndex];
+      return cellContent.value[cellIndex(row, col)];
     };
 
     const hasWeight = (row: number, col: number) => {
-      const cellIndex = (row - 1) * 13 + col - 1;
       if (!cellData.value) return false;
-      return cellData.value[cellIndex].some((suit) => suit.weight > 0);
+      return cellData.value[cellIndex(row, col)].some(
+        (suit) => suit.weight > 0
+      );
     };
 
     const cellText = (row: number, col: number) => {
@@ -383,52 +436,116 @@ export default defineComponent({
       return ranks[r1] + ranks[r2] + ["s", "", "o"][Math.sign(row - col) + 1];
     };
 
-    const cellValueText = (row: number, col: number) => {
-      const cellIndex = (row - 1) * 13 + col - 1;
-      if (!cellData.value) return "";
+    const cellValueText = computed(() => {
+      return Array.from({ length: 13 * 13 }, (_, index) => {
+        if (!props.results || !cellData.value) return "";
 
-      const displayOptions = props.displayOptions;
-      if (
-        displayOptions.strategy === "show" &&
-        displayOptions.contentBasics === "default"
-      ) {
-        return "";
-      }
+        const displayOptions = props.displayOptions;
 
-      const data = cellData.value[cellIndex];
-      const isEmpty = data.every((suit) => suit.weight === 0);
-      if (isEmpty) return "";
-      if (props.results?.isEmpty) return "-";
+        if (
+          displayOptions.strategy === "show" &&
+          displayOptions.contentBasics === "default"
+        ) {
+          return "";
+        }
 
-      let valueSum = 0;
-      let normalizerSum = 0;
-      for (const suit of data) {
-        valueSum += suit.value;
-        normalizerSum += suit.normalizer;
-      }
+        const data = cellData.value[index];
+        const isEmpty = data.every((suit) => suit.weight === 0);
+        if (isEmpty) return "";
 
-      let value;
-      if (displayOptions.contentBasics === "default") {
-        value = valueSum / cellDenominator.value[cellIndex];
+        let weightSum = 0;
+        let normalizerSum = 0;
+        let equitySum = 0;
+        let evSum = 0;
+
+        for (const suit of data) {
+          weightSum += suit.weight;
+          normalizerSum += suit.normalizer;
+          equitySum += suit.equity;
+          evSum += suit.ev;
+        }
+
+        let value;
+        if (displayOptions.contentBasics === "default") {
+          value = weightSum / cellDenominator.value[index];
+        } else if (displayOptions.contentBasics === "eq") {
+          value = equitySum / normalizerSum;
+        } else if (displayOptions.contentBasics === "ev") {
+          value = evSum / normalizerSum;
+        } else {
+          const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
+          const eqrBase = props.results.eqrBase[playerIndex];
+          value = evSum / (eqrBase * equitySum);
+        }
+
+        if (
+          displayOptions.contentBasics !== "default" &&
+          props.results.isEmpty
+        ) {
+          return "-";
+        } else if (displayOptions.contentBasics === "ev") {
+          return value >= 999.95 ? value.toFixed(0) : toFixedEv.value(value);
+        } else {
+          return toFixed1(value * 100);
+        }
+      });
+    });
+
+    const onClickCell = (row: number, col: number) => {
+      const index = cellIndex(row, col);
+      if (!hasWeight(row, col)) {
+        clickedCellIndex.value = -1;
+        context.emit("update-hover-content", null);
+      } else if (clickedCellIndex.value === index) {
+        clickedCellIndex.value = -1;
       } else {
-        value = valueSum / normalizerSum;
+        clickedCellIndex.value = -1;
+        onMouseEnterCell(row, col);
+        clickedCellIndex.value = index;
       }
+    };
 
-      if (displayOptions.contentBasics === "ev") {
-        const ret = value >= 999.95 ? value.toFixed(0) : value.toFixed(1);
-        return ret === "-0.0" ? "0.0" : ret;
-      } else {
-        const ret = (value * 100).toFixed(1);
-        return ret === "-0.0" ? "0.0" : ret;
+    const onMouseEnterCell = (row: number, col: number) => {
+      if (clickedCellIndex.value === -1) {
+        if (hasWeight(row, col) && cellData.value) {
+          const index = cellIndex(row, col);
+          const indices = cellData.value[index].flatMap((suit) => suit.indices);
+          context.emit("update-hover-content", {
+            name: cellText(row, col),
+            indices,
+          });
+        } else {
+          context.emit("update-hover-content", null);
+        }
+      }
+    };
+
+    const onMouseLeaveTable = () => {
+      if (clickedCellIndex.value === -1) {
+        context.emit("update-hover-content", null);
       }
     };
 
     return {
+      clickedCellIndex,
+      cellIndex,
       columns,
       hasWeight,
       cellText,
       cellValueText,
+      onClickCell,
+      onMouseEnterCell,
+      onMouseLeaveTable,
     };
   },
 });
 </script>
+
+<style scoped>
+.clicked-cell::before {
+  content: "";
+  @apply absolute -left-px -top-px z-10 border-2 border-red-500;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+}
+</style>

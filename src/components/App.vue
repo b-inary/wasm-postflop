@@ -3,7 +3,7 @@
     <NavBar />
 
     <div
-      v-show="store.navView === 'Solver'"
+      v-show="store.navView === 'solver'"
       class="flex w-full mx-auto max-w-screen-xl"
       style="height: calc(100% - 2.5rem)"
     >
@@ -24,29 +24,29 @@
           </div>
         </div>
 
-        <div v-if="store.sideView === 'About'">
+        <div v-if="store.sideView === 'about'">
           <AboutPage />
         </div>
-        <div v-show="store.sideView === 'OOPRange'">
+        <div v-show="store.sideView === 'oop-range'">
           <RangeEditor :player="0" />
         </div>
-        <div v-show="store.sideView === 'IPRange'">
+        <div v-show="store.sideView === 'ip-range'">
           <RangeEditor :player="1" />
         </div>
-        <div v-show="store.sideView === 'Board'">
+        <div v-show="store.sideView === 'board'">
           <BoardSelector />
         </div>
-        <div v-show="store.sideView === 'TreeConfig'">
+        <div v-show="store.sideView === 'tree-config'">
           <TreeConfig />
         </div>
-        <div v-show="store.sideView === 'RunSolver'">
+        <div v-show="store.sideView === 'run-solver'">
           <RunSolver />
         </div>
       </div>
     </div>
 
     <div
-      v-show="store.navView === 'Results'"
+      v-show="store.navView === 'results'"
       style="height: calc(max(100%, 720px) - 2.5rem)"
     >
       <ResultViewer />
@@ -84,12 +84,12 @@ export default defineComponent({
     const header = computed(
       () =>
         ({
-          About: "Welcome to WASM Postflop!",
-          OOPRange: "OOP Range",
-          IPRange: "IP Range",
-          Board: "Board",
-          TreeConfig: "Tree Configuration",
-          RunSolver: "Run Solver",
+          about: "Welcome to WASM Postflop!",
+          "oop-range": "OOP Range",
+          "ip-range": "IP Range",
+          board: "Board",
+          "tree-config": "Tree Configuration",
+          "run-solver": "Run Solver",
         }[store.sideView])
     );
 

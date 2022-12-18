@@ -1,7 +1,8 @@
 export type Results = {
   currentPlayer: "oop" | "ip" | "chance" | "terminal";
   numActions: number;
-  isEmpty: boolean;
+  isEmpty: number;
+  eqrBase: number[];
   weights: Float64Array[];
   normalizer: Float64Array[];
   equity: Float64Array[];
@@ -106,3 +107,10 @@ export type DisplayOptions = {
   contentBasics: typeof contentBasicsList[number];
   contentChance: typeof contentChanceList[number];
 };
+
+export type HoverContent = {
+  name: string;
+  indices: number[];
+};
+
+export type TableMode = "basics" | "turn" | "river";

@@ -252,50 +252,78 @@ impl GameManager {
 
     pub fn get_results(&mut self) -> ReadonlyBuffer {
         let game = &mut self.game;
-        game.cache_normalized_weights();
 
         let buf = &mut self.result_buffer;
         buf.clear();
-        buf.extend(round_iter(game.weights(0).iter()));
-        buf.extend(round_iter(game.weights(1).iter()));
-        buf.extend(round_iter(game.normalized_weights(0).iter()));
-        buf.extend(round_iter(game.normalized_weights(1).iter()));
-
-        let equity = [game.equity(0), game.equity(1)];
-        let ev = [game.expected_values(0), game.expected_values(1)];
-
-        buf.extend(round_iter(equity[0].iter()));
-        buf.extend(round_iter(equity[1].iter()));
-        buf.extend(round_iter(ev[0].iter()));
-        buf.extend(round_iter(ev[1].iter()));
 
         let total_bet_amount = game.total_bet_amount();
         let pot_base = game.tree_config().starting_pot + total_bet_amount.iter().min().unwrap();
 
-        let mut eqr = [
-            Vec::with_capacity(equity[0].len()),
-            Vec::with_capacity(equity[1].len()),
-        ];
+        buf.push((pot_base + total_bet_amount[0]) as f64);
+        buf.push((pot_base + total_bet_amount[1]) as f64);
 
-        for player in 0..2 {
-            let pot = (pot_base + total_bet_amount[player]) as f32;
-            for (&eq, &ev) in equity[player].iter().zip(ev[player].iter()) {
-                if eq == 0.0 {
-                    eqr[player].push(0.0);
-                } else {
-                    eqr[player].push(ev / (pot * eq));
+        let weights = [game.weights(0), game.weights(1)];
+        let is_empty = |weights: &[f32]| weights.iter().all(|&w| w < 0.0005);
+        let is_empty_flag = is_empty(weights[0]) as usize + 2 * is_empty(weights[1]) as usize;
+
+        buf.push(is_empty_flag as f64);
+        buf.extend(round_iter(weights[0].iter()));
+        buf.extend(round_iter(weights[1].iter()));
+
+        if is_empty_flag > 0 {
+            let board = game.current_board();
+            let board_mask = board.iter().fold(0u64, |mask, &c| mask | (1 << c));
+
+            for player in 0..2 {
+                let normalized_weights_iter = game.private_cards(player).iter().map(|&(c1, c2)| {
+                    let hand_mask = (1 << c1) | (1 << c2);
+                    (hand_mask & board_mask == 0) as usize as f64
+                });
+                buf.extend(normalized_weights_iter);
+            }
+        } else {
+            game.cache_normalized_weights();
+
+            buf.extend(round_iter(game.normalized_weights(0).iter()));
+            buf.extend(round_iter(game.normalized_weights(1).iter()));
+
+            let equity = [game.equity(0), game.equity(1)];
+            let ev = [game.expected_values(0), game.expected_values(1)];
+
+            buf.extend(round_iter(equity[0].iter()));
+            buf.extend(round_iter(equity[1].iter()));
+            buf.extend(round_iter(ev[0].iter()));
+            buf.extend(round_iter(ev[1].iter()));
+
+            let mut eqr = [
+                Vec::with_capacity(equity[0].len()),
+                Vec::with_capacity(equity[1].len()),
+            ];
+
+            for player in 0..2 {
+                let pot = (pot_base + total_bet_amount[player]) as f32;
+                for (&eq, &ev) in equity[player].iter().zip(ev[player].iter()) {
+                    if ev.abs() < 1e-6 {
+                        eqr[player].push(0.0);
+                    } else if eq < 1e-6 {
+                        eqr[player].push(ev / 0.0);
+                    } else {
+                        eqr[player].push(ev / (pot * eq));
+                    }
                 }
             }
-        }
 
-        buf.extend(round_iter(eqr[0].iter()));
-        buf.extend(round_iter(eqr[1].iter()));
+            buf.extend(round_iter(eqr[0].iter()));
+            buf.extend(round_iter(eqr[1].iter()));
+        }
 
         if !game.is_terminal_node() && !game.is_chance_node() {
             buf.extend(round_iter(game.strategy().iter()));
-            buf.extend(round_iter(
-                game.expected_values_detail(game.current_player()).iter(),
-            ));
+            if is_empty_flag == 0 {
+                buf.extend(round_iter(
+                    game.expected_values_detail(game.current_player()).iter(),
+                ));
+            }
         }
 
         ReadonlyBuffer {
@@ -356,23 +384,13 @@ impl GameManager {
             let pot_base = game.tree_config().starting_pot + total_bet_amount.iter().min().unwrap();
 
             for player in 0..2 {
-                let equity_tmp = game.equity(player);
-                let ev_tmp = game.expected_values(player);
-                let mut eqr_tmp = Vec::with_capacity(equity_tmp.len());
-
                 let pot = (pot_base + total_bet_amount[player]) as f32;
-                for (&eq, &ev) in equity_tmp.iter().zip(ev_tmp.iter()) {
-                    if eq == 0.0 {
-                        eqr_tmp.push(0.0);
-                    } else {
-                        eqr_tmp.push(ev / (pot * eq));
-                    }
-                }
-
+                let equity_tmp = weighted_average(&game.equity(player), &normalizer[player]);
+                let ev_tmp = weighted_average(&game.expected_values(player), &normalizer[player]);
                 combos[player][chance] = weights[player].iter().fold(0.0, |acc, &w| acc + w as f64);
-                equity[player][chance] = round(weighted_average(&equity_tmp, &normalizer[player]));
-                ev[player][chance] = round(weighted_average(&ev_tmp, &normalizer[player]));
-                eqr[player][chance] = round(weighted_average(&eqr_tmp, &normalizer[player]));
+                equity[player][chance] = round(equity_tmp);
+                ev[player][chance] = round(ev_tmp);
+                eqr[player][chance] = round(ev_tmp / (pot as f64 * equity_tmp));
             }
 
             game.apply_history(&history);
@@ -402,12 +420,14 @@ impl GameManager {
 #[inline]
 fn round(value: f64) -> f64 {
     if value < 1.0 {
-        (value * 100000.0).round() / 100000.0
+        (value * 1000000.0).round() / 1000000.0
     } else if value < 10.0 {
-        (value * 10000.0).round() / 10000.0
+        (value * 100000.0).round() / 100000.0
     } else if value < 100.0 {
-        (value * 1000.0).round() / 1000.0
+        (value * 10000.0).round() / 10000.0
     } else if value < 1000.0 {
+        (value * 1000.0).round() / 1000.0
+    } else if value < 10000.0 {
         (value * 100.0).round() / 100.0
     } else {
         (value * 10.0).round() / 10.0

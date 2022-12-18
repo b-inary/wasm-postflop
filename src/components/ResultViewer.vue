@@ -41,8 +41,8 @@
       @reset-copy-success="resetCopySuccess"
     />
 
-    <div class="flex flex-grow">
-      <template v-if="displayMode === 'basics'">
+    <div v-if="store.navView === 'results'" class="flex flex-grow min-h-0">
+      <template v-if="displayMode === 'basics' && selectedSpot">
         <ResultBasics
           style="flex: 5"
           :cards="cards"
@@ -54,11 +54,22 @@
           :display-options="displayOptions"
           :display-player="displayPlayerBasics"
           :is-compare-mode="false"
+          @update-hover-content="onUpdateHoverContent"
         />
-        <div class="bg-gray-300" style="flex: 4"></div>
+
+        <ResultTable
+          style="flex: 4"
+          table-mode="basics"
+          :cards="cards"
+          :selected-spot="selectedSpot"
+          :selected-chance="selectedChance"
+          :results="results"
+          :display-player="displayPlayerBasics"
+          :hover-content="basicsHoverContent"
+        />
       </template>
 
-      <template v-else-if="displayMode === 'compare'">
+      <template v-else-if="displayMode === 'compare' && selectedSpot">
         <ResultBasics
           style="flex: 5"
           :cards="cards"
@@ -110,11 +121,13 @@ import {
   SpotPlayer,
   DisplayMode,
   DisplayOptions,
+  HoverContent,
 } from "../result-types";
 
 import ResultNav from "./ResultNav.vue";
 import ResultMiddle from "./ResultMiddle.vue";
 import ResultBasics from "./ResultBasics.vue";
+import ResultTable from "./ResultTable.vue";
 import ResultChance from "./ResultChance.vue";
 
 export default defineComponent({
@@ -122,6 +135,7 @@ export default defineComponent({
     ResultNav,
     ResultMiddle,
     ResultBasics,
+    ResultTable,
     ResultChance,
   },
 
@@ -281,6 +295,12 @@ export default defineComponent({
 
     /* Results */
 
+    const basicsHoverContent = ref<HoverContent | null>(null);
+
+    const onUpdateHoverContent = (content: HoverContent | null) => {
+      basicsHoverContent.value = content;
+    };
+
     const onDealCard = (card: number) => {
       dealtCard.value = card;
     };
@@ -311,6 +331,8 @@ export default defineComponent({
       autoPlayerChance,
       displayPlayerBasics,
       displayPlayerChance,
+      basicsHoverContent,
+      onUpdateHoverContent,
       onDealCard,
     };
   },

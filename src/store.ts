@@ -1,15 +1,15 @@
 import { defineStore } from "pinia";
 import { sanitizeBetString } from "./utils";
 
-export type NavView = "Solver" | "Results";
+export type NavView = "solver" | "results";
 
 export type SideView =
-  | "About"
-  | "OOPRange"
-  | "IPRange"
-  | "Board"
-  | "TreeConfig"
-  | "RunSolver";
+  | "about"
+  | "oop-range"
+  | "ip-range"
+  | "board"
+  | "tree-config"
+  | "run-solver";
 
 export const saveConfigTmp = () => {
   const config = useConfigStore();
@@ -87,8 +87,8 @@ export const saveConfig = () => {
 
 export const useStore = defineStore("app", {
   state: () => ({
-    navView: "Solver" as NavView,
-    sideView: "About" as SideView,
+    navView: "solver" as NavView,
+    sideView: "about" as SideView,
     isSolverRunning: false,
     isSolverPaused: false,
     isSolverFinished: false,

@@ -1,7 +1,7 @@
 <template>
   <div
     ref="navDiv"
-    class="flex shrink-0 h-[10.25rem] gap-1 p-1 overflow-x-auto whitespace-nowrap snug"
+    class="flex shrink-0 h-[10.5rem] gap-1 p-1 overflow-x-auto whitespace-nowrap snug"
   >
     <div
       v-for="spot in spots"
@@ -193,16 +193,16 @@ import {
 import { CheckIcon, XMarkIcon } from "@heroicons/vue/20/solid";
 
 const foldColor = { red: 0x3b, green: 0x82, blue: 0xf6 }; // blue-500
-const checkColor = { red: 0x10, green: 0xb9, blue: 0x81 }; // emerald-500
-const callColor = { red: 0x10, green: 0xb9, blue: 0x81 }; // emerald-500
+const checkColor = { red: 0x22, green: 0xc5, blue: 0x5e }; // green-500
+const callColor = { red: 0x22, green: 0xc5, blue: 0x5e }; // green-500
 const betColorGradient = [
   { red: 0xf5, green: 0x9e, blue: 0x0b }, // amber-500
   { red: 0xf9, green: 0x73, blue: 0x16 }, // orange-500
   { red: 0xef, green: 0x44, blue: 0x44 }, // red-500
-  { red: 0xf4, green: 0x3f, blue: 0x5e }, // rose-500
   { red: 0xec, green: 0x48, blue: 0x99 }, // pink-500
   { red: 0xd9, green: 0x46, blue: 0xef }, // fuchsia-500
   { red: 0xa8, green: 0x55, blue: 0xf7 }, // purple-500
+  { red: 0x8b, green: 0x5c, blue: 0xf6 }, // violet-500
 ];
 
 const actionColor = (
@@ -535,12 +535,16 @@ export default defineComponent({
       const spot = spots.value[selectedSpotIndexTmp];
       if (spot.type === "player" && selectedChanceIndexTmp === -1) {
         const playerIndex = spot.player === "oop" ? 0 : 1;
-        const n = props.cards[playerIndex].length;
-        rates.value = Array.from({ length: spot.actions.length }, (_, i) => {
-          if (!results) throw new Error("null results");
-          const rates = results.strategy.subarray(i * n, (i + 1) * n);
-          return average(rates, results.normalizer[playerIndex]);
-        });
+        if (results.isEmpty & (1 << playerIndex)) {
+          rates.value = null;
+        } else {
+          const n = props.cards[playerIndex].length;
+          rates.value = Array.from({ length: spot.actions.length }, (_, i) => {
+            if (!results) throw new Error("null results");
+            const rates = results.strategy.subarray(i * n, (i + 1) * n);
+            return average(rates, results.normalizer[playerIndex]);
+          });
+        }
       } else {
         rates.value = null;
       }
@@ -583,58 +587,70 @@ export default defineComponent({
       const buffer = await memory.buffer;
 
       const ptr = resultsBuffer.ptr >>> 0;
-      const lengthOop = props.cards[0].length;
-      const lengthIp = props.cards[1].length;
+      const length = [props.cards[0].length, props.cards[1].length];
 
       let offset = 0;
-
-      const weightOop = new Float64Array(buffer, ptr + offset, lengthOop);
-      offset += 8 * lengthOop;
-      const weightIp = new Float64Array(buffer, ptr + offset, lengthIp);
-      offset += 8 * lengthIp;
-
-      const normalizerOop = new Float64Array(buffer, ptr + offset, lengthOop);
-      offset += 8 * lengthOop;
-      const normalizerIp = new Float64Array(buffer, ptr + offset, lengthIp);
-      offset += 8 * lengthIp;
-
-      const equityOop = new Float64Array(buffer, ptr + offset, lengthOop);
-      offset += 8 * lengthOop;
-      const equityIp = new Float64Array(buffer, ptr + offset, lengthIp);
-      offset += 8 * lengthIp;
-
-      const evOop = new Float64Array(buffer, ptr + offset, lengthOop);
-      offset += 8 * lengthOop;
-      const evIp = new Float64Array(buffer, ptr + offset, lengthIp);
-      offset += 8 * lengthIp;
-
-      const eqrOop = new Float64Array(buffer, ptr + offset, lengthOop);
-      offset += 8 * lengthOop;
-      const eqrIp = new Float64Array(buffer, ptr + offset, lengthIp);
-      offset += 8 * lengthIp;
-
+      const weights = [new Float64Array(), new Float64Array()];
+      const normalizer = [new Float64Array(), new Float64Array()];
+      const equity = [new Float64Array(), new Float64Array()];
+      const ev = [new Float64Array(), new Float64Array()];
+      const eqr = [new Float64Array(), new Float64Array()];
       let strategy = new Float64Array();
       let evDetail = new Float64Array();
-      if (["oop", "ip"].includes(currentPlayer)) {
-        const length = currentPlayer === "oop" ? lengthOop : lengthIp;
-        strategy = new Float64Array(buffer, ptr + offset, numActions * length);
-        offset += 8 * numActions * length;
-        evDetail = new Float64Array(buffer, ptr + offset, numActions * length);
-        offset += 8 * numActions * length;
+
+      const header = new Float64Array(buffer, ptr + offset, 3);
+      offset += 24;
+
+      const isEmpty = header[2];
+      const eqrBase = [header[0], header[1]];
+
+      weights[0] = new Float64Array(buffer, ptr + offset, length[0]);
+      offset += 8 * length[0];
+      weights[1] = new Float64Array(buffer, ptr + offset, length[1]);
+      offset += 8 * length[1];
+
+      normalizer[0] = new Float64Array(buffer, ptr + offset, length[0]);
+      offset += 8 * length[0];
+      normalizer[1] = new Float64Array(buffer, ptr + offset, length[1]);
+      offset += 8 * length[1];
+
+      if (!isEmpty) {
+        equity[0] = new Float64Array(buffer, ptr + offset, length[0]);
+        offset += 8 * length[0];
+        equity[1] = new Float64Array(buffer, ptr + offset, length[1]);
+        offset += 8 * length[1];
+
+        ev[0] = new Float64Array(buffer, ptr + offset, length[0]);
+        offset += 8 * length[0];
+        ev[1] = new Float64Array(buffer, ptr + offset, length[1]);
+        offset += 8 * length[1];
+
+        eqr[0] = new Float64Array(buffer, ptr + offset, length[0]);
+        offset += 8 * length[0];
+        eqr[1] = new Float64Array(buffer, ptr + offset, length[1]);
+        offset += 8 * length[1];
       }
 
-      const isOopEmpty = weightOop.every((v) => v < 0.0005); // 0.05%
-      const isIpEmpty = weightIp.every((v) => v < 0.0005);
+      if (["oop", "ip"].includes(currentPlayer)) {
+        const len = length[currentPlayer === "oop" ? 0 : 1];
+        strategy = new Float64Array(buffer, ptr + offset, numActions * len);
+        offset += 8 * numActions * len;
+        if (!isEmpty) {
+          evDetail = new Float64Array(buffer, ptr + offset, numActions * len);
+          offset += 8 * numActions * len;
+        }
+      }
 
       return {
         currentPlayer,
         numActions,
-        isEmpty: isOopEmpty || isIpEmpty,
-        weights: [weightOop, weightIp],
-        normalizer: [normalizerOop, normalizerIp],
-        equity: [equityOop, equityIp],
-        ev: [evOop, evIp],
-        eqr: [eqrOop, eqrIp],
+        isEmpty,
+        eqrBase,
+        weights,
+        normalizer,
+        equity,
+        ev,
+        eqr,
         strategy,
         evDetail,
       };

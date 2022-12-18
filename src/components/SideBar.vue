@@ -1,24 +1,27 @@
 <template>
   <aside class="flex flex-col shrink-0 w-56 my-4 overflow-y-auto border-r-2">
-    <button :class="itemStyle('About')" @click="store.sideView = 'About'">
+    <button :class="itemStyle('about')" @click="store.sideView = 'about'">
       About
     </button>
 
-    <button :class="itemStyle('OOPRange')" @click="store.sideView = 'OOPRange'">
+    <button
+      :class="itemStyle('oop-range')"
+      @click="store.sideView = 'oop-range'"
+    >
       OOP Range
       <span class="flex my-2 justify-center">
         <RangeMiniViewer :player="0" />
       </span>
     </button>
 
-    <button :class="itemStyle('IPRange')" @click="store.sideView = 'IPRange'">
+    <button :class="itemStyle('ip-range')" @click="store.sideView = 'ip-range'">
       IP Range
       <span class="flex my-2 justify-center">
         <RangeMiniViewer :player="1" />
       </span>
     </button>
 
-    <button :class="itemStyle('Board')" @click="store.sideView = 'Board'">
+    <button :class="itemStyle('board')" @click="store.sideView = 'board'">
       Board
       <span class="flex mt-1 justify-center font-bold">
         <span
@@ -32,15 +35,15 @@
     </button>
 
     <button
-      :class="itemStyle('TreeConfig')"
-      @click="store.sideView = 'TreeConfig'"
+      :class="itemStyle('tree-config')"
+      @click="store.sideView = 'tree-config'"
     >
       Tree Configuration
     </button>
 
     <button
-      :class="itemStyle('RunSolver')"
-      @click="store.sideView = 'RunSolver'"
+      :class="itemStyle('run-solver')"
+      @click="store.sideView = 'run-solver'"
     >
       Run Solver
     </button>

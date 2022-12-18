@@ -5,7 +5,7 @@
         <div class="flex my-1 gap-8">
           <div>
             <div class="my-1">
-              <span class="inline-block w-[7.25rem]">Starting pot:</span>
+              <span class="inline-block w-[7.5rem]">Starting pot:</span>
               <input
                 v-model="config.startingPot"
                 type="number"
@@ -24,7 +24,7 @@
             </div>
 
             <div class="my-1">
-              <span class="inline-block w-[7.25rem]">Effective stack:</span>
+              <span class="inline-block w-[7.5rem]">Effective stack:</span>
               <input
                 v-model="config.effectiveStack"
                 type="number"
