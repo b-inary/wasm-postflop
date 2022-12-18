@@ -4,7 +4,33 @@
       <div class="flex h-full px-4 items-center text-lg font-semibold">
         Summary
       </div>
-      <div class="flex h-full ml-auto px-4 items-center">
+
+      <div class="flex h-full ml-auto px-4 items-center gap-4 snug">
+        <div class="flex flex-col items-start justify-center h-full">
+          <div class="text-sm">Bar width:</div>
+          <select
+            v-model="displayOptions.barWidth"
+            class="w-28 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+            @change="updateDisplayOptions"
+          >
+            <option value="normalized">Normalized</option>
+            <option value="absolute">Absolute</option>
+            <option value="full">Full</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col items-start justify-center h-full">
+          <div class="text-sm">Display:</div>
+          <select
+            v-model="displayOptions.content"
+            class="w-28 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+            @change="updateDisplayOptions"
+          >
+            <option value="percentage">Action %</option>
+            <option value="ev">Action EV</option>
+          </select>
+        </div>
+
         <Tippy content="Export summary to CSV file">
           <a
             ref="exportSummaryButton"
@@ -30,100 +56,114 @@
         <thead class="sticky top-0 z-30 bg-gray-100 shadow">
           <tr style="height: calc(1.9rem + 1px)">
             <th
-              v-for="(text, i) in headers"
-              :key="text"
+              v-for="column in columns"
+              :key="column.label"
               scope="col"
               :class="
                 'whitespace-nowrap select-none ' +
-                (i === 0 ? 'sticky left-0 z-40 bg-gray-100 ' : '') +
-                (i !== 1 ? 'cursor-pointer' : '')
+                (column.type === 'card'
+                  ? 'sticky left-0 z-40 bg-gray-100 '
+                  : '') +
+                (column.type !== 'bar' ? 'cursor-pointer' : '')
               "
               :style="{
-                'min-width': ['4.5', '6.5', '4'][Math.min(i, 2)] + 'rem',
+                'min-width':
+                  (column.type === 'card'
+                    ? '4.5'
+                    : column.type === 'bar'
+                    ? '6.5'
+                    : '4') + 'rem',
               }"
-              @click="i !== 1 && sortBy(i)"
+              @click="column.type !== 'bar' && sortBy(columnIndex(column))"
             >
-              <span v-if="sortKey.key === i" class="inline-block text-xs">
+              <span
+                v-if="sortKey.key === columnIndex(column)"
+                class="inline-block text-xs pr-1"
+              >
                 {{ sortKey.order === "asc" ? "▲" : "▼" }}
               </span>
-              {{ text }}
+              <span>{{ column.label }}</span>
             </th>
           </tr>
 
           <tr style="height: calc(1.9rem + 1px)">
             <th
+              v-for="column in columns"
+              :key="column.label"
               scope="col"
-              class="sticky left-0 z-40 underline bg-gray-100 cursor-pointer header-divider"
-              @click="sortBy(0)"
+              :class="
+                'header-divider ' +
+                (column.type === 'card'
+                  ? 'sticky left-0 z-40 underline bg-gray-100 '
+                  : 'relative ') +
+                (column.type === 'bar'
+                  ? 'pt-[0.3125rem] pb-1 px-1'
+                  : 'cursor-pointer')
+              "
+              :style="{
+                height: column.type === 'bar' ? 'calc(1.9rem + 1px)' : 'auto',
+              }"
+              @click="column.type !== 'bar' && sortBy(columnIndex(column))"
             >
-              {{ hoverContent?.name ?? "Total" }}
-            </th>
-            <template v-if="summary == null">
-              <th scope="col" class="relative header-divider"></th>
-              <th
-                v-for="i in headers.length - 2"
-                :key="i"
-                scope="col"
-                class="relative cursor-pointer header-divider"
-              >
-                -
-              </th>
-            </template>
-            <template v-else>
-              <th
-                scope="col"
-                class="relative pt-[0.3125rem] pb-1 px-1 header-divider"
-                style="height: calc(1.9rem + 1px)"
-              >
+              <template v-if="column.type === 'card'">
+                <span>{{ hoverContent?.name ?? "Total" }}</span>
+              </template>
+
+              <template v-else-if="column.type === 'bar'">
                 <div
-                  v-if="headers[1] === 'Strategy'"
+                  v-if="summary && column.label === 'Strategy'"
                   class="w-full h-full bg-neutral-800 bg-left bg-no-repeat"
                   :style="{
-                    'background-image': strategyBarBgImage(summary.slice(6)),
+                    'background-image': strategyBarBgImage(summary),
                   }"
                 ></div>
-              </th>
-              <th
-                v-for="(value, i) in summary.slice(2)"
-                :key="i"
-                scope="col"
-                class="relative cursor-pointer header-divider"
-                @click="sortBy(i + 2)"
+              </template>
+
+              <template
+                v-else-if="
+                  summary == null ||
+                  (results?.isEmpty &&
+                    (column.type === 'percentage' || column.type === 'ev'))
+                "
               >
+                <span>-</span>
+              </template>
+
+              <template v-else>
                 <div class="inline-block w-12 text-right">
-                  <span
-                    v-if="results?.isEmpty && 1 <= i && i <= 3"
-                    class="inline-block w-full text-center"
-                    >-</span
+                  <template v-if="column.type === 'weight'">
+                    <Adaptive :value="summary[columnIndex(column)]" />
+                  </template>
+                  <template
+                    v-else-if="
+                      column.type === 'percentage' || column.type === 'action'
+                    "
                   >
-                  <span v-else-if="i === 0">
-                    {{ toFixedAdaptive(value).split(".")[0] }}.<span
-                      class="text-xs"
-                      >{{ toFixedAdaptive(value).split(".")[1] }}</span
-                    >
-                  </span>
-                  <span v-else-if="i === 2">
-                    {{ toFixedEv(value).slice(0, -evDigits)
-                    }}<span class="text-xs">{{
-                      toFixedEv(value).slice(-evDigits)
-                    }}</span>
-                  </span>
-                  <span v-else>
-                    {{ toFixed1(value * 100).slice(0, -1)
-                    }}<span class="text-xs"
-                      >{{ toFixed1(value * 100).slice(-1) }}%</span
-                    >
-                  </span>
+                    <Percentage :value="summary[columnIndex(column)]" />
+                  </template>
+                  <template v-else-if="column.type === 'action-ev'">
+                    <Percentage :value="summary[columnIndex(column) - 1]" />
+                  </template>
+                  <template v-else-if="column.type === 'ev'">
+                    <Ev
+                      :value="summary[columnIndex(column)]"
+                      :digits="evDigits"
+                    />
+                  </template>
                 </div>
-                <div
-                  v-if="i >= 4"
-                  class="absolute w-12 h-1 bottom-0 inset-x-0 mx-auto"
-                  :style="{
-                    background: actionBarBg(i - 4, value),
-                  }"
-                ></div>
-              </th>
-            </template>
+              </template>
+
+              <div
+                v-if="
+                  summary &&
+                  (column.type === 'action' || column.type === 'action-ev')
+                "
+                class="absolute w-12 h-1 bottom-0 inset-x-0 mx-auto"
+                :style="{
+                  background: actionBarBg(column.index, summary),
+                }"
+              ></div>
+            </th>
           </tr>
         </thead>
 
@@ -136,79 +176,96 @@
               height: 'calc(var(--num-rows) * (1.9rem + 1px))',
             }"
           >
-            <td :colspan="headers.length"></td>
+            <td :colspan="columns.length"></td>
           </tr>
 
           <!-- Body -->
           <tr
-            v-for="item in resultRendered"
+            v-for="item in resultsRendered"
             :key="item[0]"
             class="relative bg-white"
             style="height: calc(1.9rem + 1px)"
           >
-            <td class="sticky left-0 pt-0.5 z-10 bg-white row-divider">
-              <template
-                v-for="card in textPair(item[0])"
-                :key="card.rank + card.suit"
-              >
-                <span :class="card.colorClass">
+            <td
+              v-for="column in columns"
+              :key="column.label"
+              :class="
+                'row-divider ' +
+                (column.type === 'card'
+                  ? 'sticky left-0 z-10 bg-white '
+                  : 'relative ') +
+                (column.type === 'bar' ? 'pt-[0.3125rem] pb-1 px-1' : 'pt-0.5')
+              "
+              :style="{
+                height: column.type === 'bar' ? 'calc(1.9rem + 1px)' : 'auto',
+              }"
+            >
+              <template v-if="column.type === 'card'">
+                <span
+                  v-for="card in pairText(item[columnIndex(column)])"
+                  :key="card.rank + card.suit"
+                  :class="card.colorClass"
+                >
                   {{ card.rank + card.suit }}
                 </span>
               </template>
-            </td>
-            <td
-              class="relative pt-[0.3125rem] pb-1 px-1 row-divider"
-              style="height: calc(1.9rem + 1px)"
-            >
-              <div
-                class="w-full h-full bg-neutral-800 bg-left bg-no-repeat"
-                :style="{
-                  'background-image': strategyBarBgImage(item.slice(6)),
-                  'background-size': `${item[2] * 100}% 100%`,
-                }"
-              ></div>
-            </td>
-            <td
-              v-for="(value, i) in item.slice(2)"
-              :key="i"
-              class="relative pt-0.5 row-divider"
-            >
-              <div class="inline-block w-12 text-right">
-                <span
-                  v-if="results?.isEmpty && 1 <= i && i <= 3"
-                  class="inline-block w-full text-center"
-                >
-                  -</span
-                >
-                <span v-else-if="i === 2">
-                  {{ toFixedEv(value).slice(0, -evDigits)
-                  }}<span class="text-xs">{{
-                    toFixedEv(value).slice(-evDigits)
-                  }}</span>
-                </span>
-                <span v-else>
-                  {{ toFixed1(value * 100).slice(0, -1)
-                  }}<span class="text-xs"
-                    >{{ toFixed1(value * 100).slice(-1) }}%</span
+
+              <template v-else-if="column.type === 'bar'">
+                <div
+                  class="w-full h-full bg-neutral-800 bg-left bg-no-repeat"
+                  :style="{
+                    'background-image': strategyBarBgImage(item),
+                    'background-size': strategyBarBgSize(item),
+                  }"
+                ></div>
+              </template>
+
+              <template
+                v-else-if="
+                  results?.isEmpty &&
+                  (column.type === 'percentage' || column.type === 'ev')
+                "
+              >
+                <span>-</span>
+              </template>
+
+              <template v-else>
+                <div class="inline-block w-12 text-right">
+                  <template
+                    v-if="
+                      column.type === 'weight' ||
+                      column.type === 'percentage' ||
+                      column.type === 'action'
+                    "
                   >
-                </span>
-              </div>
+                    <Percentage :value="item[columnIndex(column)]" />
+                  </template>
+                  <template
+                    v-else-if="
+                      column.type === 'ev' || column.type === 'action-ev'
+                    "
+                  >
+                    <Ev :value="item[columnIndex(column)]" :digits="evDigits" />
+                  </template>
+                </div>
+              </template>
+
               <div
-                v-if="i >= 4"
+                v-if="column.type === 'action' || column.type === 'action-ev'"
                 class="absolute w-12 h-1 bottom-0 inset-x-0 mx-auto"
                 :style="{
-                  background: actionBarBg(i - 4, value),
+                  background: actionBarBg(column.index, item),
                 }"
               ></div>
             </td>
           </tr>
 
           <!-- No results -->
-          <tr v-if="resultRendered.length === 0">
+          <tr v-if="resultsRendered.length === 0">
             <td
               class="relative bg-white row-divider"
               style="height: calc(1.9rem + 1px)"
-              :colspan="headers.length"
+              :colspan="columns.length"
             >
               No results
             </td>
@@ -222,12 +279,12 @@
               height: 'calc(var(--num-rows) * (1.9rem + 1px))',
             }"
           >
-            <td :colspan="headers.length" class="relative row-divider"></td>
+            <td :colspan="columns.length" class="relative row-divider"></td>
           </tr>
 
           <!-- Spacer -->
           <tr>
-            <td :colspan="headers.length" class="relative row-divider"></td>
+            <td :colspan="columns.length" class="relative row-divider"></td>
           </tr>
         </tbody>
       </table>
@@ -236,7 +293,16 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, toRefs, watch } from "vue";
+import {
+  computed,
+  defineComponent,
+  h,
+  reactive,
+  ref,
+  toRefs,
+  watch,
+} from "vue";
+
 import {
   ranks,
   cardText,
@@ -249,7 +315,6 @@ import {
 import {
   Results,
   Spot,
-  SpotChance,
   SpotPlayer,
   HoverContent,
   TableMode,
@@ -257,6 +322,87 @@ import {
 
 import { Tippy } from "vue-tippy";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/24/solid";
+
+const barWidthList = ["normalized", "absolute", "full"] as const;
+const contentList = ["percentage", "ev"] as const;
+type DisplayOptions = {
+  barWidth: typeof barWidthList[number];
+  content: typeof contentList[number];
+};
+
+type ColumnCard = {
+  label: string;
+  type: "card";
+};
+
+type ColumnBar = {
+  label: string;
+  type: "bar";
+};
+
+type ColumnWeight = {
+  label: string;
+  type: "weight";
+};
+
+type ColumnPercentage = {
+  label: string;
+  type: "percentage";
+  index: number;
+};
+
+type ColumnEv = {
+  label: string;
+  type: "ev";
+};
+
+type ColumnAction = {
+  label: string;
+  type: "action";
+  index: number;
+};
+
+type ColumnActionEV = {
+  label: string;
+  type: "action-ev";
+  index: number;
+};
+
+type Column =
+  | ColumnCard
+  | ColumnBar
+  | ColumnWeight
+  | ColumnPercentage
+  | ColumnEv
+  | ColumnAction
+  | ColumnActionEV;
+
+const INDEX_CARD_PAIR = 0;
+const INDEX_WEIGHT = 1;
+const INDEX_NORMALIZER = 2;
+const INDEX_EQUITY = 3;
+const INDEX_EV = 4;
+const INDEX_EQR = 5;
+const INDEX_STRATEGY_BASE = 6;
+
+const columnIndex = (column: Column) => {
+  switch (column.type) {
+    case "card":
+      return INDEX_CARD_PAIR;
+    case "bar":
+      return -1;
+    case "weight":
+      return INDEX_WEIGHT;
+    case "percentage":
+      return column.index;
+    case "ev":
+      return INDEX_EV;
+    case "action":
+      return INDEX_STRATEGY_BASE + column.index * 2;
+    case "action-ev":
+      return INDEX_STRATEGY_BASE + column.index * 2 + 1;
+  }
+};
 
 const amber500 = "#f59e0b";
 const neutral800 = "#262626";
@@ -269,8 +415,35 @@ const cardStr = (card: number) => {
   return rank + suit;
 };
 
+const Adaptive = (props: { value: number }) => {
+  const split = computed(() => toFixedAdaptive(props.value).split("."));
+  return h("span", {}, [
+    h("span", {}, split.value[0] + "."),
+    h("span", { class: "text-xs" }, split.value[1]),
+  ]);
+};
+
+const Percentage = (props: { value: number }) => {
+  const str = computed(() => toFixed1(props.value * 100));
+  return h("span", {}, [
+    h("span", {}, str.value.slice(0, -1)),
+    h("span", { class: "text-xs" }, str.value.slice(-1) + "%"),
+  ]);
+};
+
+const Ev = (props: { value: number; digits: number }) => {
+  const str = computed(() => toFixed[props.digits - 1](props.value));
+  return h("span", {}, [
+    h("span", {}, str.value.slice(0, -props.digits)),
+    h("span", { class: "text-xs" }, str.value.slice(-props.digits)),
+  ]);
+};
+
 export default defineComponent({
   components: {
+    Adaptive,
+    Percentage,
+    Ev,
     Tippy,
     ArrowTopRightOnSquareIcon,
   },
@@ -288,10 +461,6 @@ export default defineComponent({
       type: Object as () => Spot,
       required: true,
     },
-    selectedChance: {
-      type: Object as () => SpotChance | null,
-      required: true,
-    },
     results: {
       type: Object as () => Results | null,
       required: true,
@@ -307,6 +476,29 @@ export default defineComponent({
   },
 
   setup(props) {
+    const displayOptions = reactive<DisplayOptions>({
+      barWidth: "normalized",
+      content: "percentage",
+    });
+
+    const savedDisplayOptions = localStorage.getItem("display-options-table");
+    if (savedDisplayOptions) {
+      const saved = JSON.parse(savedDisplayOptions) as DisplayOptions;
+      if (barWidthList.includes(saved.barWidth)) {
+        displayOptions.barWidth = saved.barWidth;
+      }
+      if (contentList.includes(saved.content)) {
+        displayOptions.content = saved.content;
+      }
+    }
+
+    const updateDisplayOptions = () => {
+      localStorage.setItem(
+        "display-options-table",
+        JSON.stringify(displayOptions)
+      );
+    };
+
     const tableDiv = ref<HTMLDivElement | null>(null);
     const tableHeight = ref(0);
 
@@ -319,7 +511,7 @@ export default defineComponent({
     watch(tableDiv, assignTableHeight);
     window.addEventListener("resize", assignTableHeight);
 
-    const textPair = (pair: number) => {
+    const pairText = (pair: number) => {
       const card1 = pair & 0xff;
       const card2 = pair >>> 8;
       if (card2 !== 0xff) {
@@ -340,12 +532,15 @@ export default defineComponent({
       sortKey.value = { key, order };
     };
 
-    const { selectedSpot, displayPlayer } = toRefs(props);
-    watch([selectedSpot, displayPlayer], () => {
-      if (sortKey.value.key >= 6) {
+    const resetSortKey = () => {
+      if (sortKey.value.key >= INDEX_STRATEGY_BASE) {
         sortKey.value = { key: 0, order: "desc" };
       }
-    });
+    };
+
+    const { selectedSpot, displayPlayer } = toRefs(props);
+    watch([selectedSpot, displayPlayer], resetSortKey);
+    watch(() => displayOptions.content, resetSortKey);
 
     const evDigits = computed(() => {
       const results = props.results;
@@ -355,54 +550,67 @@ export default defineComponent({
       return maxEv < 10 ? 3 : maxEv < 100 ? 2 : 1;
     });
 
-    const toFixedEv = computed(() => {
-      return toFixed[evDigits.value - 1];
-    });
-
-    const hasStrategy = computed(() => {
+    const numActions = computed(() => {
       const spot = props.selectedSpot;
+      const results = props.results;
       return (
-        spot.type === "player" &&
-        spot.player === props.displayPlayer &&
-        !props.selectedChance
+        (spot.type === "player" &&
+          spot.player === props.displayPlayer &&
+          results &&
+          results.strategy.length > 0 &&
+          (spot as SpotPlayer).actions.length) ||
+        0
       );
     });
 
-    const headers = computed(() => {
-      let firstColumn = "";
+    const columns = computed(() => {
+      const ret: Column[] = [];
+
+      let firstLabel = "";
       if (props.tableMode === "basics") {
-        firstColumn = "Hand";
+        firstLabel = "Hand";
       } else if (props.tableMode === "turn") {
-        firstColumn = "Turn";
+        firstLabel = "Turn";
       } else {
-        firstColumn = "River";
+        firstLabel = "River";
       }
 
-      const secondColumn = hasStrategy.value ? "Strategy" : "Weight (Bar)";
-      const ret = [firstColumn, secondColumn, "Weight", "EQ", "EV", "EQR"];
+      const secondLabel = numActions.value ? "Strategy" : "Weight (Bar)";
 
-      if (hasStrategy.value) {
+      ret.push({ label: firstLabel, type: "card" });
+      ret.push({ label: secondLabel, type: "bar" });
+      ret.push({ label: "Weight", type: "weight" });
+      ret.push({ label: "EQ", type: "percentage", index: INDEX_EQUITY });
+      ret.push({ label: "EV", type: "ev" });
+      ret.push({ label: "EQR", type: "percentage", index: INDEX_EQR });
+
+      if (numActions.value > 0) {
         const spot = props.selectedSpot as SpotPlayer;
-        for (let i = spot.actions.length - 1; i >= 0; --i) {
-          const action = spot.actions[i];
-          ret.push(
+        for (let i = 0; i < numActions.value; ++i) {
+          const j = numActions.value - i - 1; // reverse order
+          const action = spot.actions[j];
+          const label =
             action.amount === "0"
               ? action.name
-              : `${action.name[0]} ${action.amount}`
-          );
+              : `${action.name[0]} ${action.amount}`;
+          if (displayOptions.content === "percentage") {
+            ret.push({ label, type: "action", index: i });
+          } else {
+            ret.push({ label, type: "action-ev", index: i });
+          }
         }
       }
 
       return ret;
     });
 
-    const resultFiltered = computed(() => {
+    const resultsFiltered = computed(() => {
       const ret: number[][] = [];
 
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
 
       let cards = new Uint16Array();
-      if (props.cards) {
+      if (props.tableMode === "basics" && props.cards) {
         cards = props.cards[playerIndex];
       } else {
         const cardsArray = Array.from({ length: 52 }, (_, i) => 0xff00 + i);
@@ -418,19 +626,23 @@ export default defineComponent({
         if (weight < 0.0005 || normalizer === 0) return null;
 
         const ret: number[] = [];
-        ret.push(cards[index]);
-        ret.push(results.normalizer[playerIndex][index]); // utilize strategy's position
-        ret.push(results.weights[playerIndex][index]);
-        ret.push(results.equity[playerIndex][index] ?? 0);
-        ret.push(results.ev[playerIndex][index] ?? 0);
-        ret.push(results.eqr[playerIndex][index] ?? 0);
 
-        if (hasStrategy.value) {
-          const spot = props.selectedSpot as SpotPlayer;
-          const numActions = spot.actions.length;
-          for (let i = numActions - 1; i >= 0; --i) {
-            ret.push(results.strategy[i * cards.length + index]);
+        ret.push(cards[index]);
+
+        if (props.tableMode === "basics") {
+          ret.push(results.weights[playerIndex][index]);
+          ret.push(results.normalizer[playerIndex][index]);
+          ret.push(results.equity[playerIndex][index] ?? 0);
+          ret.push(results.ev[playerIndex][index] ?? 0);
+          ret.push(results.eqr[playerIndex][index] ?? 0);
+
+          for (let i = numActions.value - 1; i >= 0; --i) {
+            const j = i * cards.length + index;
+            ret.push(results.strategy[j]);
+            ret.push(results.actionEv[j] ?? 0);
           }
+        } else {
+          // TODO
         }
 
         return ret;
@@ -451,10 +663,10 @@ export default defineComponent({
       return ret;
     });
 
-    const resultSorted = computed(() => {
+    const resultsSorted = computed(() => {
       const { key, order } = sortKey.value;
       const coef = order === "asc" ? 1 : -1;
-      const ret = [...resultFiltered.value];
+      const ret = [...resultsFiltered.value];
 
       if (key === 0) {
         ret.sort((a, b) => {
@@ -485,11 +697,11 @@ export default defineComponent({
     const emptyBufferTop = ref(-2 * bufferUnit);
     const emptyBufferBottom = computed(
       () =>
-        resultFiltered.value.length -
+        resultsFiltered.value.length -
         (emptyBufferTop.value + numDisplayedRows.value + 4 * bufferUnit)
     );
 
-    watch(resultSorted, () => {
+    watch(resultsSorted, () => {
       if (!tableDiv.value) return;
       tableDiv.value.scrollTop = 0;
       emptyBufferTop.value = -2 * bufferUnit;
@@ -517,63 +729,84 @@ export default defineComponent({
       });
     };
 
-    const resultRendered = computed(() => {
-      return resultSorted.value.slice(
+    const resultsRendered = computed(() => {
+      return resultsSorted.value.slice(
         Math.max(emptyBufferTop.value, 0),
         emptyBufferTop.value + numDisplayedRows.value + 4 * bufferUnit
       );
     });
 
     const summary = computed(() => {
-      if (!props.results) return;
-      if (resultFiltered.value.length === 0) return null;
+      const results = resultsFiltered.value;
+      if (!props.results || results.length === 0) return null;
 
-      let weightSum = 0;
-      const ret = resultFiltered.value[0].map(() => 0);
+      let normalizer = 0;
+      const ret = results[0].map(() => 0);
 
-      for (const row of resultFiltered.value) {
-        ret[0] += row[0];
-        weightSum += row[1];
-        ret[2] += row[2];
-        for (let i = 3; i < row.length; ++i) {
-          ret[i] += row[i] * row[1];
+      for (const row of results) {
+        const n = row[INDEX_NORMALIZER];
+        normalizer += n;
+        ret[INDEX_WEIGHT] += row[INDEX_WEIGHT];
+        for (let i = INDEX_EQUITY; i < row.length; ++i) {
+          ret[i] += row[i] * n;
         }
       }
 
-      for (let i = 3; i < ret.length; ++i) {
-        ret[i] /= weightSum;
+      for (let i = INDEX_EQUITY; i < ret.length; ++i) {
+        ret[i] /= normalizer;
       }
 
+      // EQR is not the average
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
-      ret[5] = ret[4] / (props.results.eqrBase[playerIndex] * ret[3]);
+      const eqrBase = props.results.eqrBase[playerIndex];
+      ret[INDEX_EQR] = ret[INDEX_EV] / (eqrBase * ret[INDEX_EQUITY]);
 
       return ret;
     });
 
     const actionColors = computed(() => {
-      if (!hasStrategy.value) return [];
+      if (numActions.value === 0) return [];
       const spot = props.selectedSpot as SpotPlayer;
       return spot.actions.map((a) => a.color).reverse();
     });
 
-    const strategyBarBgImage = (strategy: number[]) => {
-      if (strategy.length === 0) {
+    const maxWeight = computed(() => {
+      return Math.max(...resultsFiltered.value.map((r) => r[INDEX_WEIGHT]));
+    });
+
+    const strategyBarBgImage = (row: number[]) => {
+      if (!row || row.length === INDEX_STRATEGY_BASE) {
         return `linear-gradient(${amber500} 0% 100%)`;
       }
+
       let pos = 0;
       let ret = "linear-gradient(to right";
-      for (let i = 0; i < strategy.length; ++i) {
-        const width = strategy[i] * 100;
+
+      for (let i = 0; i < numActions.value; ++i) {
+        const width = row[INDEX_STRATEGY_BASE + i * 2] * 100;
         const color = actionColors.value[i];
         ret += `, ${color} ${pos}% ${pos + width}%`;
         pos += width;
       }
+
       ret += ")";
       return ret;
     };
 
-    const actionBarBg = (index: number, value: number) => {
+    const strategyBarBgSize = (row: number[]) => {
+      const weight = row[INDEX_WEIGHT];
+      if (displayOptions.barWidth === "normalized") {
+        return `${(weight / maxWeight.value) * 100}% 100%`;
+      } else if (displayOptions.barWidth === "absolute") {
+        return `${weight * 100}% 100%`;
+      } else {
+        return "100% 100%";
+      }
+    };
+
+    const actionBarBg = (index: number, row: number[]) => {
       const color = actionColors.value[index];
+      const value = row[INDEX_STRATEGY_BASE + index * 2];
       return `linear-gradient(to right, ${color} 0% ${
         value * 100
       }%, ${neutral800} ${value * 100}% 100%)`;
@@ -584,16 +817,37 @@ export default defineComponent({
     const exportSummary = () => {
       if (!props.results || !exportSummaryButton.value) return;
 
-      const h = headers.value;
-      const startIndex = props.results.isEmpty ? 6 : 3;
-      const ary = [h[0], "Weight", "Combinations", ...h.slice(startIndex)];
-      const data = [ary.join(",")];
+      const ary = [columns.value[0].label, "Weight", "Combinations"];
 
-      for (const row of resultSorted.value) {
+      if (!props.results.isEmpty) {
+        ary.push("Equity", "EV", "EQR");
+      }
+
+      if (numActions.value > 0) {
+        const actions = (props.selectedSpot as SpotPlayer).actions;
+        for (let i = actions.length - 1; i >= 0; --i) {
+          const action = actions[i];
+          const amount = action.amount === "0" ? "" : ` ${action.amount}`;
+          ary.push(`${action.name}${amount} %`);
+          ary.push(`${action.name}${amount} EV`);
+        }
+      }
+
+      const data = [ary.join(",")];
+      const startIndex = props.results.isEmpty
+        ? INDEX_STRATEGY_BASE
+        : INDEX_EQUITY;
+
+      for (const row of resultsSorted.value) {
         const card1 = row[0] & 0xff;
         const card2 = row[0] >>> 8;
         const pairStr = cardStr(card2) + cardStr(card1);
-        const ary = [pairStr, row[2], row[1], ...row.slice(startIndex)];
+        const ary = [
+          pairStr,
+          row[INDEX_WEIGHT],
+          row[INDEX_NORMALIZER],
+          ...row.slice(startIndex),
+        ];
         data.push(ary.join(","));
       }
 
@@ -605,19 +859,22 @@ export default defineComponent({
     return {
       toFixed1,
       toFixedAdaptive,
-      textPair,
+      columnIndex,
+      displayOptions,
+      updateDisplayOptions,
       tableDiv,
+      pairText,
       sortKey,
       sortBy,
       evDigits,
-      toFixedEv,
-      headers,
+      columns,
       onTableScroll,
-      resultRendered,
+      resultsRendered,
       emptyBufferTop,
       emptyBufferBottom,
       summary,
       strategyBarBgImage,
+      strategyBarBgSize,
       actionBarBg,
       exportSummaryButton,
       exportSummary,

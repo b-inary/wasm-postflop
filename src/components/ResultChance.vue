@@ -1,6 +1,6 @@
 <template>
   <div class="flex w-full h-full">
-    <div class="flex flex-col h-full pt-2 gap-[1%]" style="flex: 5">
+    <div class="flex flex-col h-full pt-2 gap-[1%]" style="flex: 4">
       <div
         v-for="suit in 4"
         :key="suit"
@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <div class="bg-gray-300" style="flex: 4"></div>
+    <div class="bg-gray-300" style="flex: 3"></div>
   </div>
 </template>
 

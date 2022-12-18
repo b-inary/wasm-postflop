@@ -241,7 +241,7 @@ export default defineComponent({
       }
     });
 
-    const displayOptions = reactive({
+    const displayOptions = reactive<Types.DisplayOptions>({
       playerBasics: "auto",
       playerChance: "auto",
       barHeight: "normalized",
@@ -249,27 +249,27 @@ export default defineComponent({
       strategy: "show",
       contentBasics: "default",
       contentChance: "strategy",
-    } as Types.DisplayOptions);
+    });
 
     const strategyContentPair = ref("show,default");
 
     const savedDisplayOptions = localStorage.getItem("display-options");
     if (savedDisplayOptions) {
-      const parsed = JSON.parse(savedDisplayOptions) as Types.DisplayOptions;
-      if (Types.barHeightList.includes(parsed?.barHeight)) {
-        displayOptions.barHeight = parsed.barHeight;
+      const saved = JSON.parse(savedDisplayOptions) as Types.DisplayOptions;
+      if (Types.barHeightList.includes(saved?.barHeight)) {
+        displayOptions.barHeight = saved.barHeight;
       }
-      if (Types.suitList.includes(parsed?.suit)) {
-        displayOptions.suit = parsed.suit;
+      if (Types.suitList.includes(saved?.suit)) {
+        displayOptions.suit = saved.suit;
       }
-      if (Types.strategyList.includes(parsed?.strategy)) {
-        displayOptions.strategy = parsed.strategy;
+      if (Types.strategyList.includes(saved?.strategy)) {
+        displayOptions.strategy = saved.strategy;
       }
-      if (Types.contentBasicsList.includes(parsed?.contentBasics)) {
-        displayOptions.contentBasics = parsed.contentBasics;
+      if (Types.contentBasicsList.includes(saved?.contentBasics)) {
+        displayOptions.contentBasics = saved.contentBasics;
       }
-      if (Types.contentChanceList.includes(parsed?.contentChance)) {
-        displayOptions.contentChance = parsed.contentChance;
+      if (Types.contentChanceList.includes(saved?.contentChance)) {
+        displayOptions.contentChance = saved.contentChance;
       }
       strategyContentPair.value = [
         displayOptions.strategy,

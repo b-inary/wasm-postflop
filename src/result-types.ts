@@ -9,7 +9,7 @@ export type Results = {
   ev: Float64Array[];
   eqr: Float64Array[];
   strategy: Float64Array;
-  evDetail: Float64Array;
+  actionEv: Float64Array;
 };
 
 export type ChanceReports = {

@@ -44,7 +44,7 @@
     <div v-if="store.navView === 'results'" class="flex flex-grow min-h-0">
       <template v-if="displayMode === 'basics' && selectedSpot">
         <ResultBasics
-          style="flex: 5"
+          style="flex: 4"
           :cards="cards"
           :selected-spot="selectedSpot"
           :selected-chance="selectedChance"
@@ -58,11 +58,10 @@
         />
 
         <ResultTable
-          style="flex: 4"
+          style="flex: 3"
           table-mode="basics"
           :cards="cards"
           :selected-spot="selectedSpot"
-          :selected-chance="selectedChance"
           :results="results"
           :display-player="displayPlayerBasics"
           :hover-content="basicsHoverContent"

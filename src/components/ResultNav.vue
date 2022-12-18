@@ -428,6 +428,8 @@ export default defineComponent({
               results.equity[0],
               results.normalizer[0]
             );
+          } else {
+            lastSpot.equityOop = -1;
           }
         }
       }
@@ -596,7 +598,7 @@ export default defineComponent({
       const ev = [new Float64Array(), new Float64Array()];
       const eqr = [new Float64Array(), new Float64Array()];
       let strategy = new Float64Array();
-      let evDetail = new Float64Array();
+      let actionEv = new Float64Array();
 
       const header = new Float64Array(buffer, ptr + offset, 3);
       offset += 24;
@@ -636,7 +638,7 @@ export default defineComponent({
         strategy = new Float64Array(buffer, ptr + offset, numActions * len);
         offset += 8 * numActions * len;
         if (!isEmpty) {
-          evDetail = new Float64Array(buffer, ptr + offset, numActions * len);
+          actionEv = new Float64Array(buffer, ptr + offset, numActions * len);
           offset += 8 * numActions * len;
         }
       }
@@ -652,7 +654,7 @@ export default defineComponent({
         ev,
         eqr,
         strategy,
-        evDetail,
+        actionEv,
       };
     };
 
