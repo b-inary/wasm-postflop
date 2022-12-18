@@ -88,7 +88,10 @@
           </div>
         </div>
 
-        <div v-if="errorBasics.length > 0" class="flex font-bold text-red-500">
+        <div
+          v-if="errorBasics.length > 0"
+          class="flex font-semibold text-red-500"
+        >
           <div class="underline">Error:</div>
           <div class="ml-2">
             <div v-for="error in errorBasics" :key="error">
@@ -99,8 +102,8 @@
 
         <div class="mt-6">
           <div class="flex">
-            <span class="font-bold">OOP bet sizes</span>
-            <label class="inline-block ml-8">
+            <span class="font-semibold">OOP bet sizes</span>
+            <label class="inline-block ml-6">
               <input
                 v-model="config.donkOption"
                 type="checkbox"
@@ -315,7 +318,7 @@
 
         <div>
           <div class="flex">
-            <div class="mt-6 font-bold">IP bet sizes</div>
+            <div class="mt-6 font-semibold">IP bet sizes</div>
             <div class="flex flex-grow items-center justify-center gap-6">
               <button
                 class="mt-3 button-base button-blue button-arrow"
@@ -453,7 +456,7 @@
 
         <div
           v-if="errorOop.length > 0 || errorIp.length > 0"
-          class="flex mt-1 font-bold text-red-500"
+          class="flex mt-1 font-semibold text-red-500"
         >
           <div class="underline">Error:</div>
           <div class="ml-2">
@@ -624,7 +627,7 @@
 
         <div
           v-if="errorMisc.length > 0"
-          class="flex mt-1 font-bold text-red-500"
+          class="flex mt-1 font-semibold text-red-500"
         >
           <div class="underline">Error:</div>
           <div class="ml-2">
@@ -636,7 +639,7 @@
 
         <div
           v-if="warningMisc.length > 0"
-          class="flex mt-1 font-bold text-orange-500"
+          class="flex mt-1 font-semibold text-orange-500"
         >
           <div class="underline">Warning:</div>
           <div class="ml-2">
@@ -665,7 +668,7 @@
       class="mt-6"
     >
       <div v-if="addedLinesArray.length > 0" class="flex">
-        <div class="font-bold underline w-[7.75rem]">
+        <div class="font-semibold underline w-[7.75rem]">
           Added line{{ addedLinesArray.length > 1 ? "s" : "" }}:
         </div>
         <div class="flex flex-col">
@@ -676,7 +679,7 @@
       </div>
 
       <div v-if="removedLinesArray.length > 0" class="flex mt-2">
-        <div class="font-bold underline w-[7.75rem]">
+        <div class="font-semibold underline w-[7.75rem]">
           Removed line{{ removedLinesArray.length > 1 ? "s" : "" }}:
         </div>
         <div class="flex flex-col">
@@ -692,7 +695,7 @@
           config.expectedBoardLength > 0 &&
           config.board.length !== config.expectedBoardLength
         "
-        class="flex mt-2 font-bold text-orange-500"
+        class="flex mt-2 font-semibold text-orange-500"
       >
         <div class="underline">Warning:</div>
         <div class="ml-2">

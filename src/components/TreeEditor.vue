@@ -23,12 +23,12 @@
       <!-- Root or Chance -->
       <template v-if="spot.type === 'root' || spot.type === 'chance'">
         <div
-          class="px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 opacity-70"
+          class="px-1.5 pt-1 pb-0.5 font-semibold group-hover:opacity-100 opacity-70"
         >
           {{ spot.player.toUpperCase() }}
         </div>
         <div
-          class="flex flex-col flex-grow px-3 items-center justify-evenly font-bold"
+          class="flex flex-col flex-grow px-3 items-center justify-evenly font-semibold"
         >
           <div class="group-hover:opacity-100 opacity-70">
             <div>Pot {{ spot.pot }}</div>
@@ -41,7 +41,7 @@
       <template v-if="spot.type === 'player'">
         <div
           :class="
-            'px-1.5 py-1 font-bold group-hover:opacity-100 ' +
+            'px-1.5 py-1 font-semibold group-hover:opacity-100 ' +
             (spot.index === selectedSpotIndex ? '' : 'opacity-70')
           "
         >
@@ -64,7 +64,7 @@
             </span>
             <span
               :class="
-                'pr-0.5 font-bold group-hover:opacity-100 ' +
+                'pr-0.5 font-semibold group-hover:opacity-100 ' +
                 (action.isSelected || spot.index === selectedSpotIndex
                   ? ''
                   : 'opacity-70')
@@ -77,7 +77,7 @@
           <div
             v-if="spot.actions.length === 0"
             :class="
-              'flex w-full px-1.5 font-bold group-hover:opacity-100 ' +
+              'flex w-full px-1.5 font-semibold group-hover:opacity-100 ' +
               (spot.index === selectedSpotIndex ? '' : 'opacity-70')
             "
           >
@@ -90,7 +90,7 @@
       <template v-else-if="spot.type === 'terminal'">
         <div
           :class="
-            'px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 ' +
+            'px-1.5 pt-1 pb-0.5 font-semibold group-hover:opacity-100 ' +
             (spot.index === selectedSpotIndex ? '' : 'opacity-70')
           "
         >
@@ -98,7 +98,7 @@
         </div>
         <div
           :class="
-            'flex flex-col flex-grow items-center justify-evenly font-bold group-hover:opacity-100 ' +
+            'flex flex-col flex-grow items-center justify-evenly font-semibold group-hover:opacity-100 ' +
             (spot.index === selectedSpotIndex ? '' : 'opacity-70')
           "
         >
@@ -115,7 +115,7 @@
 
   <div
     v-if="invalidLinesArray.length > 0"
-    class="flex mt-4 font-bold text-red-500"
+    class="flex mt-4 font-semibold text-red-500"
   >
     <div class="underline">
       Invalid Terminal{{ invalidLinesArray.length > 1 ? "s" : "" }}:
@@ -202,7 +202,7 @@
 
   <div v-if="addedLinesArray.length > 0 || removedLinesArray.length > 0">
     <div v-if="addedLinesArray.length > 0" class="flex">
-      <div class="font-bold underline w-[7.75rem]">
+      <div class="font-semibold underline w-[7.75rem]">
         Added line{{ addedLinesArray.length > 1 ? "s" : "" }}:
       </div>
       <div class="flex flex-col">
@@ -220,7 +220,7 @@
     </div>
 
     <div v-if="removedLinesArray.length > 0" class="flex mt-2">
-      <div class="font-bold underline w-[7.75rem]">
+      <div class="font-semibold underline w-[7.75rem]">
         Removed line{{ removedLinesArray.length > 1 ? "s" : "" }}:
       </div>
       <div class="flex flex-col">

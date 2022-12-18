@@ -81,7 +81,7 @@
   <p class="mt-4 underline">Change log:</p>
 
   <ul class="mt-4 ml-8 list-disc">
-    <li><span class="font-bold">2022-06-01</span>: Initial release</li>
+    <li><span class="font-semibold">2022-06-01</span>: Initial release</li>
   </ul>
 </template>
 

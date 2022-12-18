@@ -14,7 +14,7 @@
     }"
   >
     <span
-      :class="'absolute top-0 font-bold ' + colorClass"
+      :class="'absolute top-0 font-semibold ' + colorClass"
       :style="{
         left: '15%',
         'font-size': 'calc(var(--font-size) * 1.25)',

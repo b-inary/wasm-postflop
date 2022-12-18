@@ -25,7 +25,7 @@
       config.expectedBoardLength > 0 &&
       config.board.length !== config.expectedBoardLength
     "
-    class="mt-5 font-bold text-orange-500"
+    class="mt-5 font-semibold text-orange-500"
   >
     <span class="underline">Warning:</span>
     The edited tree assumes a {{ config.expectedBoardLength }}-card board.

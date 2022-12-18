@@ -377,7 +377,7 @@
       </div>
     </div>
 
-    <div v-if="errorOccured" class="mt-3 text-red-600 font-bold">
+    <div v-if="errorOccured" class="mt-3 text-red-500 font-bold">
       Something went wrong. Please reload the page.
     </div>
 

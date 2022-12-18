@@ -1,7 +1,9 @@
 <template>
   <div class="flex flex-col w-full overflow-x-auto">
     <div class="flex shrink-0 h-12 border-y border-gray-500">
-      <div class="flex h-full px-4 items-center text-lg font-bold">Summary</div>
+      <div class="flex h-full px-4 items-center text-lg font-semibold">
+        Summary
+      </div>
       <div class="flex h-full ml-auto px-4 items-center">
         <Tippy content="Export summary to CSV file">
           <a
@@ -32,7 +34,7 @@
               :key="text"
               scope="col"
               :class="
-                'whitespace-nowrap font-bold select-none ' +
+                'whitespace-nowrap select-none ' +
                 (i === 0 ? 'sticky left-0 z-40 bg-gray-100 ' : '') +
                 (i !== 1 ? 'cursor-pointer' : '')
               "

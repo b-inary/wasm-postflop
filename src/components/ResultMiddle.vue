@@ -4,7 +4,7 @@
       v-for="mode in ['basics', 'compare', 'graphs', 'scatter'] as const"
       :key="mode"
       :class="
-        'flex w-[9%] h-full items-center justify-center font-bold text-lg transition ' +
+        'flex w-[9%] h-full items-center justify-center font-semibold text-lg transition ' +
         (chanceMode === ''
           ? displayMode === mode
             ? 'bg-blue-100 underline'
@@ -19,7 +19,7 @@
     </button>
     <button
       :class="
-        'flex w-[9%] h-full items-center justify-center font-bold text-lg transition enabled:hover:bg-blue-100 ' +
+        'flex w-[9%] h-full items-center justify-center font-semibold text-lg transition enabled:hover:bg-blue-100 ' +
         (displayMode === 'chance' ? 'bg-blue-100 underline' : '')
       "
       :disabled="chanceMode === ''"

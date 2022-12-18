@@ -23,7 +23,7 @@
 
     <button :class="itemStyle('board')" @click="store.sideView = 'board'">
       Board
-      <span class="flex mt-1 justify-center font-bold">
+      <span class="flex mt-1 justify-center font-semibold">
         <span
           v-for="item in boardTexts"
           :key="item.rank + item.suit"

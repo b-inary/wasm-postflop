@@ -30,7 +30,7 @@
       <template v-if="spot.type === 'root' || spot.type === 'chance'">
         <div
           :class="
-            'px-1.5 pt-1 pb-0.5 font-bold ' +
+            'px-1.5 pt-1 pb-0.5 font-semibold ' +
             (spot.index === selectedChanceIndex
               ? ''
               : isSelectedChanceSkipped && spot.index > selectedChanceIndex
@@ -41,7 +41,7 @@
           {{ spot.player.toUpperCase() }}
         </div>
         <div
-          class="flex flex-col flex-grow px-3 items-center justify-evenly font-bold"
+          class="flex flex-col flex-grow px-3 items-center justify-evenly font-semibold"
         >
           <div>
             <span
@@ -83,7 +83,7 @@
       <template v-if="spot.type === 'player'">
         <div
           :class="
-            'px-1.5 py-1 font-bold group-hover:opacity-100 ' +
+            'px-1.5 py-1 font-semibold group-hover:opacity-100 ' +
             (spot.index === selectedSpotIndex ? '' : 'opacity-70')
           "
         >
@@ -111,7 +111,7 @@
             </span>
             <span
               :class="
-                'pr-0.5 font-bold group-hover:opacity-100 ' +
+                'pr-0.5 font-semibold group-hover:opacity-100 ' +
                 (action.isSelected || spot.index === selectedSpotIndex
                   ? ''
                   : 'opacity-70')
@@ -139,7 +139,7 @@
       <template v-else-if="spot.type === 'terminal'">
         <div
           :class="
-            'px-1.5 pt-1 pb-0.5 font-bold group-hover:opacity-100 ' +
+            'px-1.5 pt-1 pb-0.5 font-semibold group-hover:opacity-100 ' +
             (spot.index === selectedSpotIndex ? '' : 'opacity-70')
           "
         >
@@ -147,7 +147,7 @@
         </div>
         <div
           :class="
-            'flex flex-col flex-grow items-center justify-evenly font-bold group-hover:opacity-100 ' +
+            'flex flex-col flex-grow items-center justify-evenly font-semibold group-hover:opacity-100 ' +
             (spot.index === selectedSpotIndex ? '' : 'opacity-70')
           "
         >
