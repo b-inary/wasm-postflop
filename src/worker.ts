@@ -120,12 +120,12 @@ function createHandler(mod: Mod) {
       return this.game.num_actions();
     },
 
-    actionsAfterHistory(append: Uint32Array) {
-      return this.game.actions_after_history(append);
+    actionsAfter(append: Uint32Array) {
+      return this.game.actions_after(append);
     },
 
-    possibleCards() {
-      return this.game.possible_cards();
+    possibleCards(append: Uint32Array) {
+      return this.game.possible_cards(append);
     },
 
     getResults(): ReadonlyBuffer {

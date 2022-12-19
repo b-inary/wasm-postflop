@@ -3,7 +3,7 @@
 
   <div
     ref="navDiv"
-    class="flex h-[10.25rem] gap-1 p-1 overflow-x-auto whitespace-nowrap snug"
+    class="flex h-[10.5rem] gap-1 p-1 overflow-x-auto whitespace-nowrap snug"
   >
     <div
       v-for="spot in spots"

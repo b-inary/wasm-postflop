@@ -113,4 +113,4 @@ export type HoverContent = {
   indices: number[];
 };
 
-export type TableMode = "basics" | "turn" | "river";
+export type TableMode = "basics" | "chance";

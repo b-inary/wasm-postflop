@@ -397,7 +397,7 @@ export default defineComponent({
             spots.value.slice(1, riverIndex).map((spot) => spot.selectedIndex)
           );
           await handler.applyHistory(history);
-          const possibleCards = await handler.possibleCards();
+          const possibleCards = await handler.possibleCards(new Uint32Array());
           for (let i = 0; i < 52; ++i) {
             const isDead = !(possibleCards & (1n << BigInt(i)));
             riverSpot.cards[i].isDead = isDead;
@@ -455,7 +455,7 @@ export default defineComponent({
 
       let endIndex: number;
       if (selectedChanceIndexTmp === -1) {
-        endIndex = spotIndex;
+        endIndex = selectedSpotIndexTmp;
       } else {
         endIndex = selectedChanceIndexTmp;
       }
@@ -484,13 +484,13 @@ export default defineComponent({
 
       if (selectedChanceIndexTmp !== -1) {
         appendArray = spots.value
-          .slice(selectedChanceIndexTmp, spotIndex)
+          .slice(selectedChanceIndexTmp, selectedSpotIndexTmp)
           .map((spot) => spot.selectedIndex);
         append = new Uint32Array(appendArray);
       }
 
       // obtain actions after skipped chances
-      const nextActionsStr = await handler.actionsAfterHistory(append);
+      const nextActionsStr = await handler.actionsAfter(append);
 
       const canChanceReports =
         selectedChanceIndexTmp !== -1 &&
@@ -502,14 +502,15 @@ export default defineComponent({
       // if possible, obtain chance reports
       if (canChanceReports) {
         let player: "oop" | "ip" | "terminal";
+        let numActions: number;
+
         if (nextActionsStr === "terminal") {
           player = "terminal";
+          numActions = 0;
         } else {
           player = append.length % 2 === 1 ? "oop" : "ip";
+          numActions = nextActionsStr.split("/").length;
         }
-
-        const actionsStr = await handler.actionsAfterHistory(append);
-        const numActions = actionsStr.split("/").length;
 
         const buffer = await handler.getChanceReports(append, numActions);
         chanceReports = await getChanceReports(buffer, player, numActions);
@@ -525,11 +526,11 @@ export default defineComponent({
       // if need to splice, splice spots
       if (needSplice) {
         if (nextActionsStr === "terminal") {
-          updateResultsTerminal(spotIndex);
+          spliceSpotsTerminal(spotIndex);
         } else if (nextActionsStr === "chance") {
-          await updateResultsChance(spotIndex);
+          await spliceSpotsChance(spotIndex);
         } else {
-          updateResultsPlayer(spotIndex, nextActionsStr);
+          spliceSpotsPlayer(spotIndex, nextActionsStr);
         }
       }
 
@@ -710,7 +711,7 @@ export default defineComponent({
       };
     };
 
-    const updateResultsTerminal = (spotIndex: number) => {
+    const spliceSpotsTerminal = (spotIndex: number) => {
       if (!results) throw new Error("null results");
 
       const prevSpot = spots.value[spotIndex - 1] as SpotPlayer;
@@ -742,7 +743,7 @@ export default defineComponent({
       });
     };
 
-    const updateResultsChance = async (spotIndex: number) => {
+    const spliceSpotsChance = async (spotIndex: number) => {
       if (!handler) throw new Error("null handler");
 
       type SpotTurn = SpotRoot | SpotChance;
@@ -752,15 +753,21 @@ export default defineComponent({
         .find((spot) => spot.player === "turn") as SpotTurn | undefined;
 
       let appendArray = [] as number[];
-      if (selectedChanceIndex.value !== -1) {
+      if (selectedChanceIndexTmp !== -1) {
         appendArray = spots.value
-          .slice(selectedChanceIndex.value, spotIndex)
+          .slice(selectedChanceIndexTmp, spotIndex)
           .map((spot) => spot.selectedIndex);
+      }
+
+      let possibleCards = 0n;
+      if (turnSpot?.selectedIndex !== -1) {
+        const append = new Uint32Array(appendArray);
+        possibleCards = await handler.possibleCards(append);
       }
 
       appendArray.push(-1);
       const append = new Uint32Array(appendArray);
-      const nextActionsStr = await handler.actionsAfterHistory(append);
+      const nextActionsStr = await handler.actionsAfter(append);
       const nextActions = nextActionsStr.split("/");
 
       let numBetActions = nextActions.length;
@@ -771,9 +778,7 @@ export default defineComponent({
         --numBetActions;
       }
 
-      let possibleCards = 0n;
-      if (selectedChanceIndex.value === -1) {
-        possibleCards = await handler.possibleCards();
+      if (selectedChanceIndexTmp === -1) {
         const numActions = nextActions.length;
         const buffer = await handler.getChanceReports(append, numActions);
         chanceReports = await getChanceReports(buffer, "oop", numActions);
@@ -822,7 +827,7 @@ export default defineComponent({
       }
     };
 
-    const updateResultsPlayer = (spotIndex: number, actionsStr: string) => {
+    const spliceSpotsPlayer = (spotIndex: number, actionsStr: string) => {
       if (!handler) throw new Error("null handler");
 
       const prevSpot = spots.value[spotIndex - 1];

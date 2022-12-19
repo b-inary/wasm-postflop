@@ -1,6 +1,6 @@
 <template>
-  <div class="flex flex-col w-full overflow-x-auto">
-    <div class="flex shrink-0 h-12 border-y border-gray-500">
+  <div class="flex flex-col w-full border-l border-gray-500 overflow-x-auto">
+    <div class="flex shrink-0 h-12 border-b border-gray-500">
       <div class="flex h-full px-4 items-center text-lg font-semibold">
         Summary
       </div>
@@ -14,12 +14,17 @@
             @change="updateDisplayOptions"
           >
             <option value="normalized">Normalized</option>
-            <option value="absolute">Absolute</option>
+            <option v-if="tableMode === 'basics'" value="absolute">
+              Absolute
+            </option>
             <option value="full">Full</option>
           </select>
         </div>
 
-        <div class="flex flex-col items-start justify-center h-full">
+        <div
+          v-if="tableMode === 'basics'"
+          class="flex flex-col items-start justify-center h-full"
+        >
           <div class="text-sm">Display:</div>
           <select
             v-model="displayOptions.content"
@@ -64,7 +69,8 @@
                 (column.type === 'card'
                   ? 'sticky left-0 z-40 bg-gray-100 '
                   : '') +
-                (column.type !== 'bar' ? 'cursor-pointer' : '')
+                (column.type !== 'bar' ? 'cursor-pointer ' : '') +
+                (tableMode !== 'basics' ? 'header-divider' : '')
               "
               :style="{
                 'min-width':
@@ -86,7 +92,7 @@
             </th>
           </tr>
 
-          <tr style="height: calc(1.9rem + 1px)">
+          <tr v-if="tableMode === 'basics'" style="height: calc(1.9rem + 1px)">
             <th
               v-for="column in columns"
               :key="column.label"
@@ -121,9 +127,7 @@
 
               <template
                 v-else-if="
-                  summary == null ||
-                  (results?.isEmpty &&
-                    (column.type === 'percentage' || column.type === 'ev'))
+                  summary == null || isNaN(summary[columnIndex(column)])
                 "
               >
                 <span>-</span>
@@ -220,19 +224,19 @@
                 ></div>
               </template>
 
-              <template
-                v-else-if="
-                  results?.isEmpty &&
-                  (column.type === 'percentage' || column.type === 'ev')
-                "
-              >
+              <template v-else-if="isNaN(item[columnIndex(column)])">
                 <span>-</span>
               </template>
 
               <template v-else>
                 <div class="inline-block w-12 text-right">
                   <template
-                    v-if="
+                    v-if="tableMode !== 'basics' && column.type === 'weight'"
+                  >
+                    <Adaptive :value="item[columnIndex(column)]" />
+                  </template>
+                  <template
+                    v-else-if="
                       column.type === 'weight' ||
                       column.type === 'percentage' ||
                       column.type === 'action'
@@ -267,7 +271,11 @@
               style="height: calc(1.9rem + 1px)"
               :colspan="columns.length"
             >
-              No results
+              {{
+                tableMode === "basics"
+                  ? "No results"
+                  : `${capitalize(chanceType)} reports not available`
+              }}
             </td>
           </tr>
 
@@ -310,10 +318,12 @@ import {
   toFixed1,
   toFixed,
   toFixedAdaptive,
+  capitalize,
 } from "../utils";
 
 import {
   Results,
+  ChanceReports,
   Spot,
   SpotPlayer,
   HoverContent,
@@ -453,6 +463,10 @@ export default defineComponent({
       type: String as () => TableMode,
       required: true,
     },
+    chanceType: {
+      type: String as () => "turn" | "river",
+      default: "turn",
+    },
     cards: {
       type: Array as () => Uint16Array[] | null,
       required: true,
@@ -463,6 +477,10 @@ export default defineComponent({
     },
     results: {
       type: Object as () => Results | null,
+      required: true,
+    },
+    chanceReports: {
+      type: Object as () => ChanceReports | null,
       required: true,
     },
     displayPlayer: {
@@ -484,7 +502,10 @@ export default defineComponent({
     const savedDisplayOptions = localStorage.getItem("display-options-table");
     if (savedDisplayOptions) {
       const saved = JSON.parse(savedDisplayOptions) as DisplayOptions;
-      if (barWidthList.includes(saved.barWidth)) {
+      if (
+        barWidthList.includes(saved.barWidth) &&
+        !(props.tableMode !== "basics" && saved.barWidth === "absolute")
+      ) {
         displayOptions.barWidth = saved.barWidth;
       }
       if (contentList.includes(saved.content)) {
@@ -524,17 +545,35 @@ export default defineComponent({
     type Key = { key: number; order: "asc" | "desc" };
     const sortKey = ref<Key>({ key: 0, order: "desc" });
 
+    const savedSortKey = sessionStorage.getItem(
+      `sort-key-table-${props.tableMode}`
+    );
+    if (savedSortKey) {
+      const saved = JSON.parse(savedSortKey) as Key;
+      if (saved.key < INDEX_STRATEGY_BASE) {
+        sortKey.value = saved;
+      }
+    }
+
     const sortBy = (key: number) => {
       const order =
         key === sortKey.value.key && sortKey.value.order === "desc"
           ? "asc"
           : "desc";
       sortKey.value = { key, order };
+      sessionStorage.setItem(
+        `sort-key-table-${props.tableMode}`,
+        JSON.stringify(sortKey.value)
+      );
     };
 
     const resetSortKey = () => {
       if (sortKey.value.key >= INDEX_STRATEGY_BASE) {
         sortKey.value = { key: 0, order: "desc" };
+        sessionStorage.setItem(
+          `sort-key-table-${props.tableMode}`,
+          JSON.stringify(sortKey.value)
+        );
       }
     };
 
@@ -542,23 +581,37 @@ export default defineComponent({
     watch([selectedSpot, displayPlayer], resetSortKey);
     watch(() => displayOptions.content, resetSortKey);
 
-    const evDigits = computed(() => {
-      const results = props.results;
-      if (!results || results.isEmpty) return 1;
+    const maxEv = computed(() => {
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
-      const maxEv = Math.max(...results.ev[playerIndex]);
-      return maxEv < 10 ? 3 : maxEv < 100 ? 2 : 1;
+      if (props.tableMode === "basics") {
+        const results = props.results;
+        if (!results || results.isEmpty) return 0;
+        return Math.max(...results.ev[playerIndex].map((v) => Math.abs(v)));
+      } else {
+        const reports = props.chanceReports;
+        if (!reports || reports.status.every((s) => s <= 1.0)) return 0;
+        return Math.max(...reports.ev[playerIndex].map((v) => Math.abs(v)));
+      }
+    });
+
+    const evDigits = computed(() => {
+      return maxEv.value < 10 ? 3 : maxEv.value < 100 ? 2 : 1;
     });
 
     const numActions = computed(() => {
+      let data: Results | ChanceReports | null;
+      if (props.tableMode === "basics") {
+        data = props.results;
+      } else {
+        data = props.chanceReports;
+      }
+
       const spot = props.selectedSpot;
-      const results = props.results;
       return (
         (spot.type === "player" &&
           spot.player === props.displayPlayer &&
-          results &&
-          results.strategy.length > 0 &&
-          (spot as SpotPlayer).actions.length) ||
+          data &&
+          data.numActions) ||
         0
       );
     });
@@ -566,37 +619,56 @@ export default defineComponent({
     const columns = computed(() => {
       const ret: Column[] = [];
 
-      let firstLabel = "";
       if (props.tableMode === "basics") {
-        firstLabel = "Hand";
-      } else if (props.tableMode === "turn") {
-        firstLabel = "Turn";
+        ret.push({ label: "Hand", type: "card" });
+        ret.push({
+          label: numActions.value > 0 ? "Strategy" : "Weight (Bar)",
+          type: "bar",
+        });
+
+        ret.push({ label: "Weight", type: "weight" });
+        ret.push({ label: "EQ", type: "percentage", index: INDEX_EQUITY });
+        ret.push({ label: "EV", type: "ev" });
+        ret.push({ label: "EQR", type: "percentage", index: INDEX_EQR });
+
+        if (numActions.value > 0) {
+          const spot = props.selectedSpot as SpotPlayer;
+          for (let i = 0; i < numActions.value; ++i) {
+            const j = numActions.value - i - 1; // reverse order
+            const action = spot.actions[j];
+            const label =
+              action.amount === "0"
+                ? action.name
+                : `${action.name[0]} ${action.amount}`;
+            if (displayOptions.content === "percentage") {
+              ret.push({ label, type: "action", index: i });
+            } else {
+              ret.push({ label, type: "action-ev", index: i });
+            }
+          }
+        }
       } else {
-        firstLabel = "River";
-      }
+        ret.push({ label: capitalize(props.chanceType), type: "card" });
+        ret.push({
+          label: numActions.value > 0 ? "Strategy" : "Combos (Bar)",
+          type: "bar",
+        });
 
-      const secondLabel = numActions.value ? "Strategy" : "Weight (Bar)";
+        ret.push({ label: "Combos", type: "weight" });
+        ret.push({ label: "EQ", type: "percentage", index: INDEX_EQUITY });
+        ret.push({ label: "EV", type: "ev" });
+        ret.push({ label: "EQR", type: "percentage", index: INDEX_EQR });
 
-      ret.push({ label: firstLabel, type: "card" });
-      ret.push({ label: secondLabel, type: "bar" });
-      ret.push({ label: "Weight", type: "weight" });
-      ret.push({ label: "EQ", type: "percentage", index: INDEX_EQUITY });
-      ret.push({ label: "EV", type: "ev" });
-      ret.push({ label: "EQR", type: "percentage", index: INDEX_EQR });
-
-      if (numActions.value > 0) {
-        const spot = props.selectedSpot as SpotPlayer;
-        for (let i = 0; i < numActions.value; ++i) {
-          const j = numActions.value - i - 1; // reverse order
-          const action = spot.actions[j];
-          const label =
-            action.amount === "0"
-              ? action.name
-              : `${action.name[0]} ${action.amount}`;
-          if (displayOptions.content === "percentage") {
+        if (numActions.value > 0) {
+          const spot = props.selectedSpot as SpotPlayer;
+          for (let i = 0; i < numActions.value; ++i) {
+            const j = numActions.value - i - 1;
+            const action = spot.actions[j];
+            const label =
+              action.amount === "0"
+                ? action.name
+                : `${action.name[0]} ${action.amount}`;
             ret.push({ label, type: "action", index: i });
-          } else {
-            ret.push({ label, type: "action-ev", index: i });
           }
         }
       }
@@ -617,36 +689,65 @@ export default defineComponent({
         cards = new Uint16Array(cardsArray);
       }
 
-      const dataRow = (index: number) => {
-        const results = props.results;
-        if (!results) return null;
+      let dataRow: (index: number) => number[] | null;
 
-        const weight = results.weights[playerIndex][index];
-        const normalizer = results.normalizer[playerIndex][index];
-        if (weight < 0.0005 || normalizer === 0) return null;
+      if (props.tableMode === "basics") {
+        dataRow = (index: number) => {
+          const results = props.results;
+          if (!results) return null;
 
-        const ret: number[] = [];
+          const weight = results.weights[playerIndex][index];
+          const normalizer = results.normalizer[playerIndex][index];
+          if (weight < 0.0005 || normalizer === 0) return null;
 
-        ret.push(cards[index]);
+          const ret: number[] = [];
 
-        if (props.tableMode === "basics") {
+          ret.push(cards[index]);
           ret.push(results.weights[playerIndex][index]);
           ret.push(results.normalizer[playerIndex][index]);
-          ret.push(results.equity[playerIndex][index] ?? 0);
-          ret.push(results.ev[playerIndex][index] ?? 0);
-          ret.push(results.eqr[playerIndex][index] ?? 0);
+          ret.push(results.equity[playerIndex][index] ?? Number.NaN);
+          ret.push(results.ev[playerIndex][index] ?? Number.NaN);
+          ret.push(results.eqr[playerIndex][index] ?? Number.NaN);
 
           for (let i = numActions.value - 1; i >= 0; --i) {
             const j = i * cards.length + index;
             ret.push(results.strategy[j]);
             ret.push(results.actionEv[j] ?? 0);
           }
-        } else {
-          // TODO
-        }
 
-        return ret;
-      };
+          return ret;
+        };
+      } else {
+        dataRow = (index: number) => {
+          const reports = props.chanceReports;
+          if (!reports) return null;
+
+          const status = reports.status[index];
+          if (status === 0) return null;
+
+          const ret: number[] = [];
+
+          ret.push(cards[index]);
+          ret.push(reports.combos[playerIndex][index]);
+          ret.push(Number.NaN);
+
+          if (status === 1) {
+            ret.push(Number.NaN, Number.NaN, Number.NaN);
+          } else {
+            ret.push(reports.equity[playerIndex][index]);
+            ret.push(reports.ev[playerIndex][index]);
+            ret.push(reports.eqr[playerIndex][index]);
+          }
+
+          for (let i = numActions.value - 1; i >= 0; --i) {
+            const j = i * cards.length + index;
+            ret.push(reports.strategy[j]);
+            ret.push(Number.NaN);
+          }
+
+          return ret;
+        };
+      }
 
       if (props.hoverContent) {
         for (const index of props.hoverContent.indices) {
@@ -815,40 +916,74 @@ export default defineComponent({
     const exportSummaryButton = ref<HTMLAnchorElement | null>(null);
 
     const exportSummary = () => {
-      if (!props.results || !exportSummaryButton.value) return;
+      if (!exportSummaryButton.value) return;
 
-      const ary = [columns.value[0].label, "Weight", "Combinations"];
+      const data: string[] = [];
 
-      if (!props.results.isEmpty) {
-        ary.push("Equity", "EV", "EQR");
-      }
+      if (props.tableMode === "basics") {
+        if (!props.results) return;
 
-      if (numActions.value > 0) {
-        const actions = (props.selectedSpot as SpotPlayer).actions;
-        for (let i = actions.length - 1; i >= 0; --i) {
-          const action = actions[i];
-          const amount = action.amount === "0" ? "" : ` ${action.amount}`;
-          ary.push(`${action.name}${amount} %`);
-          ary.push(`${action.name}${amount} EV`);
+        const ary = ["Hand", "Weight", "Combos"];
+
+        if (!props.results.isEmpty) {
+          ary.push("Equity", "EV", "EQR");
         }
-      }
 
-      const data = [ary.join(",")];
-      const startIndex = props.results.isEmpty
-        ? INDEX_STRATEGY_BASE
-        : INDEX_EQUITY;
+        if (numActions.value > 0) {
+          const actions = (props.selectedSpot as SpotPlayer).actions;
+          for (let i = actions.length - 1; i >= 0; --i) {
+            const action = actions[i];
+            const amount = action.amount === "0" ? "" : ` ${action.amount}`;
+            ary.push(`${action.name}${amount} %`);
+            ary.push(`${action.name}${amount} EV`);
+          }
+        }
 
-      for (const row of resultsSorted.value) {
-        const card1 = row[0] & 0xff;
-        const card2 = row[0] >>> 8;
-        const pairStr = cardStr(card2) + cardStr(card1);
-        const ary = [
-          pairStr,
-          row[INDEX_WEIGHT],
-          row[INDEX_NORMALIZER],
-          ...row.slice(startIndex),
-        ];
         data.push(ary.join(","));
+
+        const startIndex = props.results.isEmpty
+          ? INDEX_STRATEGY_BASE
+          : INDEX_EQUITY;
+
+        for (const row of resultsSorted.value) {
+          const card1 = row[0] & 0xff;
+          const card2 = row[0] >>> 8;
+          const pairStr = cardStr(card2) + cardStr(card1);
+          const ary = [
+            pairStr,
+            row[INDEX_WEIGHT],
+            row[INDEX_NORMALIZER],
+            ...row.slice(startIndex),
+          ];
+          data.push(ary.join(","));
+        }
+      } else {
+        if (!props.chanceReports) return;
+
+        const ary = [columns.value[0].label, "Combos", "Equity", "EV", "EQR"];
+
+        if (numActions.value > 0) {
+          const actions = (props.selectedSpot as SpotPlayer).actions;
+          for (let i = actions.length - 1; i >= 0; --i) {
+            const action = actions[i];
+            const amount = action.amount === "0" ? "" : ` ${action.amount}`;
+            ary.push(`${action.name}${amount} %`);
+          }
+        }
+
+        data.push(ary.join(","));
+
+        for (const row of resultsSorted.value) {
+          const ary = [
+            cardStr(row[0] & 0xff),
+            row[INDEX_WEIGHT],
+            isNaN(row[INDEX_EQUITY]) ? "-" : row[INDEX_EQUITY],
+            isNaN(row[INDEX_EV]) ? "-" : row[INDEX_EV],
+            isNaN(row[INDEX_EQR]) ? "-" : row[INDEX_EQR],
+            ...row.slice(INDEX_STRATEGY_BASE).filter((_, i) => i % 2 === 0),
+          ];
+          data.push(ary.join(","));
+        }
       }
 
       const blob = new Blob([data.join("\n")], { type: "text/csv" });
@@ -859,6 +994,7 @@ export default defineComponent({
     return {
       toFixed1,
       toFixedAdaptive,
+      capitalize,
       columnIndex,
       displayOptions,
       updateDisplayOptions,

@@ -15,7 +15,7 @@
       "
       @click="updateDisplayMode(mode)"
     >
-      {{ mode[0].toUpperCase() + mode.slice(1) }}
+      {{ capitalize(mode) }}
     </button>
     <button
       :class="
@@ -25,11 +25,7 @@
       :disabled="chanceMode === ''"
       @click="updateDisplayMode('chance')"
     >
-      {{
-        chanceMode !== ""
-          ? chanceMode[0].toUpperCase() + chanceMode.slice(1)
-          : ""
-      }}
+      {{ capitalize(chanceMode) }}
     </button>
 
     <div
@@ -180,15 +176,15 @@
 
 <script lang="ts">
 import { defineComponent, reactive, ref, toRefs, watch } from "vue";
-import { Tippy } from "vue-tippy";
+import { capitalize } from "../utils";
+import * as Types from "../result-types";
 
+import { Tippy } from "vue-tippy";
 import { ComputerDesktopIcon } from "@heroicons/vue/24/solid";
 import {
   ClipboardDocumentIcon,
   ClipboardDocumentCheckIcon,
 } from "@heroicons/vue/24/outline";
-
-import * as Types from "../result-types";
 
 export default defineComponent({
   components: {
@@ -303,6 +299,7 @@ export default defineComponent({
     };
 
     return {
+      capitalize,
       displayOptions,
       strategyContentPair,
       updateDisplayMode,

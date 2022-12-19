@@ -66,7 +66,14 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, toRefs, watch } from "vue";
+import {
+  computed,
+  defineComponent,
+  ref,
+  toRefs,
+  onUnmounted,
+  watch,
+} from "vue";
 import { useSavedConfigStore } from "../store";
 import {
   ranks,
@@ -205,9 +212,7 @@ export default defineComponent({
         options.strategy === "show" &&
         !props.selectedChance &&
         player === selectedSpot.player;
-      const numActions = showStrategy
-        ? (selectedSpot as SpotPlayer).actions.length
-        : 0;
+      const numActions = showStrategy ? results.numActions : 0;
 
       const isSuitIndividual = options.suit === "individual";
 
@@ -260,6 +265,11 @@ export default defineComponent({
             target.strategy[j] += results.strategy[k] * normalizer;
           }
         }
+      }
+
+      for (const cell of data) {
+        const hasWeight = cell.some((suit) => suit.weight > 0);
+        if (!hasWeight) cell.splice(0);
       }
 
       return data;
@@ -425,9 +435,7 @@ export default defineComponent({
 
     const hasWeight = (row: number, col: number) => {
       if (!cellData.value) return false;
-      return cellData.value[cellIndex(row, col)].some(
-        (suit) => suit.weight > 0
-      );
+      return cellData.value[cellIndex(row, col)].length > 0;
     };
 
     const cellText = (row: number, col: number) => {
@@ -450,8 +458,7 @@ export default defineComponent({
         }
 
         const data = cellData.value[index];
-        const isEmpty = data.every((suit) => suit.weight === 0);
-        if (isEmpty) return "";
+        if (data.length === 0) return "";
 
         let weightSum = 0;
         let normalizerSum = 0;
@@ -492,6 +499,7 @@ export default defineComponent({
     });
 
     const onClickCell = (row: number, col: number) => {
+      if (props.isCompareMode) return;
       const index = cellIndex(row, col);
       if (!hasWeight(row, col)) {
         clickedCellIndex.value = -1;
@@ -506,25 +514,28 @@ export default defineComponent({
     };
 
     const onMouseEnterCell = (row: number, col: number) => {
-      if (clickedCellIndex.value === -1) {
-        if (hasWeight(row, col) && cellData.value) {
-          const index = cellIndex(row, col);
-          const indices = cellData.value[index].flatMap((suit) => suit.indices);
-          context.emit("update-hover-content", {
-            name: cellText(row, col),
-            indices,
-          });
-        } else {
-          context.emit("update-hover-content", null);
-        }
+      if (props.isCompareMode || clickedCellIndex.value !== -1) return;
+      if (hasWeight(row, col) && cellData.value) {
+        const index = cellIndex(row, col);
+        const indices = cellData.value[index].flatMap((suit) => suit.indices);
+        context.emit("update-hover-content", {
+          name: cellText(row, col),
+          indices,
+        });
+      } else {
+        context.emit("update-hover-content", null);
       }
     };
 
     const onMouseLeaveTable = () => {
-      if (clickedCellIndex.value === -1) {
-        context.emit("update-hover-content", null);
-      }
+      if (props.isCompareMode || clickedCellIndex.value !== -1) return;
+      context.emit("update-hover-content", null);
     };
+
+    onUnmounted(() => {
+      if (props.isCompareMode || clickedCellIndex.value === -1) return;
+      context.emit("update-hover-content", null);
+    });
 
     return {
       clickedCellIndex,

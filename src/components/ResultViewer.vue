@@ -41,8 +41,11 @@
       @reset-copy-success="resetCopySuccess"
     />
 
-    <div v-if="store.navView === 'results'" class="flex flex-grow min-h-0">
-      <template v-if="displayMode === 'basics' && selectedSpot">
+    <div
+      v-if="store.navView === 'results' && selectedSpot"
+      class="flex flex-grow min-h-0"
+    >
+      <template v-if="displayMode === 'basics'">
         <ResultBasics
           style="flex: 4"
           :cards="cards"
@@ -63,12 +66,13 @@
           :cards="cards"
           :selected-spot="selectedSpot"
           :results="results"
+          :chance-reports="null"
           :display-player="displayPlayerBasics"
           :hover-content="basicsHoverContent"
         />
       </template>
 
-      <template v-else-if="displayMode === 'compare' && selectedSpot">
+      <template v-else-if="displayMode === 'compare'">
         <ResultBasics
           style="flex: 5"
           :cards="cards"
@@ -81,7 +85,9 @@
           display-player="oop"
           :is-compare-mode="true"
         />
+
         <div class="bg-gray-300" style="flex: 2"></div>
+
         <ResultBasics
           style="flex: 5"
           :cards="cards"
@@ -98,8 +104,10 @@
 
       <template v-else-if="displayMode === 'chance' && selectedChance">
         <ResultChance
+          :selected-spot="selectedSpot"
           :selected-chance="selectedChance"
           :chance-reports="chanceReports"
+          :display-player="displayPlayerChance"
           @deal-card="onDealCard"
         />
       </template>

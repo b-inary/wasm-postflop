@@ -187,6 +187,10 @@ impl GameManager {
     }
 
     pub fn total_bet_amount(&mut self, append: &[usize]) -> Box<[u32]> {
+        if append.is_empty() {
+            let total_bet_amount = self.game.total_bet_amount();
+            return total_bet_amount.iter().map(|&x| x as u32).collect();
+        }
         let history = self.game.history().to_vec();
         for &action in append {
             self.game.play(action);
@@ -236,7 +240,10 @@ impl GameManager {
         }
     }
 
-    pub fn actions_after_history(&mut self, append: &[usize]) -> String {
+    pub fn actions_after(&mut self, append: &[usize]) -> String {
+        if append.is_empty() {
+            return self.actions();
+        }
         let history = self.game.history().to_vec();
         for &action in append {
             self.game.play(action);
@@ -246,8 +253,17 @@ impl GameManager {
         ret
     }
 
-    pub fn possible_cards(&self) -> u64 {
-        self.game.possible_cards()
+    pub fn possible_cards(&mut self, append: &[usize]) -> u64 {
+        if append.is_empty() {
+            return self.game.possible_cards();
+        }
+        let history = self.game.history().to_vec();
+        for &action in append {
+            self.game.play(action);
+        }
+        let ret = self.game.possible_cards();
+        self.game.apply_history(&history);
+        ret
     }
 
     pub fn get_results(&mut self) -> ReadonlyBuffer {
@@ -336,7 +352,10 @@ impl GameManager {
         let game = &mut self.game;
         let history = game.history().to_vec();
 
-        let mut status = vec![0.0; 52]; // 0: empty range, 1: not empty range
+        let board = game.current_board();
+        let board_mask = board.iter().fold(0u64, |mask, &c| mask | (1 << c));
+
+        let mut status = vec![0.0; 52]; // 0: not possible, 1: empty, 2: not empty
         let mut combos = [vec![0.0; 52], vec![0.0; 52]];
         let mut equity = [vec![0.0; 52], vec![0.0; 52]];
         let mut ev = [vec![0.0; 52], vec![0.0; 52]];
@@ -366,7 +385,7 @@ impl GameManager {
                 for action in 0..num_actions {
                     let slice = &strategy_tmp[action * num_hands..(action + 1) * num_hands];
                     let strategy_summary = weighted_average(slice, &normalizer[current_player]);
-                    strategy[chance * num_actions + action] = round(strategy_summary);
+                    strategy[action * 52 + chance] = round(strategy_summary);
                 }
             }
 
@@ -374,20 +393,32 @@ impl GameManager {
             let is_ip_empty = weights[1].iter().all(|&w| w < 0.0005);
 
             if is_oop_empty || is_ip_empty {
+                status[chance] = 1.0;
                 game.apply_history(&history);
                 continue;
             }
 
-            status[chance] = 1.0;
+            status[chance] = 2.0;
 
             let total_bet_amount = game.total_bet_amount();
             let pot_base = game.tree_config().starting_pot + total_bet_amount.iter().min().unwrap();
 
             for player in 0..2 {
+                let mut c = 0.0;
+                weights[player]
+                    .iter()
+                    .zip(game.private_cards(player))
+                    .for_each(|(&w, &(c1, c2))| {
+                        let hand_mask = (1 << c1) | (1 << c2);
+                        if hand_mask & (board_mask | (1 << chance)) == 0 {
+                            c += w as f64;
+                        }
+                    });
+
                 let pot = (pot_base + total_bet_amount[player]) as f32;
                 let equity_tmp = weighted_average(&game.equity(player), &normalizer[player]);
                 let ev_tmp = weighted_average(&game.expected_values(player), &normalizer[player]);
-                combos[player][chance] = weights[player].iter().fold(0.0, |acc, &w| acc + w as f64);
+                combos[player][chance] = round(c);
                 equity[player][chance] = round(equity_tmp);
                 ev[player][chance] = round(ev_tmp);
                 eqr[player][chance] = round(ev_tmp / (pot as f64 * equity_tmp));
