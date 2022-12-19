@@ -43,14 +43,74 @@
         <div
           class="flex flex-col flex-grow px-3 items-center justify-evenly font-semibold"
         >
-          <div>
+          <div class="relative">
             <span
               v-for="card of spotCards(spot)"
               :key="card.rank + card.suit"
-              :class="'mx-px ' + card.colorClass"
+              :class="
+                (spot.type === 'root'
+                  ? 'mx-px '
+                  : 'inline-block w-8 text-center ') + card.colorClass
+              "
             >
               {{ card.rank + card.suit }}
             </span>
+            <template
+              v-if="spot.type === 'chance' && spot.selectedIndex !== -1"
+            >
+              <button
+                :class="
+                  'absolute -top-5 left-1/2 -ml-2.5 w-5 h-5 ' +
+                  (isCardAvailable(spot, 0, 1)
+                    ? 'opacity-70 hover:opacity-100 text-gray-700'
+                    : 'text-red-300')
+                "
+                @click.stop="
+                  isCardAvailable(spot, 0, 1) && dealArrow(spot, 0, 1)
+                "
+              >
+                <ChevronUpIcon class="w-full h-full" />
+              </button>
+              <button
+                :class="
+                  'absolute -left-5 top-1/2 -mt-2.5 w-5 h-5 ' +
+                  (isCardAvailable(spot, 1, 0)
+                    ? 'opacity-70 hover:opacity-100 text-gray-700'
+                    : 'text-red-300')
+                "
+                @click.stop="
+                  isCardAvailable(spot, 1, 0) && dealArrow(spot, 1, 0)
+                "
+              >
+                <ChevronLeftIcon class="w-full h-full" />
+              </button>
+              <button
+                :class="
+                  'absolute -right-5 top-1/2 -mt-2.5 w-5 h-5 ' +
+                  (isCardAvailable(spot, -1, 0)
+                    ? 'opacity-70 hover:opacity-100 text-gray-700'
+                    : 'text-red-300')
+                "
+                @click.stop="
+                  isCardAvailable(spot, -1, 0) && dealArrow(spot, -1, 0)
+                "
+              >
+                <ChevronRightIcon class="w-full h-full" />
+              </button>
+              <button
+                :class="
+                  'absolute -bottom-5 left-1/2 -ml-2.5 w-5 h-5 ' +
+                  (isCardAvailable(spot, 0, -1)
+                    ? 'opacity-70 hover:opacity-100 text-gray-700'
+                    : 'text-red-300')
+                "
+                @click.stop="
+                  isCardAvailable(spot, 0, -1) && dealArrow(spot, 0, -1)
+                "
+              >
+                <ChevronDownIcon class="w-full h-full" />
+              </button>
+            </template>
           </div>
           <div
             :class="
@@ -72,7 +132,7 @@
             spot.selectedIndex !== -1 &&
             !isDealing
           "
-          class="absolute top-1.5 right-1.5 opacity-70 hover:opacity-100 text-gray-600"
+          class="absolute top-1.5 right-1.5 opacity-70 hover:opacity-100 text-gray-700"
           @click="deal(spot.selectedIndex)"
         >
           <XMarkIcon class="w-6 h-6" />
@@ -101,7 +161,10 @@
           >
             <span class="inline-block relative w-4 mr-0.5">
               <span
-                v-if="spot.index === selectedSpotIndex"
+                v-if="
+                  spot.index === selectedSpotIndex &&
+                  !(selectedChanceIndex !== -1 && !canChanceReports)
+                "
                 class="absolute top-[0.3125rem] left-0 w-3 h-3 rounded-sm"
                 :style="{ backgroundColor: action.color }"
               ></span>
@@ -190,7 +253,14 @@ import {
   SpotPlayer,
 } from "../result-types";
 
-import { CheckIcon, XMarkIcon } from "@heroicons/vue/20/solid";
+import {
+  CheckIcon,
+  XMarkIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+} from "@heroicons/vue/20/solid";
 
 const foldColor = { red: 0x3b, green: 0x82, blue: 0xf6 }; // blue-500
 const checkColor = { red: 0x22, green: 0xc5, blue: 0x5e }; // green-500
@@ -245,6 +315,10 @@ export default defineComponent({
   components: {
     CheckIcon,
     XMarkIcon,
+    ChevronDownIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    ChevronUpIcon,
   },
 
   props: {
@@ -290,6 +364,7 @@ export default defineComponent({
     const selectedSpotIndex = ref(-1);
     const selectedChanceIndex = ref(-1);
     const isDealing = ref(false);
+    const canChanceReports = ref(false);
 
     const selectedSpot = computed(() =>
       selectedSpotIndex.value === -1 ||
@@ -492,7 +567,7 @@ export default defineComponent({
       // obtain actions after skipped chances
       const nextActionsStr = await handler.actionsAfter(append);
 
-      const canChanceReports =
+      canChanceReports.value =
         selectedChanceIndexTmp !== -1 &&
         spots.value
           .slice(selectedChanceIndexTmp + 3, selectedSpotIndexTmp)
@@ -500,7 +575,7 @@ export default defineComponent({
         nextActionsStr !== "chance";
 
       // if possible, obtain chance reports
-      if (canChanceReports) {
+      if (canChanceReports.value) {
         let player: "oop" | "ip" | "terminal";
         let numActions: number;
 
@@ -779,6 +854,7 @@ export default defineComponent({
       }
 
       if (selectedChanceIndexTmp === -1) {
+        canChanceReports.value = true;
         const numActions = nextActions.length;
         const buffer = await handler.getChanceReports(append, numActions);
         chanceReports = await getChanceReports(buffer, "oop", numActions);
@@ -883,6 +959,77 @@ export default defineComponent({
       await selectSpot(selectedSpotIndex.value, false, true);
     };
 
+    const dealArrow = async (
+      spot: SpotChance,
+      rankDir: number,
+      suitDir: number
+    ) => {
+      const offset = rankDir ? 4 * rankDir : suitDir;
+      let card = spot.selectedIndex + offset;
+
+      for (; 0 <= card && card < 52; card += offset) {
+        if (!spot.cards[card].isDead) break;
+      }
+
+      if (card < 0 || 52 <= card) {
+        throw new Error("invalid card");
+      }
+
+      isDealing.value = true;
+
+      spot.cards[spot.selectedIndex].isSelected = false;
+      spot.cards[card].isSelected = true;
+      spot.selectedIndex = card;
+
+      const selectedChanceIndexBak = selectedChanceIndex.value;
+      selectedChanceIndex.value = spot.index;
+
+      await selectSpot(selectedSpotIndex.value, false, true);
+
+      if (
+        selectedChanceIndex.value === -1 &&
+        selectedChanceIndexBak !== spot.index
+      ) {
+        selectedChanceIndex.value = selectedChanceIndexBak;
+      }
+    };
+
+    const isCardAvailable = (
+      spot: SpotChance,
+      rankDir: number,
+      suitDir: number
+    ) => {
+      let card = spot.selectedIndex;
+
+      if (rankDir) {
+        card += 4 * rankDir;
+        for (; 0 <= card && card < 52; card += 4 * rankDir) {
+          if (!spot.cards[card].isDead) return true;
+        }
+      } else {
+        const rank = card >>> 2;
+        card += suitDir;
+        for (; card >>> 2 === rank; card += suitDir) {
+          if (!spot.cards[card].isDead) return true;
+        }
+      }
+
+      return false;
+    };
+
+    const cardChanceArrow = (
+      spot: SpotChance,
+      rankDir: number,
+      suitDir: number
+    ) => {
+      const offset = rankDir ? 4 * rankDir : suitDir;
+      let card = spot.selectedIndex + offset;
+      for (; 0 <= card && card < 52; card += offset) {
+        if (!spot.cards[card].isDead) return card;
+      }
+      return -1;
+    };
+
     watch(dealtCard, async (card) => {
       if (card === -1) return;
       await deal(card);
@@ -905,10 +1052,14 @@ export default defineComponent({
       selectedSpotIndex,
       selectedChanceIndex,
       isDealing,
+      canChanceReports,
       isSelectedChanceSkipped,
       selectSpot,
       play,
       deal,
+      dealArrow,
+      isCardAvailable,
+      cardChanceArrow,
       spotCards,
     };
   },

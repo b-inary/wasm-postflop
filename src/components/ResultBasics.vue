@@ -200,19 +200,23 @@ export default defineComponent({
       return toFixed[evDigits.value - 1];
     });
 
+    const numActions = computed(() => {
+      return (
+        (props.displayOptions.strategy === "show" &&
+          props.displayPlayer === props.selectedSpot.player &&
+          !props.selectedChance &&
+          props.results &&
+          props.results.numActions) ||
+        0
+      );
+    });
+
     const cellData = computed(() => {
-      const selectedSpot = props.selectedSpot;
       const results = props.results;
       if (!results) return null;
 
       const options = props.displayOptions;
       const player = props.displayPlayer;
-
-      const showStrategy =
-        options.strategy === "show" &&
-        !props.selectedChance &&
-        player === selectedSpot.player;
-      const numActions = showStrategy ? results.numActions : 0;
 
       const isSuitIndividual = options.suit === "individual";
 
@@ -229,7 +233,7 @@ export default defineComponent({
           normalizer: 0,
           equity: 0,
           ev: 0,
-          strategy: Array.from({ length: numActions }, () => 0),
+          strategy: Array.from({ length: numActions.value }, () => 0),
         }));
       });
 
@@ -259,8 +263,8 @@ export default defineComponent({
           target.ev += results.ev[playerIndex][i] * normalizer;
         }
 
-        if (showStrategy) {
-          for (let j = 0; j < numActions; ++j) {
+        if (numActions.value > 0) {
+          for (let j = 0; j < numActions.value; ++j) {
             const k = j * cardsLength + i;
             target.strategy[j] += results.strategy[k] * normalizer;
           }
@@ -327,7 +331,6 @@ export default defineComponent({
       const barHeight = options.barHeight;
       const isSuitIndividual = options.suit === "individual";
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
-      const showStrategy = cellData.value[0][0].strategy.length > 0;
       const isEmpty = results.isEmpty;
       const eqrBase = results.eqrBase[playerIndex];
 
@@ -335,7 +338,7 @@ export default defineComponent({
       let middle = 0;
       let highest = 0;
 
-      if (!showStrategy) {
+      if (numActions.value === 0) {
         if (options.contentBasics === "eq") {
           lowest = 0;
           middle = 0.5;
@@ -371,7 +374,7 @@ export default defineComponent({
             height = 1;
           }
 
-          if (!showStrategy) {
+          if (numActions.value === 0) {
             let color;
             if (isEmpty || options.contentBasics === "default") {
               color = amber500;
