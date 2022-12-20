@@ -1,7 +1,7 @@
 <template>
   <div class="flex shrink-0 h-12 border-y border-gray-500">
     <button
-      v-for="mode in ['basics', 'compare', 'graphs', 'scatter'] as const"
+      v-for="mode in ['basics', 'compare'] as const"
       :key="mode"
       :class="
         'flex w-[9%] h-full items-center justify-center font-semibold text-lg transition ' +
@@ -29,7 +29,7 @@
     </button>
 
     <div
-      class="flex ml-auto shrink-0 h-full pl-4 items-center justify-start gap-2 snug"
+      class="flex ml-auto shrink-0 h-full px-4 items-center justify-start gap-2 snug"
     >
       <div
         v-if="displayMode === 'basics'"
@@ -119,6 +119,7 @@
         </select>
       </div>
 
+      <!--
       <div
         v-if="displayMode === 'chance'"
         class="flex flex-col items-start justify-center h-full"
@@ -170,6 +171,7 @@
           </button>
         </Tippy>
       </div>
+      -->
     </div>
   </div>
 </template>
@@ -179,19 +181,19 @@ import { defineComponent, reactive, ref, toRefs, watch } from "vue";
 import { capitalize } from "../utils";
 import * as Types from "../result-types";
 
-import { Tippy } from "vue-tippy";
-import { ComputerDesktopIcon } from "@heroicons/vue/24/solid";
-import {
-  ClipboardDocumentIcon,
-  ClipboardDocumentCheckIcon,
-} from "@heroicons/vue/24/outline";
+// import { Tippy } from "vue-tippy";
+// import { ComputerDesktopIcon } from "@heroicons/vue/24/solid";
+// import {
+//   ClipboardDocumentIcon,
+//   ClipboardDocumentCheckIcon,
+// } from "@heroicons/vue/24/outline";
 
 export default defineComponent({
   components: {
-    Tippy,
-    ComputerDesktopIcon,
-    ClipboardDocumentIcon,
-    ClipboardDocumentCheckIcon,
+    // Tippy,
+    // ComputerDesktopIcon,
+    // ClipboardDocumentIcon,
+    // ClipboardDocumentCheckIcon,
   },
 
   props: {
@@ -220,8 +222,8 @@ export default defineComponent({
   emits: {
     "update:display-mode": (_displayMode: Types.DisplayMode) => true,
     "update:display-options": (_displayOptions: Types.DisplayOptions) => true,
-    "copy-to-clipboard": () => true,
-    "reset-copy-success": () => true,
+    // "copy-to-clipboard": () => true,
+    // "reset-copy-success": () => true,
   },
 
   setup(props, context) {
@@ -244,7 +246,7 @@ export default defineComponent({
       suit: "grouped",
       strategy: "show",
       contentBasics: "default",
-      contentChance: "strategy",
+      // contentChance: "strategy",
     });
 
     const strategyContentPair = ref("show,default");
@@ -264,9 +266,9 @@ export default defineComponent({
       if (Types.contentBasicsList.includes(saved?.contentBasics)) {
         displayOptions.contentBasics = saved.contentBasics;
       }
-      if (Types.contentChanceList.includes(saved?.contentChance)) {
-        displayOptions.contentChance = saved.contentChance;
-      }
+      // if (Types.contentChanceList.includes(saved?.contentChance)) {
+      //   displayOptions.contentChance = saved.contentChance;
+      // }
       strategyContentPair.value = [
         displayOptions.strategy,
         displayOptions.contentBasics,
@@ -290,13 +292,13 @@ export default defineComponent({
       context.emit("update:display-options", options);
     };
 
-    const copyToClipboard = () => {
-      context.emit("copy-to-clipboard");
-    };
+    // const copyToClipboard = () => {
+    //   context.emit("copy-to-clipboard");
+    // };
 
-    const onCopyTooltipLeave = () => {
-      context.emit("reset-copy-success");
-    };
+    // const onCopyTooltipLeave = () => {
+    //   context.emit("reset-copy-success");
+    // };
 
     return {
       capitalize,
@@ -304,8 +306,8 @@ export default defineComponent({
       strategyContentPair,
       updateDisplayMode,
       updateDisplayOptions,
-      copyToClipboard,
-      onCopyTooltipLeave,
+      // copyToClipboard,
+      // onCopyTooltipLeave,
     };
   },
 });

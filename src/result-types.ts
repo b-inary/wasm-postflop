@@ -77,8 +77,8 @@ export type Spot = SpotRoot | SpotChance | SpotPlayer | SpotTerminal;
 export const displayModeList = [
   "basics",
   "compare",
-  "graphs",
-  "scatter",
+  // "graphs",
+  // "scatter",
   "chance",
 ] as const;
 
@@ -90,13 +90,13 @@ export const barHeightList = ["normalized", "absolute", "full"] as const;
 export const suitList = ["grouped", "individual"] as const;
 export const strategyList = ["show", "none"] as const;
 export const contentBasicsList = ["default", "eq", "ev", "eqr"] as const;
-export const contentChanceList = [
-  "strategy",
-  "combos",
-  "eq",
-  "ev",
-  "eqr",
-] as const;
+// export const contentChanceList = [
+//   "strategy",
+//   "combos",
+//   "eq",
+//   "ev",
+//   "eqr",
+// ] as const;
 
 export type DisplayOptions = {
   playerBasics: typeof playerBasicsList[number];
@@ -105,7 +105,7 @@ export type DisplayOptions = {
   suit: typeof suitList[number];
   strategy: typeof strategyList[number];
   contentBasics: typeof contentBasicsList[number];
-  contentChance: typeof contentChanceList[number];
+  // contentChance: typeof contentChanceList[number];
 };
 
 export type HoverContent = {
