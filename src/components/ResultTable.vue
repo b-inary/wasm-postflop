@@ -27,7 +27,7 @@
         >
           <div class="text-sm">Display:</div>
           <select
-            v-model="displayOptions.content"
+            v-model="(displayOptions as DisplayOptionsBasics).content"
             class="w-28 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
             @change="updateDisplayOptions"
           >
@@ -333,11 +333,16 @@ import {
 import { Tippy } from "vue-tippy";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/24/solid";
 
-const barWidthList = ["normalized", "absolute", "full"] as const;
-const contentList = ["percentage", "ev"] as const;
-type DisplayOptions = {
-  barWidth: typeof barWidthList[number];
-  content: typeof contentList[number];
+const barWidthListBasics = ["normalized", "absolute", "full"] as const;
+const contentListBasics = ["percentage", "ev"] as const;
+type DisplayOptionsBasics = {
+  barWidth: typeof barWidthListBasics[number];
+  content: typeof contentListBasics[number];
+};
+
+const barWidthListChance = ["normalized", "full"] as const;
+type DisplayOptionsChance = {
+  barWidth: typeof barWidthListChance[number];
 };
 
 type ColumnCard = {
@@ -494,30 +499,40 @@ export default defineComponent({
   },
 
   setup(props) {
-    const displayOptions = reactive<DisplayOptions>({
-      barWidth: "normalized",
-      content: "percentage",
-    });
+    const displayOptions =
+      props.tableMode === "basics"
+        ? reactive<DisplayOptionsBasics>({
+            barWidth: "normalized",
+            content: "percentage",
+          })
+        : reactive<DisplayOptionsChance>({
+            barWidth: "normalized",
+          });
 
-    const savedDisplayOptions = localStorage.getItem("display-options-table");
+    const key = `display-options-table-${props.tableMode}`;
+    const savedDisplayOptions = localStorage.getItem(key);
+
     if (savedDisplayOptions) {
-      const saved = JSON.parse(savedDisplayOptions) as DisplayOptions;
-      if (
-        barWidthList.includes(saved.barWidth) &&
-        !(props.tableMode !== "basics" && saved.barWidth === "absolute")
-      ) {
-        displayOptions.barWidth = saved.barWidth;
-      }
-      if (contentList.includes(saved.content)) {
-        displayOptions.content = saved.content;
+      if (props.tableMode === "basics") {
+        const saved = JSON.parse(savedDisplayOptions) as DisplayOptionsBasics;
+        const options = displayOptions as DisplayOptionsBasics;
+        if (barWidthListBasics.includes(saved.barWidth)) {
+          options.barWidth = saved.barWidth;
+        }
+        if (contentListBasics.includes(saved.content)) {
+          options.content = saved.content;
+        }
+      } else if (props.tableMode === "chance") {
+        const saved = JSON.parse(savedDisplayOptions) as DisplayOptionsChance;
+        const options = displayOptions as DisplayOptionsChance;
+        if (barWidthListChance.includes(saved.barWidth)) {
+          options.barWidth = saved.barWidth;
+        }
       }
     }
 
     const updateDisplayOptions = () => {
-      localStorage.setItem(
-        "display-options-table",
-        JSON.stringify(displayOptions)
-      );
+      localStorage.setItem(key, JSON.stringify(displayOptions));
     };
 
     const tableDiv = ref<HTMLDivElement | null>(null);
@@ -579,7 +594,12 @@ export default defineComponent({
 
     const { selectedSpot, displayPlayer } = toRefs(props);
     watch([selectedSpot, displayPlayer], resetSortKey);
-    watch(() => displayOptions.content, resetSortKey);
+    if (props.tableMode === "basics") {
+      watch(
+        () => (displayOptions as DisplayOptionsBasics).content,
+        resetSortKey
+      );
+    }
 
     const maxEv = computed(() => {
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
@@ -631,6 +651,8 @@ export default defineComponent({
         ret.push({ label: "EV", type: "ev" });
         ret.push({ label: "EQR", type: "percentage", index: INDEX_EQR });
 
+        const options = displayOptions as DisplayOptionsBasics;
+
         if (numActions.value > 0) {
           const spot = props.selectedSpot as SpotPlayer;
           for (let i = 0; i < numActions.value; ++i) {
@@ -640,7 +662,7 @@ export default defineComponent({
               action.amount === "0"
                 ? action.name
                 : `${action.name[0]} ${action.amount}`;
-            if (displayOptions.content === "percentage") {
+            if (options.content === "percentage") {
               ret.push({ label, type: "action", index: i });
             } else {
               ret.push({ label, type: "action-ev", index: i });
