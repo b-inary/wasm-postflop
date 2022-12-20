@@ -1,68 +1,70 @@
 <template>
-  <table
-    class="w-full h-full table-fixed select-none snug"
-    :style="{
-      '--font-scale': isCompareMode ? 0.875 : 1,
-      '--pair-font-size':
-        'calc(max(1rem, min(1.35vw, 2.25vh)) * var(--font-scale))',
-      '--value-font-size':
-        'calc(max(0.889rem, min(1.2vw, 2vh)) * var(--font-scale))',
-    }"
-    @mouseleave="onMouseLeaveTable"
-  >
-    <tr v-for="row in 13" :key="row">
-      <td
-        v-for="col in 13"
-        :key="col"
-        :class="
-          'relative border border-black ' +
-          (clickedCellIndex === cellIndex(row, col) ? 'clicked-cell' : '')
-        "
-        @click="onClickCell(row, col)"
-        @mouseenter="onMouseEnterCell(row, col)"
-      >
-        <div
+  <div class="w-full h-full">
+    <table
+      class="w-full h-full table-fixed select-none snug"
+      :style="{
+        '--font-scale': isCompareMode ? 0.875 : 1,
+        '--pair-font-size':
+          'calc(max(1rem, min(1.35vw, 2.25vh)) * var(--font-scale))',
+        '--value-font-size':
+          'calc(max(0.889rem, min(1.2vw, 2vh)) * var(--font-scale))',
+      }"
+      @mouseleave="onMouseLeaveTable"
+    >
+      <tr v-for="row in 13" :key="row">
+        <td
+          v-for="col in 13"
+          :key="col"
           :class="
-            'flex absolute w-full h-full left-0 top-0 ' +
-            (row === col ? 'bg-neutral-700' : 'bg-neutral-800')
+            'relative border border-black ' +
+            (clickedCellIndex === cellIndex(row, col) ? 'clicked-cell' : '')
           "
+          @click="onClickCell(row, col)"
+          @mouseenter="onMouseEnterCell(row, col)"
         >
           <div
-            v-for="(column, k) in columns(row, col)"
-            :key="k"
-            class="flex-grow h-full bg-left-bottom bg-no-repeat"
-            :style="{
-              'background-image': column?.bgImage ?? 'none',
-              'background-size': column?.bgSize ?? 'auto',
-            }"
-          ></div>
-        </div>
-        <div
-          :class="
-            'absolute -top-px left-[0.1875rem] z-10 text-shadow ' +
-            (hasWeight(row, col) ? 'text-white' : 'text-neutral-500')
-          "
-          style="font-size: var(--pair-font-size)"
-        >
-          {{ cellText(row, col) }}
-        </div>
-        <div
-          class="absolute bottom-px right-1 z-10 text-shadow text-white overflow-hidden"
-          style="
-            max-width: calc(100% - 0.25rem);
-            font-size: var(--value-font-size);
-          "
-        >
-          {{ cellValueText[cellIndex(row, col)].split(".")[0]
-          }}<span v-if="cellValueText[cellIndex(row, col)].includes('.')"
-            >.<span style="font-size: 85%">
-              {{ cellValueText[cellIndex(row, col)].split(".")[1] }}</span
-            ></span
+            :class="
+              'flex absolute w-full h-full left-0 top-0 ' +
+              (row === col ? 'bg-neutral-700' : 'bg-neutral-800')
+            "
           >
-        </div>
-      </td>
-    </tr>
-  </table>
+            <div
+              v-for="(column, k) in columns(row, col)"
+              :key="k"
+              class="flex-grow h-full bg-left-bottom bg-no-repeat"
+              :style="{
+                'background-image': column?.bgImage ?? 'none',
+                'background-size': column?.bgSize ?? 'auto',
+              }"
+            ></div>
+          </div>
+          <div
+            :class="
+              'absolute -top-px left-[0.1875rem] z-10 text-shadow ' +
+              (hasWeight(row, col) ? 'text-white' : 'text-neutral-500')
+            "
+            style="font-size: var(--pair-font-size)"
+          >
+            {{ cellText(row, col) }}
+          </div>
+          <div
+            class="absolute bottom-px right-1 z-10 text-shadow text-white overflow-hidden"
+            style="
+              max-width: calc(100% - 0.25rem);
+              font-size: var(--value-font-size);
+            "
+          >
+            {{ cellValueText[cellIndex(row, col)].split(".")[0]
+            }}<span v-if="cellValueText[cellIndex(row, col)].includes('.')"
+              >.<span style="font-size: 85%">
+                {{ cellValueText[cellIndex(row, col)].split(".")[1] }}</span
+              ></span
+            >
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
 </template>
 
 <script lang="ts">
