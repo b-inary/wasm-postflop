@@ -39,35 +39,6 @@ input.input-error {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.cross-icon {
-  @apply text-red-600;
-  position: absolute;
-  left: -10px;
-  top: 3px;
-  width: 21px;
-  height: 21px;
-}
-
-.cross-icon::before {
-  content: "";
-  position: absolute;
-  top: 9px;
-  width: 21px;
-  height: 3px;
-  background-color: currentColor;
-  transform: rotate(-45deg);
-}
-
-.cross-icon::after {
-  content: "";
-  position: absolute;
-  top: 9px;
-  width: 21px;
-  height: 3px;
-  background-color: currentColor;
-  transform: rotate(45deg);
-}
-
 .spinner {
   width: 1rem;
   height: 1rem;

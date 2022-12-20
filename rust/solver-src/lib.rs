@@ -18,6 +18,7 @@ pub struct ReadonlyBuffer {
     pub byte_length: usize,
 }
 
+#[inline]
 fn decode_action(action: &str) -> Action {
     match action {
         "F" => Action::Fold,
@@ -35,6 +36,39 @@ fn decode_action(action: &str) -> Action {
             }
         }
     }
+}
+
+#[inline]
+fn round(value: f64) -> f64 {
+    if value < 1.0 {
+        (value * 1000000.0).round() / 1000000.0
+    } else if value < 10.0 {
+        (value * 100000.0).round() / 100000.0
+    } else if value < 100.0 {
+        (value * 10000.0).round() / 10000.0
+    } else if value < 1000.0 {
+        (value * 1000.0).round() / 1000.0
+    } else if value < 10000.0 {
+        (value * 100.0).round() / 100.0
+    } else {
+        (value * 10.0).round() / 10.0
+    }
+}
+
+#[inline]
+fn round_iter<'a>(iter: impl Iterator<Item = &'a f32> + 'a) -> impl Iterator<Item = f64> + 'a {
+    iter.map(|&x| round(x as f64))
+}
+
+#[inline]
+pub fn weighted_average(slice: &[f32], weights: &[f32]) -> f64 {
+    let mut sum = 0.0;
+    let mut weight_sum = 0.0;
+    for (&value, &weight) in slice.iter().zip(weights.iter()) {
+        sum += value as f64 * weight as f64;
+        weight_sum += weight as f64;
+    }
+    sum / weight_sum
 }
 
 #[wasm_bindgen]
@@ -230,9 +264,9 @@ impl GameManager {
                     Action::Fold => "Fold:0".to_string(),
                     Action::Check => "Check:0".to_string(),
                     Action::Call => "Call:0".to_string(),
-                    Action::Bet(size) => format!("Bet:{}", size),
-                    Action::Raise(size) => format!("Raise:{}", size),
-                    Action::AllIn(size) => format!("Allin:{}", size),
+                    Action::Bet(amount) => format!("Bet:{amount}"),
+                    Action::Raise(amount) => format!("Raise:{amount}"),
+                    Action::AllIn(amount) => format!("Allin:{amount}"),
                     _ => unreachable!(),
                 })
                 .collect::<Vec<_>>()
@@ -311,26 +345,19 @@ impl GameManager {
             buf.extend(round_iter(ev[0].iter()));
             buf.extend(round_iter(ev[1].iter()));
 
-            let mut eqr = [
-                Vec::with_capacity(equity[0].len()),
-                Vec::with_capacity(equity[1].len()),
-            ];
-
             for player in 0..2 {
-                let pot = (pot_base + total_bet_amount[player]) as f32;
+                let pot = (pot_base + total_bet_amount[player]) as f64;
                 for (&eq, &ev) in equity[player].iter().zip(ev[player].iter()) {
+                    let (eq, ev) = (eq as f64, ev as f64);
                     if ev.abs() < 1e-6 {
-                        eqr[player].push(0.0);
+                        buf.push(0.0);
                     } else if eq < 1e-6 {
-                        eqr[player].push(ev / 0.0);
+                        buf.push(ev / 0.0);
                     } else {
-                        eqr[player].push(ev / (pot * eq));
+                        buf.push(round(ev / (pot * eq)));
                     }
                 }
             }
-
-            buf.extend(round_iter(eqr[0].iter()));
-            buf.extend(round_iter(eqr[1].iter()));
         }
 
         if !game.is_terminal_node() && !game.is_chance_node() {
@@ -384,7 +411,7 @@ impl GameManager {
                 let num_hands = game.private_cards(current_player).len();
                 for action in 0..num_actions {
                     let slice = &strategy_tmp[action * num_hands..(action + 1) * num_hands];
-                    let strategy_summary = weighted_average(slice, &normalizer[current_player]);
+                    let strategy_summary = weighted_average(slice, normalizer[current_player]);
                     strategy[action * 52 + chance] = round(strategy_summary);
                 }
             }
@@ -416,8 +443,8 @@ impl GameManager {
                     });
 
                 let pot = (pot_base + total_bet_amount[player]) as f32;
-                let equity_tmp = weighted_average(&game.equity(player), &normalizer[player]);
-                let ev_tmp = weighted_average(&game.expected_values(player), &normalizer[player]);
+                let equity_tmp = weighted_average(&game.equity(player), normalizer[player]);
+                let ev_tmp = weighted_average(&game.expected_values(player), normalizer[player]);
                 combos[player][chance] = round(c);
                 equity[player][chance] = round(equity_tmp);
                 ev[player][chance] = round(ev_tmp);
@@ -446,37 +473,4 @@ impl GameManager {
             byte_length: buf.len() * 8,
         }
     }
-}
-
-#[inline]
-fn round(value: f64) -> f64 {
-    if value < 1.0 {
-        (value * 1000000.0).round() / 1000000.0
-    } else if value < 10.0 {
-        (value * 100000.0).round() / 100000.0
-    } else if value < 100.0 {
-        (value * 10000.0).round() / 10000.0
-    } else if value < 1000.0 {
-        (value * 1000.0).round() / 1000.0
-    } else if value < 10000.0 {
-        (value * 100.0).round() / 100.0
-    } else {
-        (value * 10.0).round() / 10.0
-    }
-}
-
-#[inline]
-fn round_iter<'a>(iter: impl Iterator<Item = &'a f32> + 'a) -> impl Iterator<Item = f64> + 'a {
-    iter.map(|&x| round(x as f64))
-}
-
-#[inline]
-pub fn weighted_average(slice: &[f32], weights: &[f32]) -> f64 {
-    let mut sum = 0.0;
-    let mut weight_sum = 0.0;
-    for (&value, &weight) in slice.iter().zip(weights.iter()) {
-        sum += value as f64 * weight as f64;
-        weight_sum += weight as f64;
-    }
-    sum / weight_sum
 }

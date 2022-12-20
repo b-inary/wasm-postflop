@@ -265,8 +265,9 @@ export default defineComponent({
 
     const config = useConfigStore();
 
+    const boardLength = config.expectedBoardLength;
     const treeManager = TreeManager.new(
-      config.expectedBoardLength,
+      boardLength,
       config.startingPot,
       config.effectiveStack,
       config.donkOption,
@@ -291,7 +292,6 @@ export default defineComponent({
       config.removedLines
     );
 
-    const boardLength = config.expectedBoardLength;
     const rootSpot: SpotRoot = {
       type: "root",
       index: 0,
@@ -631,9 +631,7 @@ export default defineComponent({
     };
 
     const saveEdit = () => {
-      const addedLines = treeManager.added_lines();
-      const removedLines = treeManager.removed_lines();
-      context.emit("save", addedLines, removedLines);
+      context.emit("save", addedLines.value, removedLines.value);
     };
 
     const cancelEdit = () => {

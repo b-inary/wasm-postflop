@@ -37,7 +37,6 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { useStore } from "../store";
 import { cardText } from "../utils";
 
 export default defineComponent({
@@ -61,16 +60,8 @@ export default defineComponent({
   },
 
   setup(props) {
-    const store = useStore();
-
     const { rank, suit, colorClass } = cardText(props.cardId);
-
-    return {
-      store,
-      rank,
-      suit,
-      colorClass,
-    };
+    return { rank, suit, colorClass };
   },
 });
 </script>

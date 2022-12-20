@@ -22,7 +22,7 @@ function createHandler(mod: Mod) {
       flop: Uint8Array,
       startingPot: number,
       effectiveStack: number,
-      rakePercent: number,
+      rakePercentage: number,
       rakeCap: number,
       donkOption: boolean,
       oopFlopBet: string,
@@ -51,7 +51,7 @@ function createHandler(mod: Mod) {
         flop,
         startingPot,
         effectiveStack,
-        rakePercent,
+        rakePercentage,
         rakeCap,
         donkOption,
         oopFlopBet,
@@ -84,12 +84,12 @@ function createHandler(mod: Mod) {
       };
     },
 
-    memoryUsage(enable_compression: boolean) {
-      return Number(this.game.memory_usage(enable_compression));
+    memoryUsage(enableCompression: boolean) {
+      return Number(this.game.memory_usage(enableCompression));
     },
 
-    allocateMemory(enable_compression: boolean) {
-      this.game.allocate_memory(enable_compression);
+    allocateMemory(enableCompression: boolean) {
+      this.game.allocate_memory(enableCompression);
     },
 
     iterate(iteration: number) {
@@ -136,8 +136,8 @@ function createHandler(mod: Mod) {
       };
     },
 
-    getChanceReports(append: Uint32Array, num_actions: number): ReadonlyBuffer {
-      const ret = this.game.get_chance_reports(append, num_actions);
+    getChanceReports(append: Uint32Array, numActions: number): ReadonlyBuffer {
+      const ret = this.game.get_chance_reports(append, numActions);
       return {
         ptr: ret.pointer,
         byteLength: ret.byte_length,

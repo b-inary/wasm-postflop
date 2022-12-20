@@ -69,14 +69,14 @@ import ResultViewer from "./ResultViewer.vue";
 
 export default defineComponent({
   components: {
-    AboutPage,
-    BoardSelector,
     NavBar,
-    RangeEditor,
-    ResultViewer,
-    RunSolver,
     SideBar,
+    AboutPage,
+    RangeEditor,
+    BoardSelector,
     TreeConfig,
+    RunSolver,
+    ResultViewer,
   },
 
   setup() {

@@ -160,7 +160,7 @@ export default defineComponent({
     const weight = ref(100);
     const numCombos = ref(0);
 
-    let draggingMode = "none" as DraggingMode;
+    let draggingMode: DraggingMode = "none";
 
     const cellText = (row: number, col: number) => {
       const r1 = 13 - Math.min(row, col);

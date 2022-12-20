@@ -9,7 +9,7 @@
         (numThreads < 1 ||
         numThreads > (isSafari ? 1 : 64) ||
         numThreads % 1 !== 0
-          ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+          ? 'input-error'
           : '')
       "
       min="1"
@@ -20,7 +20,7 @@
       :disabled="isTreeBuilding || store.isSolverRunning || store.isFinalizing"
       @click="buildTree"
     >
-      Build tree
+      Build New Tree
     </button>
   </div>
 
@@ -165,9 +165,7 @@
         type="number"
         :class="
           'w-20 ml-3 px-2 py-1 rounded-lg text-sm text-center ' +
-          (targetExploitability <= 0
-            ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
-            : '')
+          (targetExploitability <= 0 ? 'input-error' : '')
         "
         :disabled="store.hasSolverRun && !store.isSolverPaused"
         min="0"
@@ -186,7 +184,7 @@
           (maxIterations < 0 ||
           maxIterations % 1 !== 0 ||
           maxIterations > 100000
-            ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+            ? 'input-error'
             : '')
         "
         :disabled="store.hasSolverRun && !store.isSolverPaused"
@@ -208,7 +206,7 @@
         "
         @click="runSolver"
       >
-        Run solver
+        Run Solver
       </button>
       <button
         class="button-base button-red"

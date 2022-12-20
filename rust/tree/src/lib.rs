@@ -7,26 +7,28 @@ pub struct TreeManager {
     tree: ActionTree,
 }
 
+#[inline]
 fn action_to_string(action: Action) -> String {
     match action {
         Action::Fold => "Fold:0".to_string(),
         Action::Check => "Check:0".to_string(),
         Action::Call => "Call:0".to_string(),
-        Action::Bet(amount) => format!("Bet:{}", amount),
-        Action::Raise(amount) => format!("Raise:{}", amount),
-        Action::AllIn(amount) => format!("Allin:{}", amount),
+        Action::Bet(amount) => format!("Bet:{amount}"),
+        Action::Raise(amount) => format!("Raise:{amount}"),
+        Action::AllIn(amount) => format!("Allin:{amount}"),
         _ => unreachable!(),
     }
 }
 
+#[inline]
 fn encode_action(action: Action) -> String {
     match action {
         Action::Fold => "F".to_string(),
         Action::Check => "X".to_string(),
         Action::Call => "C".to_string(),
-        Action::Bet(amount) => format!("B{}", amount),
-        Action::Raise(amount) => format!("R{}", amount),
-        Action::AllIn(amount) => format!("A{}", amount),
+        Action::Bet(amount) => format!("B{amount}"),
+        Action::Raise(amount) => format!("R{amount}"),
+        Action::AllIn(amount) => format!("A{amount}"),
         _ => unreachable!(),
     }
 }
@@ -56,6 +58,7 @@ fn encode_line(line: &[Action]) -> String {
     encoded
 }
 
+#[inline]
 fn decode_action(action: &str) -> Action {
     match action {
         "F" => Action::Fold,

@@ -243,7 +243,7 @@
 import { computed, defineComponent, nextTick, toRefs, ref, watch } from "vue";
 import { useSavedConfigStore } from "../store";
 import { cardText, average, colorString } from "../utils";
-import { handler, memory, ReadonlyBuffer } from "../global-worker";
+import { handler, memory } from "../global-worker";
 import {
   Results,
   ChanceReports,
@@ -496,8 +496,7 @@ export default defineComponent({
             spots.value.slice(1, -1).map((spot) => spot.selectedIndex)
           );
           await handler.applyHistory(history);
-          const buffer = await handler.getResults();
-          const results = await getResults(buffer, "terminal", 0);
+          const results = await getResults("terminal", 0);
           if (!results.isEmpty) {
             lastSpot.equityOop = average(
               results.equity[0],
@@ -551,8 +550,7 @@ export default defineComponent({
       }
 
       // obtain results
-      const buffer = await handler.getResults();
-      results = await getResults(buffer, currentPlayer, numActions);
+      results = await getResults(currentPlayer, numActions);
 
       let appendArray: number[] = [];
       let append = new Uint32Array();
@@ -587,8 +585,7 @@ export default defineComponent({
           numActions = nextActionsStr.split("/").length;
         }
 
-        const buffer = await handler.getChanceReports(append, numActions);
-        chanceReports = await getChanceReports(buffer, player, numActions);
+        chanceReports = await getChanceReports(append, player, numActions);
       } else {
         chanceReports = null;
       }
@@ -657,11 +654,13 @@ export default defineComponent({
     };
 
     const getResults = async (
-      resultsBuffer: ReadonlyBuffer,
       currentPlayer: "oop" | "ip" | "chance" | "terminal",
       numActions: number
     ): Promise<Results> => {
+      if (!handler) throw new Error("null handler");
       if (!memory) throw new Error("null memory");
+
+      const resultsBuffer = await handler.getResults();
       const buffer = await memory.buffer;
 
       const ptr = resultsBuffer.ptr >>> 0;
@@ -735,14 +734,17 @@ export default defineComponent({
     };
 
     const getChanceReports = async (
-      reportBuffer: ReadonlyBuffer,
+      append: Uint32Array,
       currentPlayer: "oop" | "ip" | "terminal",
       numActions: number
     ): Promise<ChanceReports> => {
+      if (!handler) throw new Error("null handler");
       if (!memory) throw new Error("null memory");
+
+      const reportsBuffer = await handler.getChanceReports(append, numActions);
       const buffer = await memory.buffer;
 
-      const ptr = reportBuffer.ptr >>> 0;
+      const ptr = reportsBuffer.ptr >>> 0;
       let offset = 0;
 
       const status = new Float64Array(buffer, ptr + offset, 52);
@@ -827,7 +829,7 @@ export default defineComponent({
         .slice(0, spotIndex)
         .find((spot) => spot.player === "turn") as SpotTurn | undefined;
 
-      let appendArray = [] as number[];
+      let appendArray: number[] = [];
       if (selectedChanceIndexTmp !== -1) {
         appendArray = spots.value
           .slice(selectedChanceIndexTmp, spotIndex)
@@ -856,8 +858,7 @@ export default defineComponent({
       if (selectedChanceIndexTmp === -1) {
         canChanceReports.value = true;
         const numActions = nextActions.length;
-        const buffer = await handler.getChanceReports(append, numActions);
-        chanceReports = await getChanceReports(buffer, "oop", numActions);
+        chanceReports = await getChanceReports(append, "oop", numActions);
       }
 
       spots.value.splice(
@@ -904,8 +905,6 @@ export default defineComponent({
     };
 
     const spliceSpotsPlayer = (spotIndex: number, actionsStr: string) => {
-      if (!handler) throw new Error("null handler");
-
       const prevSpot = spots.value[spotIndex - 1];
       const player = prevSpot.player === "oop" ? "ip" : "oop";
 
@@ -1017,19 +1016,6 @@ export default defineComponent({
       return false;
     };
 
-    const cardChanceArrow = (
-      spot: SpotChance,
-      rankDir: number,
-      suitDir: number
-    ) => {
-      const offset = rankDir ? 4 * rankDir : suitDir;
-      let card = spot.selectedIndex + offset;
-      for (; 0 <= card && card < 52; card += offset) {
-        if (!spot.cards[card].isDead) return card;
-      }
-      return -1;
-    };
-
     watch(dealtCard, async (card) => {
       if (card === -1) return;
       await deal(card);
@@ -1059,7 +1045,6 @@ export default defineComponent({
       deal,
       dealArrow,
       isCardAvailable,
-      cardChanceArrow,
       spotCards,
     };
   },

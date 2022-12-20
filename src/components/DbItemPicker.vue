@@ -542,7 +542,7 @@ export default defineComponent({
   },
 
   setup(props, context) {
-    const data = ref([] as (Item | Group)[]);
+    const data = ref<(Item | Group)[]>([]);
     const selectedValue = ref(false as false | string);
 
     const selectedItem = computed(() => {

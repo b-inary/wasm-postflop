@@ -681,7 +681,7 @@ export default defineComponent({
 
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
 
-      let cards = new Uint16Array();
+      let cards: Uint16Array;
       if (props.tableMode === "basics" && props.cards) {
         cards = props.cards[playerIndex];
       } else {
