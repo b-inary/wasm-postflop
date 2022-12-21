@@ -1,6 +1,6 @@
 [package]
 name = "solver"
-version = "0.2.0-alpha"
+version = "0.2.0-alpha.0"
 authors = ["Wataru Inariba"]
 edition = "2021"
 license = "AGPL-3.0-or-later"
