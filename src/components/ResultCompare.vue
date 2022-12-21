@@ -227,7 +227,7 @@ export default defineComponent({
       const results = props.results;
       if (!results || results.isEmpty) return 3;
       const maxEv = Math.max(...ev.value.map((x) => Math.abs(x)));
-      return maxEv < 10 ? 3 : maxEv < 100 ? 2 : 1;
+      return maxEv < 9.9995 ? 3 : maxEv < 99.995 ? 2 : 1;
     });
 
     return {

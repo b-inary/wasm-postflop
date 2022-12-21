@@ -195,7 +195,7 @@ export default defineComponent({
       if (!results || results.isEmpty) return 1;
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
       const maxEv = Math.max(...results.ev[playerIndex]);
-      return maxEv < 10 ? 3 : maxEv < 100 ? 2 : 1;
+      return maxEv < 9.9995 ? 3 : maxEv < 99.995 ? 2 : 1;
     });
 
     const toFixedEv = computed(() => {

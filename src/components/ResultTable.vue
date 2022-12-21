@@ -615,7 +615,7 @@ export default defineComponent({
     });
 
     const evDigits = computed(() => {
-      return maxEv.value < 10 ? 3 : maxEv.value < 100 ? 2 : 1;
+      return maxEv.value < 9.9995 ? 3 : maxEv.value < 99.995 ? 2 : 1;
     });
 
     const numActions = computed(() => {
@@ -729,7 +729,9 @@ export default defineComponent({
           ret.push(results.normalizer[playerIndex][index]);
           ret.push(results.equity[playerIndex][index] ?? Number.NaN);
           ret.push(results.ev[playerIndex][index] ?? Number.NaN);
-          ret.push(results.eqr[playerIndex][index] ?? Number.NaN);
+
+          const eqr = results.eqr[playerIndex][index];
+          ret.push(isFinite(eqr) ? eqr : Number.NaN);
 
           for (let i = numActions.value - 1; i >= 0; --i) {
             const j = i * cards.length + index;
@@ -788,22 +790,27 @@ export default defineComponent({
 
     const resultsSorted = computed(() => {
       const { key, order } = sortKey.value;
-      const coef = order === "asc" ? 1 : -1;
       const ret = [...resultsFiltered.value];
 
       if (key === 0) {
         ret.sort((a, b) => {
-          return coef * (cardPairOrder(a[0]) - cardPairOrder(b[0]));
+          return cardPairOrder(a[0]) - cardPairOrder(b[0]);
         });
       } else {
         ret.sort((a, b) => {
-          return (
-            coef *
-            (a[key] - b[key] || cardPairOrder(a[0]) - cardPairOrder(b[0]))
-          );
+          if (!isNaN(a[key]) && !isNaN(b[key])) {
+            return a[key] - b[key] || cardPairOrder(a[0]) - cardPairOrder(b[0]);
+          } else if (isNaN(a[key])) {
+            return 1;
+          } else if (isNaN(b[key])) {
+            return -1;
+          } else {
+            return cardPairOrder(a[0]) - cardPairOrder(b[0]);
+          }
         });
       }
 
+      if (order === "desc") ret.reverse();
       return ret;
     });
 
@@ -883,6 +890,7 @@ export default defineComponent({
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
       const eqrBase = props.results.eqrBase[playerIndex];
       ret[INDEX_EQR] = ret[INDEX_EV] / (eqrBase * ret[INDEX_EQUITY]);
+      if (!isFinite(ret[INDEX_EQR])) ret[INDEX_EQR] = Number.NaN;
 
       return ret;
     });
