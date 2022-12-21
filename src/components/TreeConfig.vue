@@ -956,8 +956,8 @@ export default defineComponent({
         forceAllInThreshold: config.forceAllInThreshold,
         mergingThreshold: config.mergingThreshold,
         expectedBoardLength: config.expectedBoardLength,
-        addedLines: "",
-        removedLines: "",
+        addedLines: config.addedLines,
+        removedLines: config.removedLines,
       })
     );
 
