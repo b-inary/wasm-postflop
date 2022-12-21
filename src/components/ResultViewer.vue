@@ -86,7 +86,12 @@
           :is-compare-mode="true"
         />
 
-        <div class="bg-gray-300" style="flex: 2"></div>
+        <ResultCompare
+          style="flex: 2"
+          :selected-spot="selectedSpot"
+          :selected-chance="selectedChance"
+          :results="results"
+        />
 
         <ResultBasics
           style="flex: 5"
@@ -135,6 +140,7 @@ import ResultNav from "./ResultNav.vue";
 import ResultMiddle from "./ResultMiddle.vue";
 import ResultBasics from "./ResultBasics.vue";
 import ResultTable from "./ResultTable.vue";
+import ResultCompare from "./ResultCompare.vue";
 import ResultChance from "./ResultChance.vue";
 
 export default defineComponent({
@@ -143,6 +149,7 @@ export default defineComponent({
     ResultMiddle,
     ResultBasics,
     ResultTable,
+    ResultCompare,
     ResultChance,
   },
 
