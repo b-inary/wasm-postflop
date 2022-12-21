@@ -64,7 +64,7 @@
       <label
         :class="
           memoryUsage > maxMemoryUsage
-            ? 'text-gray-400'
+            ? 'opacity-60'
             : !store.hasSolverRun
             ? 'cursor-pointer'
             : ''
@@ -93,7 +93,7 @@
       <label
         :class="
           memoryUsageCompressed > maxMemoryUsage
-            ? 'text-gray-400'
+            ? 'opacity-60'
             : !store.hasSolverRun
             ? 'cursor-pointer'
             : ''

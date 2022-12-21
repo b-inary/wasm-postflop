@@ -509,8 +509,8 @@ export default defineComponent({
             barWidth: "normalized",
           });
 
-    const key = `display-options-table-${props.tableMode}`;
-    const savedDisplayOptions = localStorage.getItem(key);
+    const storageKey = `display-options-table-${props.tableMode}`;
+    const savedDisplayOptions = localStorage.getItem(storageKey);
 
     if (savedDisplayOptions) {
       if (props.tableMode === "basics") {
@@ -532,7 +532,7 @@ export default defineComponent({
     }
 
     const updateDisplayOptions = () => {
-      localStorage.setItem(key, JSON.stringify(displayOptions));
+      localStorage.setItem(storageKey, JSON.stringify(displayOptions));
     };
 
     const tableDiv = ref<HTMLDivElement | null>(null);
