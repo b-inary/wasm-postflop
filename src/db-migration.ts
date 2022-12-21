@@ -1,4 +1,4 @@
-import { MAX_AMOUNT } from "./utils";
+import { MAX_AMOUNT, sanitizeBetString } from "./utils";
 
 export type ConfigValue1 = {
   startingPot: number;
@@ -48,14 +48,6 @@ type ConfigValue2 = {
   removedLines: string;
 };
 
-const migrateBetString1to2 = (s: string): string => {
-  if (s.includes(" ") && !s.includes(",")) {
-    return s.replace(" ", ", ");
-  } else {
-    return s;
-  }
-};
-
 export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
   return {
     startingPot: Math.min(value.startingPot, MAX_AMOUNT),
@@ -63,20 +55,20 @@ export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
     rakePercent: 0,
     rakeCap: 0,
     donkOption: 0,
-    oopFlopBet: migrateBetString1to2(value.oopFlopBetStr),
-    oopFlopRaise: migrateBetString1to2(value.oopFlopRaiseStr),
-    oopTurnBet: migrateBetString1to2(value.oopTurnBetStr),
-    oopTurnRaise: migrateBetString1to2(value.oopTurnRaiseStr),
+    oopFlopBet: sanitizeBetString(value.oopFlopBetStr, false).s,
+    oopFlopRaise: sanitizeBetString(value.oopFlopRaiseStr, true).s,
+    oopTurnBet: sanitizeBetString(value.oopTurnBetStr, false).s,
+    oopTurnRaise: sanitizeBetString(value.oopTurnRaiseStr, true).s,
     oopTurnDonk: "",
-    oopRiverBet: migrateBetString1to2(value.oopRiverBetStr),
-    oopRiverRaise: migrateBetString1to2(value.oopRiverRaiseStr),
+    oopRiverBet: sanitizeBetString(value.oopRiverBetStr, false).s,
+    oopRiverRaise: sanitizeBetString(value.oopRiverRaiseStr, true).s,
     oopRiverDonk: "",
-    ipFlopBet: migrateBetString1to2(value.ipFlopBetStr),
-    ipFlopRaise: migrateBetString1to2(value.ipFlopRaiseStr),
-    ipTurnBet: migrateBetString1to2(value.ipTurnBetStr),
-    ipTurnRaise: migrateBetString1to2(value.ipTurnRaiseStr),
-    ipRiverBet: migrateBetString1to2(value.ipRiverBetStr),
-    ipRiverRaise: migrateBetString1to2(value.ipRiverRaiseStr),
+    ipFlopBet: sanitizeBetString(value.ipFlopBetStr, false).s,
+    ipFlopRaise: sanitizeBetString(value.ipFlopRaiseStr, true).s,
+    ipTurnBet: sanitizeBetString(value.ipTurnBetStr, false).s,
+    ipTurnRaise: sanitizeBetString(value.ipTurnRaiseStr, true).s,
+    ipRiverBet: sanitizeBetString(value.ipRiverBetStr, false).s,
+    ipRiverRaise: sanitizeBetString(value.ipRiverRaiseStr, true).s,
     addAllInThreshold: value.addAllInThreshold,
     forceAllInThreshold: value.forceAllInThreshold,
     mergingThreshold: 0,

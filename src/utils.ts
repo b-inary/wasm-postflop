@@ -226,7 +226,8 @@ export const sanitizeBetString = (
 export const convertBetString = (s: string): string => {
   if (s === "") return s;
   return s
-    .split(", ")
+    .split(",")
+    .map((e) => e.trim())
     .map((e) => ("acex".includes(e[e.length - 1]) ? e : e + "%"))
     .join(",");
 };
