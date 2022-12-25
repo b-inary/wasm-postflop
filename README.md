@@ -55,7 +55,7 @@ We tested WASM Postflop, [Desktop Postflop] (v0.2.0), [PioSOLVER Free] (2.0.8), 
 ### Execution time and memory usage
 
 We experimented on a Windows 10 PC with a Ryzen 7 3700X CPU (16 threads; PioSOLVER Free is limited to 6 threads).
-WASM Postflop was executed on Google Chrome 104.
+WASM Postflop was executed on Google Chrome 108.
 
 Desktop Postflop, Pio CFR, and GTO+ had similar execution times.
 WASM Postflop was about 2x slower than these implementations.
