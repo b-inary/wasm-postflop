@@ -134,26 +134,46 @@
               </template>
 
               <template v-else>
-                <div class="inline-block w-12 text-right">
-                  <template v-if="column.type === 'weight'">
-                    <Adaptive :value="summary[columnIndex(column)]" />
-                  </template>
-                  <template
+                <div
+                  class="inline-block w-12 text-right"
+                  :data-set="(valueTmp = summary[columnIndex(column)])"
+                >
+                  <span
+                    v-if="column.type === 'weight'"
+                    :data-set="
+                      (splitTmp = toFixedAdaptive(valueTmp).split('.'))
+                    "
+                  >
+                    <span>{{ splitTmp[0] }}.</span>
+                    <span class="text-xs">{{ splitTmp[1] }}</span>
+                  </span>
+                  <span
                     v-else-if="
                       column.type === 'percentage' || column.type === 'action'
                     "
+                    :data-set="(strTmp = toFixed1(valueTmp * 100))"
                   >
-                    <Percentage :value="summary[columnIndex(column)]" />
-                  </template>
-                  <template v-else-if="column.type === 'action-ev'">
-                    <Percentage :value="summary[columnIndex(column) - 1]" />
-                  </template>
-                  <template v-else-if="column.type === 'ev'">
-                    <Ev
-                      :value="summary[columnIndex(column)]"
-                      :digits="evDigits"
-                    />
-                  </template>
+                    <span>{{ strTmp.slice(0, -1) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-1) }}%</span>
+                  </span>
+                  <span
+                    v-else-if="column.type === 'action-ev'"
+                    :data-set="
+                      (strTmp = toFixed1(
+                        summary[columnIndex(column) - 1] * 100
+                      ))
+                    "
+                  >
+                    <span>{{ strTmp.slice(0, -1) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-1) }}%</span>
+                  </span>
+                  <span
+                    v-else-if="column.type === 'ev'"
+                    :data-set="(strTmp = toFixed[evDigits - 1](valueTmp))"
+                  >
+                    <span>{{ strTmp.slice(0, -evDigits) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-evDigits) }}</span>
+                  </span>
                 </div>
               </template>
 
@@ -203,10 +223,11 @@
               :style="{
                 height: column.type === 'bar' ? 'calc(1.9rem + 1px)' : 'auto',
               }"
+              :data-set="(valueTmp = item[columnIndex(column)])"
             >
               <template v-if="column.type === 'card'">
                 <span
-                  v-for="card in pairText(item[columnIndex(column)])"
+                  v-for="card in pairText(valueTmp)"
                   :key="card.rank + card.suit"
                   :class="card.colorClass"
                 >
@@ -224,33 +245,41 @@
                 ></div>
               </template>
 
-              <template v-else-if="isNaN(item[columnIndex(column)])">
+              <template v-else-if="isNaN(valueTmp)">
                 <span>-</span>
               </template>
 
               <template v-else>
                 <div class="inline-block w-12 text-right">
-                  <template
+                  <span
                     v-if="tableMode !== 'basics' && column.type === 'weight'"
+                    :data-set="
+                      (splitTmp = toFixedAdaptive(valueTmp).split('.'))
+                    "
                   >
-                    <Adaptive :value="item[columnIndex(column)]" />
-                  </template>
-                  <template
+                    <span>{{ splitTmp[0] }}.</span>
+                    <span class="text-xs">{{ splitTmp[1] }}</span>
+                  </span>
+                  <span
                     v-else-if="
                       column.type === 'weight' ||
                       column.type === 'percentage' ||
                       column.type === 'action'
                     "
+                    :data-set="(strTmp = toFixed1(valueTmp * 100))"
                   >
-                    <Percentage :value="item[columnIndex(column)]" />
-                  </template>
-                  <template
+                    <span>{{ strTmp.slice(0, -1) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-1) }}%</span>
+                  </span>
+                  <span
                     v-else-if="
                       column.type === 'ev' || column.type === 'action-ev'
                     "
+                    :data-set="(strTmp = toFixed[evDigits - 1](valueTmp))"
                   >
-                    <Ev :value="item[columnIndex(column)]" :digits="evDigits" />
-                  </template>
+                    <span>{{ strTmp.slice(0, -evDigits) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-evDigits) }}</span>
+                  </span>
                 </div>
               </template>
 
@@ -301,15 +330,7 @@
 </template>
 
 <script lang="ts">
-import {
-  computed,
-  defineComponent,
-  h,
-  reactive,
-  ref,
-  toRefs,
-  watch,
-} from "vue";
+import { computed, defineComponent, reactive, ref, toRefs, watch } from "vue";
 
 import {
   ranks,
@@ -430,35 +451,8 @@ const cardStr = (card: number) => {
   return rank + suit;
 };
 
-const Adaptive = (props: { value: number }) => {
-  const split = computed(() => toFixedAdaptive(props.value).split("."));
-  return h("span", {}, [
-    h("span", {}, split.value[0] + "."),
-    h("span", { class: "text-xs" }, split.value[1]),
-  ]);
-};
-
-const Percentage = (props: { value: number }) => {
-  const str = computed(() => toFixed1(props.value * 100));
-  return h("span", {}, [
-    h("span", {}, str.value.slice(0, -1)),
-    h("span", { class: "text-xs" }, str.value.slice(-1) + "%"),
-  ]);
-};
-
-const Ev = (props: { value: number; digits: number }) => {
-  const str = computed(() => toFixed[props.digits - 1](props.value));
-  return h("span", {}, [
-    h("span", {}, str.value.slice(0, -props.digits)),
-    h("span", { class: "text-xs" }, str.value.slice(-props.digits)),
-  ]);
-};
-
 export default defineComponent({
   components: {
-    Adaptive,
-    Percentage,
-    Ev,
     Tippy,
     ArrowTopRightOnSquareIcon,
   },
@@ -1023,6 +1017,7 @@ export default defineComponent({
 
     return {
       toFixed1,
+      toFixed,
       toFixedAdaptive,
       capitalize,
       columnIndex,
@@ -1044,6 +1039,9 @@ export default defineComponent({
       actionBarBg,
       exportSummaryButton,
       exportSummary,
+      valueTmp: 0,
+      splitTmp: [] as string[],
+      strTmp: "",
     };
   },
 });
