@@ -817,19 +817,20 @@ export default defineComponent({
 
     const errorOop = computed(() => {
       const errors: string[] = [];
+      const isDonk = true;
       const betConfig = [
-        { name: "OOP flop bet", value: config.oopFlopBetSanitized },
-        { name: "OOP flop raise", value: config.oopFlopRaiseSanitized },
-        { name: "OOP turn bet", value: config.oopTurnBetSanitized },
-        { name: "OOP turn raise", value: config.oopTurnRaiseSanitized },
-        { name: "OOP turn donk", value: config.oopTurnDonkSanitized },
-        { name: "OOP river bet", value: config.oopRiverBetSanitized },
-        { name: "OOP river raise", value: config.oopRiverRaiseSanitized },
-        { name: "OOP river donk", value: config.oopRiverDonkSanitized },
+        { name: "OOP flop bet", res: config.oopFlopBetSanitized },
+        { name: "OOP flop raise", res: config.oopFlopRaiseSanitized },
+        { name: "OOP turn bet", res: config.oopTurnBetSanitized },
+        { name: "OOP turn raise", res: config.oopTurnRaiseSanitized },
+        { name: "OOP turn donk", res: config.oopTurnDonkSanitized, isDonk },
+        { name: "OOP river bet", res: config.oopRiverBetSanitized },
+        { name: "OOP river raise", res: config.oopRiverRaiseSanitized },
+        { name: "OOP river donk", res: config.oopRiverDonkSanitized, isDonk },
       ];
-      for (const { name, value } of betConfig) {
-        if (!value.valid) {
-          errors.push(`${name}: ${value.s}`);
+      for (const { name, res, isDonk } of betConfig) {
+        if (!res.valid && (!isDonk || config.donkOption)) {
+          errors.push(`${name}: ${res.s}`);
         }
       }
       return errors;
@@ -838,16 +839,16 @@ export default defineComponent({
     const errorIp = computed(() => {
       const errors: string[] = [];
       const betConfig = [
-        { name: "IP flop bet", value: config.ipFlopBetSanitized },
-        { name: "IP flop raise", value: config.ipFlopRaiseSanitized },
-        { name: "IP turn bet", value: config.ipTurnBetSanitized },
-        { name: "IP turn raise", value: config.ipTurnRaiseSanitized },
-        { name: "IP river bet", value: config.ipRiverBetSanitized },
-        { name: "IP river raise", value: config.ipRiverRaiseSanitized },
+        { name: "IP flop bet", res: config.ipFlopBetSanitized },
+        { name: "IP flop raise", res: config.ipFlopRaiseSanitized },
+        { name: "IP turn bet", res: config.ipTurnBetSanitized },
+        { name: "IP turn raise", res: config.ipTurnRaiseSanitized },
+        { name: "IP river bet", res: config.ipRiverBetSanitized },
+        { name: "IP river raise", res: config.ipRiverRaiseSanitized },
       ];
-      for (const { name, value } of betConfig) {
-        if (!value.valid) {
-          errors.push(`${name}: ${value.s}`);
+      for (const { name, res } of betConfig) {
+        if (!res.valid) {
+          errors.push(`${name}: ${res.s}`);
         }
       }
       return errors;
