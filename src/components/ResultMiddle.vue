@@ -126,7 +126,7 @@
         <div class="text-sm">Chart:</div>
         <select
           v-model="displayOptions.chartChance"
-          class="w-40 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+          class="w-[10.25rem] px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
           @change="updateDisplayOptions"
         >
           <option value="strategy-combos">Strategy (Combos)</option>

@@ -81,6 +81,10 @@
   <p class="mt-4 underline">Change log:</p>
 
   <ul class="mt-4 ml-8 list-disc">
+    <li>
+      <span class="font-semibold">2022-12-25</span>: Various updates. "Results"
+      tab has been moved to the top.
+    </li>
     <li><span class="font-semibold">2022-06-01</span>: Initial release</li>
   </ul>
 </template>

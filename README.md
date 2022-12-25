@@ -45,7 +45,7 @@ This project intends to make the GTO solver more easily accessible to a broader 
 
 ## Comparison
 
-We tested WASM Postflop, [Desktop Postflop] (v0.1.7), [PioSOLVER Free] (2.0.8), [GTO+] (v1.4.1), and [TexasSolver] (v0.2.0) with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
+We tested WASM Postflop, [Desktop Postflop] (v0.2.0), [PioSOLVER Free] (2.0.8), [GTO+] (v1.5.0), and [TexasSolver] (v0.2.0) with the "3betpotFAST" preset of PioSOLVER (all-in threshold is replaced with 100% in PioSOLVER).
 
 [Desktop Postflop]: https://github.com/b-inary/desktop-postflop
 [PioSOLVER Free]: https://www.piosolver.com/
@@ -70,19 +70,19 @@ TexasSolver, another free and open-source solver, suffered from slow execution t
 
 | Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | Pio<br/>(3) | Pio<br/>(4) | GTO+ | Texas |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target: 0.5%)** | **35.2 s** | **45.2 s** | 20.2 s | *19.7 s* | 23.4 s | 30.4 s | 22.0 s | 103.5 s |
-| **Time (Target: 0.3%)** | **43.7 s** | **56.3 s** | 25.1 s | *24.5 s* | 28.7 s | 42.5 s | 31.4 s | 149.0 s |
-| **Time (Target: 0.1%)** | **77.9 s** | **100.8 s** | 45.0 s | *43.9 s* | 61.1 s | 108.9 s | 67.7 s | 285.9 s |
-| **Memory usage** | **1.20 GB** | **634 MB** | 1.22 GB | 652 MB | 1.41 GB | 634 MB | 705 MB | 2.84 GB |
+| **Time (Target: 0.5%)** | **35.5 s** | **44.3 s** | 19.1 s | *19.0 s* | 22.9 s | 30.3 s | 22.0 s | 103.5 s |
+| **Time (Target: 0.3%)** | **44.1 s** | **55.2 s** | 23.9 s | *23.8 s* | 28.2 s | 42.4 s | 31.4 s | 149.0 s |
+| **Time (Target: 0.1%)** | **78.5 s** | **98.8 s** | 42.8 s | *42.6 s* | 60.1 s | 108.4 s | 67.7 s | 285.9 s |
+| **Memory usage** | **1.25 GB** | **660 MB** | 1.27 GB | 679 MB | 1.41 GB | 634 MB | 705 MB | 2.84 GB |
 
 - **16 threads**
 
 | Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | GTO+ | Texas |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target: 0.5%)** | **23.0 s** | **27.7 s** | 12.9 s | *12.4 s* | 13.9 s | 67.1 s |
-| **Time (Target: 0.3%)** | **28.4 s** | **34.4 s** | 16.0 s | *15.4 s* | 19.7 s | 95.9 s |
-| **Time (Target: 0.1%)** | **50.3 s** | **61.3 s** | 28.7 s | *27.5 s* | 41.7 s | 182.6 s |
-| **Memory usage** | **1.21 GB** | **643 MB** | 1.23 GB | 661 MB | 705 MB | 2.84 GB |
+| **Time (Target: 0.5%)** | **23.0 s** | **27.7 s** | 12.7 s | *12.4 s* | 13.9 s | 67.1 s |
+| **Time (Target: 0.3%)** | **28.4 s** | **34.4 s** | 15.9 s | *15.5 s* | 19.7 s | 95.9 s |
+| **Time (Target: 0.1%)** | **50.3 s** | **61.3 s** | 28.4 s | *27.7 s* | 41.7 s | 182.6 s |
+| **Memory usage** | **1.25 GB** | **660 MB** | 1.27 GB | 679 MB | 705 MB | 2.84 GB |
 
 ### Results
 
@@ -114,7 +114,7 @@ $ cargo install wasm-pack
 $ npm install
 
 $ # build
-$ npm run wasm
+$ npm run wasm # latest version of binaryen (wasm-opt) might be required
 $ npm run build
 
 $ # serve
