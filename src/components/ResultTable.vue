@@ -134,24 +134,25 @@
               </template>
 
               <template v-else>
-                <div
-                  class="inline-block w-12 text-right"
-                  :data-set="(valueTmp = summary[columnIndex(column)])"
-                >
+                <div class="inline-block w-12 text-right">
                   <span
                     v-if="column.type === 'weight'"
                     :data-set="
-                      (splitTmp = toFixedAdaptive(valueTmp).split('.'))
+                      (strTmp = toFixedAdaptive(summary[columnIndex(column)]))
                     "
                   >
-                    <span>{{ splitTmp[0] }}.</span>
-                    <span class="text-xs">{{ splitTmp[1] }}</span>
+                    <span>{{ strTmp.slice(0, strTmp.indexOf(".") + 1) }}</span>
+                    <span class="text-xs">{{
+                      strTmp.slice(strTmp.indexOf(".") + 1)
+                    }}</span>
                   </span>
                   <span
                     v-else-if="
                       column.type === 'percentage' || column.type === 'action'
                     "
-                    :data-set="(strTmp = toFixed1(valueTmp * 100))"
+                    :data-set="
+                      (strTmp = toFixed1(summary[columnIndex(column)] * 100))
+                    "
                   >
                     <span>{{ strTmp.slice(0, -1) }}</span>
                     <span class="text-xs">{{ strTmp.slice(-1) }}%</span>
@@ -169,7 +170,11 @@
                   </span>
                   <span
                     v-else-if="column.type === 'ev'"
-                    :data-set="(strTmp = toFixed[evDigits - 1](valueTmp))"
+                    :data-set="
+                      (strTmp = toFixed[evDigits - 1](
+                        summary[columnIndex(column)]
+                      ))
+                    "
                   >
                     <span>{{ strTmp.slice(0, -evDigits) }}</span>
                     <span class="text-xs">{{ strTmp.slice(-evDigits) }}</span>
@@ -223,11 +228,10 @@
               :style="{
                 height: column.type === 'bar' ? 'calc(1.9rem + 1px)' : 'auto',
               }"
-              :data-set="(valueTmp = item[columnIndex(column)])"
             >
               <template v-if="column.type === 'card'">
                 <span
-                  v-for="card in pairText(valueTmp)"
+                  v-for="card in pairText(item[columnIndex(column)])"
                   :key="card.rank + card.suit"
                   :class="card.colorClass"
                 >
@@ -245,7 +249,7 @@
                 ></div>
               </template>
 
-              <template v-else-if="isNaN(valueTmp)">
+              <template v-else-if="isNaN(item[columnIndex(column)])">
                 <span>-</span>
               </template>
 
@@ -254,11 +258,13 @@
                   <span
                     v-if="tableMode !== 'basics' && column.type === 'weight'"
                     :data-set="
-                      (splitTmp = toFixedAdaptive(valueTmp).split('.'))
+                      (strTmp = toFixedAdaptive(item[columnIndex(column)]))
                     "
                   >
-                    <span>{{ splitTmp[0] }}.</span>
-                    <span class="text-xs">{{ splitTmp[1] }}</span>
+                    <span>{{ strTmp.slice(0, strTmp.indexOf(".") + 1) }}</span>
+                    <span class="text-xs">{{
+                      strTmp.slice(strTmp.indexOf(".") + 1)
+                    }}</span>
                   </span>
                   <span
                     v-else-if="
@@ -266,7 +272,9 @@
                       column.type === 'percentage' ||
                       column.type === 'action'
                     "
-                    :data-set="(strTmp = toFixed1(valueTmp * 100))"
+                    :data-set="
+                      (strTmp = toFixed1(item[columnIndex(column)] * 100))
+                    "
                   >
                     <span>{{ strTmp.slice(0, -1) }}</span>
                     <span class="text-xs">{{ strTmp.slice(-1) }}%</span>
@@ -275,7 +283,11 @@
                     v-else-if="
                       column.type === 'ev' || column.type === 'action-ev'
                     "
-                    :data-set="(strTmp = toFixed[evDigits - 1](valueTmp))"
+                    :data-set="
+                      (strTmp = toFixed[evDigits - 1](
+                        item[columnIndex(column)]
+                      ))
+                    "
                   >
                     <span>{{ strTmp.slice(0, -evDigits) }}</span>
                     <span class="text-xs">{{ strTmp.slice(-evDigits) }}</span>
@@ -1039,8 +1051,6 @@ export default defineComponent({
       actionBarBg,
       exportSummaryButton,
       exportSummary,
-      valueTmp: 0,
-      splitTmp: [] as string[],
       strTmp: "",
     };
   },
