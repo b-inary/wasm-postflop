@@ -118,7 +118,7 @@ export const colorString = (color: {
 };
 
 const parseFloat = (s: string): number => {
-  if (/[beox+-]/.test(s)) {
+  if (!s || /[beox+-]/.test(s)) {
     return Number.NaN;
   } else {
     return Number(s);
