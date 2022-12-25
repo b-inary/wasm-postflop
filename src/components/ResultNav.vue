@@ -60,7 +60,7 @@
             >
               <button
                 :class="
-                  'absolute -top-5 left-1/2 -ml-2.5 w-5 h-5 ' +
+                  'absolute -top-[1.375rem] left-1/2 -ml-3 w-6 h-6 ' +
                   (isCardAvailable(spot, 0, 1)
                     ? 'opacity-70 hover:opacity-100 text-gray-700'
                     : 'text-red-300')
@@ -73,7 +73,7 @@
               </button>
               <button
                 :class="
-                  'absolute -left-5 top-1/2 -mt-2.5 w-5 h-5 ' +
+                  'absolute -left-[1.375rem] top-1/2 -mt-3 w-6 h-6 ' +
                   (isCardAvailable(spot, 1, 0)
                     ? 'opacity-70 hover:opacity-100 text-gray-700'
                     : 'text-red-300')
@@ -86,7 +86,7 @@
               </button>
               <button
                 :class="
-                  'absolute -right-5 top-1/2 -mt-2.5 w-5 h-5 ' +
+                  'absolute -right-[1.375rem] top-1/2 -mt-3 w-6 h-6 ' +
                   (isCardAvailable(spot, -1, 0)
                     ? 'opacity-70 hover:opacity-100 text-gray-700'
                     : 'text-red-300')
@@ -99,7 +99,7 @@
               </button>
               <button
                 :class="
-                  'absolute -bottom-5 left-1/2 -ml-2.5 w-5 h-5 ' +
+                  'absolute -bottom-[1.375rem] left-1/2 -ml-3 w-6 h-6 ' +
                   (isCardAvailable(spot, 0, -1)
                     ? 'opacity-70 hover:opacity-100 text-gray-700'
                     : 'text-red-300')

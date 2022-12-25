@@ -14,7 +14,7 @@ export const ranks = [
   "A",
 ];
 
-const suits = ["♣", "♦", "♥", "♠"];
+export const suits = ["♣", "♦", "♥", "♠"];
 
 const suitClasses = [
   "text-green-600",

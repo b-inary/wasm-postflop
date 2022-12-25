@@ -90,13 +90,13 @@ export const barHeightList = ["normalized", "absolute", "full"] as const;
 export const suitList = ["grouped", "individual"] as const;
 export const strategyList = ["show", "none"] as const;
 export const contentBasicsList = ["default", "eq", "ev", "eqr"] as const;
-// export const contentChanceList = [
-//   "strategy",
-//   "combos",
-//   "eq",
-//   "ev",
-//   "eqr",
-// ] as const;
+export const chartChanceList = [
+  "strategy-combos",
+  "strategy",
+  "eq",
+  "ev",
+  "eqr",
+] as const;
 
 export type DisplayOptions = {
   playerBasics: typeof playerBasicsList[number];
@@ -105,7 +105,7 @@ export type DisplayOptions = {
   suit: typeof suitList[number];
   strategy: typeof strategyList[number];
   contentBasics: typeof contentBasicsList[number];
-  // contentChance: typeof contentChanceList[number];
+  chartChance: typeof chartChanceList[number];
 };
 
 export type HoverContent = {
