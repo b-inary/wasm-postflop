@@ -75,10 +75,10 @@
               :style="{
                 'min-width':
                   (column.type === 'card'
-                    ? '4.5'
+                    ? '4'
                     : column.type === 'bar'
-                    ? '6.5'
-                    : '4') + 'rem',
+                    ? '6'
+                    : '3.5') + 'rem',
               }"
               @click="column.type !== 'bar' && sortBy(columnIndex(column))"
             >

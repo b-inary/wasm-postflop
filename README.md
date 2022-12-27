@@ -64,7 +64,7 @@ However, if you do not think so, please consider trying Desktop Postflop, which 
 
 TexasSolver, another free and open-source solver, suffered from slow execution times and poor memory efficiency.
 
-(1) No compression / (2) Use compression / (3) Pio CFR / (4) Original Pio algorithm
+(1) 32-bit FP / (2) 16-bit integer / (3) Pio CFR / (4) Original Pio algorithm
 
 - **6 threads**
 
