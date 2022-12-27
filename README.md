@@ -57,12 +57,13 @@ We tested WASM Postflop, [Desktop Postflop] (v0.2.0), [PioSOLVER Free] (2.0.8), 
 We experimented on a Windows 10 PC with a Ryzen 7 3700X CPU (16 threads; PioSOLVER Free is limited to 6 threads).
 WASM Postflop was executed on Google Chrome 108.
 
-Desktop Postflop, Pio CFR, and GTO+ had similar execution times.
-WASM Postflop was about 2x slower than these implementations.
-We consider that 2x overhead is acceptable for casual use.
-However, if you do not think so, please consider trying Desktop Postflop, which is a port of WASM Postflop to a native desktop application.
-
+The table below shows that Desktop Postflop, a native port of WASM Postflop, was the clear winner in terms of execution time.
+WASM Postflop was about 2x slower than Desktop Postflop, and Pio CFR and GTO+ were between them.
+In terms of memory usage, the 16-bit integer mode of WASM Postflop and Desktop Postflop, the original Pio algorithm, and GTO+ achieved almost the same efficiency.
 TexasSolver, another free and open-source solver, suffered from slow execution times and poor memory efficiency.
+
+We consider that 2x time overhead compared to Desktop Postflop is acceptable for casual use.
+However, if you do not think so, please consider trying Desktop Postflop, which is also free and open-source.
 
 (1) 32-bit FP / (2) 16-bit integer / (3) Pio CFR / (4) Original Pio algorithm
 
@@ -70,18 +71,18 @@ TexasSolver, another free and open-source solver, suffered from slow execution t
 
 | Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | Pio<br/>(3) | Pio<br/>(4) | GTO+ | Texas |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target: 0.5%)** | **35.5 s** | **44.3 s** | 19.1 s | *19.0 s* | 22.9 s | 30.3 s | 22.0 s | 103.5 s |
-| **Time (Target: 0.3%)** | **44.1 s** | **55.2 s** | 23.9 s | *23.8 s* | 28.2 s | 42.4 s | 31.4 s | 149.0 s |
-| **Time (Target: 0.1%)** | **78.5 s** | **98.8 s** | 42.8 s | *42.6 s* | 60.1 s | 108.4 s | 67.7 s | 285.9 s |
+| **Time (Target: 0.5%)** | **33.4 s** | **42.2 s** | 19.1 s | *19.0 s* | 22.9 s | 30.3 s | 22.0 s | 103.5 s |
+| **Time (Target: 0.3%)** | **41.2 s** | **52.3 s** | 23.9 s | *23.8 s* | 28.2 s | 42.4 s | 31.4 s | 149.0 s |
+| **Time (Target: 0.1%)** | **71.9 s** | **92.6 s** | 42.8 s | *42.6 s* | 60.1 s | 108.4 s | 67.7 s | 285.9 s |
 | **Memory usage** | **1.25 GB** | **660 MB** | 1.27 GB | 679 MB | 1.41 GB | 634 MB | 705 MB | 2.84 GB |
 
 - **16 threads**
 
 | Solver | WASM<br/>(1) | WASM<br/>(2) | Desktop<br/>(1) | Desktop<br/>(2) | GTO+ | Texas |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Time (Target: 0.5%)** | **23.0 s** | **27.7 s** | 12.7 s | *12.4 s* | 13.9 s | 67.1 s |
-| **Time (Target: 0.3%)** | **28.4 s** | **34.4 s** | 15.9 s | *15.5 s* | 19.7 s | 95.9 s |
-| **Time (Target: 0.1%)** | **50.3 s** | **61.3 s** | 28.4 s | *27.7 s* | 41.7 s | 182.6 s |
+| **Time (Target: 0.5%)** | **21.1 s** | **26.1 s** | 12.7 s | *12.4 s* | 13.9 s | 67.1 s |
+| **Time (Target: 0.3%)** | **26.0 s** | **32.3 s** | 15.9 s | *15.5 s* | 19.7 s | 95.9 s |
+| **Time (Target: 0.1%)** | **45.5 s** | **57.2 s** | 28.4 s | *27.7 s* | 41.7 s | 182.6 s |
 | **Memory usage** | **1.25 GB** | **660 MB** | 1.27 GB | 679 MB | 705 MB | 2.84 GB |
 
 ### Results
