@@ -40,14 +40,14 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
 name = "once_cell"
-version = "1.16.0"
+version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
+checksum = "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66"
 
 [[package]]
 name = "postflop-solver"
 version = "0.1.0"
-source = "git+https://github.com/b-inary/postflop-solver#8cf24ae68131db486da588784ce2550d7836ad51"
+source = "git+https://github.com/b-inary/postflop-solver#8eefab68e5e9b839504ceac9aa7f2d136f656889"
 dependencies = [
  "once_cell",
  "regex",
@@ -90,7 +90,7 @@ checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 
 [[package]]
 name = "solver"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "postflop-solver",
  "wasm-bindgen",

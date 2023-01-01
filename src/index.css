@@ -12,6 +12,7 @@
 
 body {
   @apply bg-gray-50;
+  font-family: system-ui, "Noto Sans", "Open Sans", Roboto, sans-serif;
 }
 
 .button-base {
