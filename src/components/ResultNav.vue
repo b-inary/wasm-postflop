@@ -837,7 +837,7 @@ export default defineComponent({
       }
 
       let possibleCards = 0n;
-      if (turnSpot?.selectedIndex !== -1) {
+      if (!(turnSpot?.type === "chance" && turnSpot.selectedIndex === -1)) {
         const append = new Uint32Array(appendArray);
         possibleCards = await handler.possibleCards(append);
       }
