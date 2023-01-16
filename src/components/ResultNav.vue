@@ -243,7 +243,7 @@
 import { computed, defineComponent, nextTick, toRefs, ref, watch } from "vue";
 import { useSavedConfigStore } from "../store";
 import { cardText, average, colorString } from "../utils";
-import { handler, memory } from "../global-worker";
+import { handler } from "../global-worker";
 import {
   Results,
   ChanceReports,
@@ -331,7 +331,7 @@ export default defineComponent({
       required: true,
     },
     cards: {
-      type: Array as () => Uint16Array[],
+      type: Array as () => number[][],
       required: true,
     },
     dealtCard: {
@@ -616,7 +616,7 @@ export default defineComponent({
           const n = props.cards[playerIndex].length;
           rates.value = Array.from({ length: spot.actions.length }, (_, i) => {
             if (!results) throw new Error("null results");
-            const rates = results.strategy.subarray(i * n, (i + 1) * n);
+            const rates = results.strategy.slice(i * n, (i + 1) * n);
             return average(rates, results.normalizer[playerIndex]);
           });
         }
@@ -658,63 +658,63 @@ export default defineComponent({
       numActions: number
     ): Promise<Results> => {
       if (!handler) throw new Error("null handler");
-      if (!memory) throw new Error("null memory");
 
-      const resultsBuffer = await handler.getResults();
-      const buffer = await memory.buffer;
-
-      const ptr = resultsBuffer.ptr >>> 0;
+      const buffer = await handler.getResults();
       const length = [props.cards[0].length, props.cards[1].length];
 
       let offset = 0;
-      const weights = [new Float64Array(), new Float64Array()];
-      const normalizer = [new Float64Array(), new Float64Array()];
-      const equity = [new Float64Array(), new Float64Array()];
-      const ev = [new Float64Array(), new Float64Array()];
-      const eqr = [new Float64Array(), new Float64Array()];
-      let strategy = new Float64Array();
-      let actionEv = new Float64Array();
+      const weights: number[][] = [[], []];
+      const normalizer: number[][] = [[], []];
+      const equity: number[][] = [[], []];
+      const ev: number[][] = [[], []];
+      const eqr: number[][] = [[], []];
+      let strategy: number[] = [];
+      let actionEv: number[] = [];
 
-      const header = new Float64Array(buffer, ptr + offset, 3);
-      offset += 24;
+      const header = buffer.subarray(offset, offset + 3);
+      offset += 3;
 
       const isEmpty = header[2];
       const eqrBase = [header[0], header[1]];
 
-      weights[0] = new Float64Array(buffer, ptr + offset, length[0]);
-      offset += 8 * length[0];
-      weights[1] = new Float64Array(buffer, ptr + offset, length[1]);
-      offset += 8 * length[1];
+      weights[0] = Array.from(buffer.subarray(offset, offset + length[0]));
+      offset += length[0];
+      weights[1] = Array.from(buffer.subarray(offset, offset + length[1]));
+      offset += length[1];
 
-      normalizer[0] = new Float64Array(buffer, ptr + offset, length[0]);
-      offset += 8 * length[0];
-      normalizer[1] = new Float64Array(buffer, ptr + offset, length[1]);
-      offset += 8 * length[1];
+      normalizer[0] = Array.from(buffer.subarray(offset, offset + length[0]));
+      offset += length[0];
+      normalizer[1] = Array.from(buffer.subarray(offset, offset + length[1]));
+      offset += length[1];
 
       if (!isEmpty) {
-        equity[0] = new Float64Array(buffer, ptr + offset, length[0]);
-        offset += 8 * length[0];
-        equity[1] = new Float64Array(buffer, ptr + offset, length[1]);
-        offset += 8 * length[1];
+        equity[0] = Array.from(buffer.subarray(offset, offset + length[0]));
+        offset += length[0];
+        equity[1] = Array.from(buffer.subarray(offset, offset + length[1]));
+        offset += length[1];
 
-        ev[0] = new Float64Array(buffer, ptr + offset, length[0]);
-        offset += 8 * length[0];
-        ev[1] = new Float64Array(buffer, ptr + offset, length[1]);
-        offset += 8 * length[1];
+        ev[0] = Array.from(buffer.subarray(offset, offset + length[0]));
+        offset += length[0];
+        ev[1] = Array.from(buffer.subarray(offset, offset + length[1]));
+        offset += length[1];
 
-        eqr[0] = new Float64Array(buffer, ptr + offset, length[0]);
-        offset += 8 * length[0];
-        eqr[1] = new Float64Array(buffer, ptr + offset, length[1]);
-        offset += 8 * length[1];
+        eqr[0] = Array.from(buffer.subarray(offset, offset + length[0]));
+        offset += length[0];
+        eqr[1] = Array.from(buffer.subarray(offset, offset + length[1]));
+        offset += length[1];
       }
 
       if (["oop", "ip"].includes(currentPlayer)) {
         const len = length[currentPlayer === "oop" ? 0 : 1];
-        strategy = new Float64Array(buffer, ptr + offset, numActions * len);
-        offset += 8 * numActions * len;
+        strategy = Array.from(
+          buffer.subarray(offset, offset + numActions * len)
+        );
+        offset += numActions * len;
         if (!isEmpty) {
-          actionEv = new Float64Array(buffer, ptr + offset, numActions * len);
-          offset += 8 * numActions * len;
+          actionEv = Array.from(
+            buffer.subarray(offset, offset + numActions * len)
+          );
+          offset += numActions * len;
         }
       }
 
@@ -739,41 +739,39 @@ export default defineComponent({
       numActions: number
     ): Promise<ChanceReports> => {
       if (!handler) throw new Error("null handler");
-      if (!memory) throw new Error("null memory");
 
-      const reportsBuffer = await handler.getChanceReports(append, numActions);
-      const buffer = await memory.buffer;
-
-      const ptr = reportsBuffer.ptr >>> 0;
+      const buffer = await handler.getChanceReports(append, numActions);
       let offset = 0;
 
-      const status = new Float64Array(buffer, ptr + offset, 52);
-      offset += 8 * 52;
+      const status = Array.from(buffer.subarray(offset, offset + 52));
+      offset += 52;
 
-      const combosOop = new Float64Array(buffer, ptr + offset, 52);
-      offset += 8 * 52;
-      const combosIp = new Float64Array(buffer, ptr + offset, 52);
-      offset += 8 * 52;
+      const combosOop = Array.from(buffer.subarray(offset, offset + 52));
+      offset += 52;
+      const combosIp = Array.from(buffer.subarray(offset, offset + 52));
+      offset += 52;
 
-      const equityOop = new Float64Array(buffer, ptr + offset, 52);
-      offset += 8 * 52;
-      const equityIp = new Float64Array(buffer, ptr + offset, 52);
-      offset += 8 * 52;
+      const equityOop = Array.from(buffer.subarray(offset, offset + 52));
+      offset += 52;
+      const equityIp = Array.from(buffer.subarray(offset, offset + 52));
+      offset += 52;
 
-      const evOop = new Float64Array(buffer, ptr + offset, 52);
-      offset += 8 * 52;
-      const evIp = new Float64Array(buffer, ptr + offset, 52);
-      offset += 8 * 52;
+      const evOop = Array.from(buffer.subarray(offset, offset + 52));
+      offset += 52;
+      const evIp = Array.from(buffer.subarray(offset, offset + 52));
+      offset += 52;
 
-      const eqrOop = new Float64Array(buffer, ptr + offset, 52);
-      offset += 8 * 52;
-      const eqrIp = new Float64Array(buffer, ptr + offset, 52);
-      offset += 8 * 52;
+      const eqrOop = Array.from(buffer.subarray(offset, offset + 52));
+      offset += 52;
+      const eqrIp = Array.from(buffer.subarray(offset, offset + 52));
+      offset += 52;
 
-      let strategy = new Float64Array();
+      let strategy: number[] = [];
       if (currentPlayer !== "terminal") {
-        strategy = new Float64Array(buffer, ptr + offset, 52 * numActions);
-        offset += 8 * 52 * numActions;
+        strategy = Array.from(
+          buffer.subarray(offset, offset + 52 * numActions)
+        );
+        offset += 52 * numActions;
       }
 
       return {

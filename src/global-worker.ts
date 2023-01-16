@@ -1,22 +1,21 @@
 import * as Comlink from "comlink";
 import { WorkerApi, Handler } from "./worker";
-export { ReadonlyBuffer } from "./worker";
 
 let worker: Worker | null = null;
+let proxy: Comlink.Remote<WorkerApi> | null = null;
 export let handler: Comlink.Remote<Handler> | null = null;
-export let memory: Comlink.Remote<WebAssembly.Memory> | null = null;
 
-export async function init(numThreads: number) {
-  if (worker) {
-    worker.terminate();
+export const init = async (numThreads: number) => {
+  if (worker && proxy) {
+    await proxy.beforeTerminate();
+    const oldWorker = worker;
+    setTimeout(() => oldWorker.terminate(), 1000);
   }
 
   worker = new Worker(new URL("./worker.ts", import.meta.url), {
     type: "module",
   });
 
-  await Comlink.wrap<WorkerApi>(worker).init(numThreads);
-
-  handler = await Comlink.wrap<WorkerApi>(worker).getHandler();
-  memory = await Comlink.wrap<WorkerApi>(worker).getMemory();
-}
+  proxy = Comlink.wrap<WorkerApi>(worker);
+  handler = await proxy.initHandler(numThreads);
+};

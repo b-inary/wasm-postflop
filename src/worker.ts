@@ -1,18 +1,11 @@
 import * as Comlink from "comlink";
 import { detect } from "detect-browser";
-import { InitOutput as InitOutputST } from "../pkg/solver-st/solver.js";
-import { InitOutput as InitOutputMT } from "../pkg/solver-mt/solver.js";
 
 type ModST = typeof import("../pkg/solver-st/solver.js");
 type ModMT = typeof import("../pkg/solver-mt/solver.js");
 type Mod = ModST | ModMT;
 
-export type ReadonlyBuffer = {
-  ptr: number;
-  byteLength: number;
-};
-
-function createHandler(mod: Mod) {
+const createHandler = (mod: Mod) => {
   return {
     game: mod.GameManager.new(),
 
@@ -76,12 +69,8 @@ function createHandler(mod: Mod) {
       );
     },
 
-    privateCards(player: number): ReadonlyBuffer {
-      const ret = this.game.private_cards(player);
-      return {
-        ptr: ret.pointer,
-        byteLength: ret.byte_length,
-      };
+    privateCards(player: number) {
+      return this.game.private_cards(player);
     },
 
     memoryUsage(enableCompression: boolean) {
@@ -128,58 +117,46 @@ function createHandler(mod: Mod) {
       return this.game.possible_cards(append);
     },
 
-    getResults(): ReadonlyBuffer {
-      const ret = this.game.get_results();
-      return {
-        ptr: ret.pointer,
-        byteLength: ret.byte_length,
-      };
+    getResults() {
+      return this.game.get_results();
     },
 
-    getChanceReports(append: Uint32Array, numActions: number): ReadonlyBuffer {
-      const ret = this.game.get_chance_reports(append, numActions);
-      return {
-        ptr: ret.pointer,
-        byteLength: ret.byte_length,
-      };
+    getChanceReports(append: Uint32Array, numActions: number) {
+      return this.game.get_chance_reports(append, numActions);
     },
   };
-}
+};
 
-type InitOutput = InitOutputST | InitOutputMT;
+const isMTSupported = () => {
+  const browser = detect();
+  return !(browser && (browser.name === "safari" || browser.os === "iOS"));
+};
+
+let mod: Mod | null = null;
 export type Handler = ReturnType<typeof createHandler>;
 
-let wasm: InitOutput;
-let handler: Handler;
-
-async function init(num_threads: number) {
-  let mod: Mod;
-
-  const browser = detect();
-  if (browser && (browser.name === "safari" || browser.os === "iOS")) {
-    mod = await import("../pkg/solver-st/solver.js");
-    wasm = await mod.default();
-  } else {
+const initHandler = async (num_threads: number) => {
+  if (isMTSupported()) {
     mod = await import("../pkg/solver-mt/solver.js");
-    wasm = await mod.default();
+    await mod.default();
     await (mod as ModMT).initThreadPool(num_threads);
+  } else {
+    mod = await import("../pkg/solver-st/solver.js");
+    await mod.default();
   }
 
-  handler = createHandler(mod);
-}
+  return Comlink.proxy(createHandler(mod));
+};
 
-function getMemory() {
-  return Comlink.proxy(wasm.memory);
-}
-
-function getHandler() {
-  return Comlink.proxy(handler);
-}
+const beforeTerminate = async () => {
+  if (isMTSupported()) {
+    await (mod as ModMT).exitThreadPool();
+  }
+};
 
 export interface WorkerApi {
-  init: typeof init;
-  getMemory: typeof getMemory;
-  getHandler: typeof getHandler;
+  initHandler: typeof initHandler;
+  beforeTerminate: typeof beforeTerminate;
 }
 
-Comlink.expose({ init, getMemory, getHandler });
+Comlink.expose({ initHandler, beforeTerminate });

@@ -2,20 +2,25 @@ extern crate wasm_bindgen;
 use postflop_solver::*;
 use wasm_bindgen::prelude::*;
 
-#[cfg(feature = "wasm-bindgen-rayon")]
-pub use wasm_bindgen_rayon::init_thread_pool;
+#[cfg(not(feature = "rayon"))]
+struct DummyPool;
+#[cfg(not(feature = "rayon"))]
+static mut THREAD_POOL: Option<DummyPool> = None;
+#[cfg(not(feature = "rayon"))]
+impl DummyPool {
+    fn install<OP: FnOnce() -> R, R: Default>(&self, _op: OP) -> R {
+        R::default()
+    }
+}
+
+#[cfg(feature = "rayon")]
+mod rayon_adapter;
+#[cfg(feature = "rayon")]
+use rayon_adapter::THREAD_POOL;
 
 #[wasm_bindgen]
 pub struct GameManager {
     game: PostFlopGame,
-    result_buffer: Vec<f64>,
-    report_buffer: Vec<f64>,
-}
-
-#[wasm_bindgen]
-pub struct ReadonlyBuffer {
-    pub pointer: *const u8,
-    pub byte_length: usize,
 }
 
 #[inline]
@@ -76,8 +81,6 @@ impl GameManager {
     pub fn new() -> Self {
         Self {
             game: PostFlopGame::new(),
-            result_buffer: Vec::new(),
-            report_buffer: Vec::new(),
         }
     }
 
@@ -184,12 +187,12 @@ impl GameManager {
         self.game.update_config(card_config, action_tree).err()
     }
 
-    pub fn private_cards(&self, player: usize) -> ReadonlyBuffer {
+    pub fn private_cards(&self, player: usize) -> Box<[u16]> {
         let cards = self.game.private_cards(player);
-        ReadonlyBuffer {
-            pointer: cards.as_ptr() as *const u8,
-            byte_length: cards.len() * 2,
-        }
+        cards
+            .iter()
+            .map(|&(c1, c2)| c1 as u16 | ((c2 as u16) << 8))
+            .collect()
     }
 
     pub fn memory_usage(&self, enable_compression: bool) -> u64 {
@@ -205,15 +208,33 @@ impl GameManager {
     }
 
     pub fn solve_step(&self, current_iteration: u32) {
-        solve_step(&self.game, current_iteration);
+        unsafe {
+            if let Some(pool) = THREAD_POOL.as_ref() {
+                pool.install(|| solve_step(&self.game, current_iteration));
+            } else {
+                solve_step(&self.game, current_iteration);
+            }
+        }
     }
 
     pub fn exploitability(&self) -> f32 {
-        compute_exploitability(&self.game)
+        unsafe {
+            if let Some(pool) = THREAD_POOL.as_ref() {
+                pool.install(|| compute_exploitability(&self.game))
+            } else {
+                compute_exploitability(&self.game)
+            }
+        }
     }
 
     pub fn finalize(&mut self) {
-        finalize(&mut self.game);
+        unsafe {
+            if let Some(pool) = THREAD_POOL.as_ref() {
+                pool.install(|| finalize(&mut self.game));
+            } else {
+                finalize(&mut self.game);
+            }
+        }
     }
 
     pub fn apply_history(&mut self, history: &[usize]) {
@@ -300,11 +321,9 @@ impl GameManager {
         ret
     }
 
-    pub fn get_results(&mut self) -> ReadonlyBuffer {
+    pub fn get_results(&mut self) -> Box<[f64]> {
         let game = &mut self.game;
-
-        let buf = &mut self.result_buffer;
-        buf.clear();
+        let mut buf = Vec::new();
 
         let total_bet_amount = game.total_bet_amount();
         let pot_base = game.tree_config().starting_pot + total_bet_amount.iter().min().unwrap();
@@ -369,13 +388,10 @@ impl GameManager {
             }
         }
 
-        ReadonlyBuffer {
-            pointer: buf.as_ptr() as *const u8,
-            byte_length: buf.len() * 8,
-        }
+        buf.into_boxed_slice()
     }
 
-    pub fn get_chance_reports(&mut self, append: &[usize], num_actions: usize) -> ReadonlyBuffer {
+    pub fn get_chance_reports(&mut self, append: &[usize], num_actions: usize) -> Box<[f64]> {
         let game = &mut self.game;
         let history = game.history().to_vec();
 
@@ -454,8 +470,7 @@ impl GameManager {
             game.apply_history(&history);
         }
 
-        let buf = &mut self.report_buffer;
-        buf.clear();
+        let mut buf = Vec::new();
 
         buf.extend_from_slice(&status);
         buf.extend_from_slice(&combos[0]);
@@ -468,9 +483,6 @@ impl GameManager {
         buf.extend_from_slice(&eqr[1]);
         buf.extend_from_slice(&strategy);
 
-        ReadonlyBuffer {
-            pointer: buf.as_ptr() as *const u8,
-            byte_length: buf.len() * 8,
-        }
+        buf.into_boxed_slice()
     }
 }

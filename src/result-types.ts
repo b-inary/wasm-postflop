@@ -3,24 +3,24 @@ export type Results = {
   numActions: number;
   isEmpty: number;
   eqrBase: number[];
-  weights: Float64Array[];
-  normalizer: Float64Array[];
-  equity: Float64Array[];
-  ev: Float64Array[];
-  eqr: Float64Array[];
-  strategy: Float64Array;
-  actionEv: Float64Array;
+  weights: number[][];
+  normalizer: number[][];
+  equity: number[][];
+  ev: number[][];
+  eqr: number[][];
+  strategy: number[];
+  actionEv: number[];
 };
 
 export type ChanceReports = {
   currentPlayer: "oop" | "ip" | "terminal";
   numActions: number;
-  status: Float64Array;
-  combos: Float64Array[];
-  equity: Float64Array[];
-  ev: Float64Array[];
-  eqr: Float64Array[];
-  strategy: Float64Array;
+  status: number[];
+  combos: number[][];
+  equity: number[][];
+  ev: number[][];
+  eqr: number[][];
+  strategy: number[];
 };
 
 export type SpotRoot = {
@@ -82,7 +82,7 @@ export const displayModeList = [
   "chance",
 ] as const;
 
-export type DisplayMode = typeof displayModeList[number];
+export type DisplayMode = (typeof displayModeList)[number];
 
 export const playerBasicsList = ["auto", "oop", "ip"] as const;
 export const playerChanceList = ["auto", "oop", "ip"] as const;
@@ -99,13 +99,13 @@ export const chartChanceList = [
 ] as const;
 
 export type DisplayOptions = {
-  playerBasics: typeof playerBasicsList[number];
-  playerChance: typeof playerChanceList[number];
-  barHeight: typeof barHeightList[number];
-  suit: typeof suitList[number];
-  strategy: typeof strategyList[number];
-  contentBasics: typeof contentBasicsList[number];
-  chartChance: typeof chartChanceList[number];
+  playerBasics: (typeof playerBasicsList)[number];
+  playerChance: (typeof playerChanceList)[number];
+  barHeight: (typeof barHeightList)[number];
+  suit: (typeof suitList)[number];
+  strategy: (typeof strategyList)[number];
+  contentBasics: (typeof contentBasicsList)[number];
+  chartChance: (typeof chartChanceList)[number];
 };
 
 export type HoverContent = {

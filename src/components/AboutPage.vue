@@ -82,6 +82,18 @@
 
   <ul class="mt-4 ml-8 list-disc">
     <li>
+      <span class="font-semibold">2023-01-16</span>:
+      <span class="font-semibold"
+        >We are experiencing memory leaks on Google Chrome 109</span
+      >.
+      <ul class="ml-8" style="list-style-type: circle">
+        <li>
+          We have made a tentative fix, but we recommend closing tabs
+          periodically (not just reloading).
+        </li>
+      </ul>
+    </li>
+    <li>
       <span class="font-semibold">2022-12-25</span>: Various updates. "Results"
       tab has been moved to the top.
     </li>

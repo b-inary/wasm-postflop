@@ -124,7 +124,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { useStore, useSavedConfigStore } from "../store";
-import { handler, memory } from "../global-worker";
+import { handler } from "../global-worker";
 
 import {
   Results,
@@ -163,7 +163,7 @@ export default defineComponent({
     const isHandlerUpdated = ref(false);
     const isLocked = ref(false);
 
-    const cards = ref([new Uint16Array(), new Uint16Array()]);
+    const cards = ref<number[][]>([[], []]);
     const dealtCard = ref(-1);
 
     const selectedSpot = ref<Spot | null>(null);
@@ -185,26 +185,22 @@ export default defineComponent({
     });
 
     const init = async () => {
-      if (!handler || !memory) return;
-      const memoryBuffer = await memory.buffer;
+      if (!handler) return;
+
       const cardsBuffer = [
         await handler.privateCards(0),
         await handler.privateCards(1),
       ];
 
       cards.value = Array.from({ length: 2 }, (_, player) => {
-        return new Uint16Array(
-          memoryBuffer,
-          cardsBuffer[player].ptr >>> 0,
-          cardsBuffer[player].byteLength / 2
-        );
+        return Array.from(cardsBuffer[player]);
       });
 
       isHandlerUpdated.value = true;
     };
 
     const clear = () => {
-      cards.value = [new Uint16Array(), new Uint16Array()];
+      cards.value = [[], []];
     };
 
     const onUpdateSpot = (

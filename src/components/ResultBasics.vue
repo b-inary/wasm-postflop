@@ -144,7 +144,7 @@ const getColor = (
 export default defineComponent({
   props: {
     cards: {
-      type: Array as () => Uint16Array[],
+      type: Array as () => number[][],
       required: true,
     },
     selectedSpot: {

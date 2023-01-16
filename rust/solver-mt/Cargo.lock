@@ -145,7 +145,7 @@ checksum = "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66"
 [[package]]
 name = "postflop-solver"
 version = "0.1.0"
-source = "git+https://github.com/b-inary/postflop-solver#8eefab68e5e9b839504ceac9aa7f2d136f656889"
+source = "git+https://github.com/b-inary/postflop-solver#88109c9174dbaa24370c6c05f4c03d468be9f8a3"
 dependencies = [
  "once_cell",
  "rayon",
@@ -194,9 +194,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.7.0"
+version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e076559ef8e241f2ae3479e36f97bd5741c0330689e217ad51ce2c76808b868a"
+checksum = "48aaa5748ba571fb95cd2c85c09f629215d3a6ece942baa100950af03a34f733"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -219,10 +219,11 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 name = "solver"
 version = "0.2.2"
 dependencies = [
+ "js-sys",
  "postflop-solver",
  "rayon",
+ "spmc",
  "wasm-bindgen",
- "wasm-bindgen-rayon",
 ]
 
 [[package]]
@@ -294,18 +295,6 @@ dependencies = [
  "syn",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
-]
-
-[[package]]
-name = "wasm-bindgen-rayon"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df87c67450805c305d3ae44a3ac537b0253d029153c25afc3ecd2edc36ccafb1"
-dependencies = [
- "js-sys",
- "rayon",
- "spmc",
- "wasm-bindgen",
 ]
 
 [[package]]

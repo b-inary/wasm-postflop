@@ -369,13 +369,13 @@ import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/24/solid";
 const barWidthListBasics = ["normalized", "absolute", "full"] as const;
 const contentListBasics = ["percentage", "ev"] as const;
 type DisplayOptionsBasics = {
-  barWidth: typeof barWidthListBasics[number];
-  content: typeof contentListBasics[number];
+  barWidth: (typeof barWidthListBasics)[number];
+  content: (typeof contentListBasics)[number];
 };
 
 const barWidthListChance = ["normalized", "full"] as const;
 type DisplayOptionsChance = {
-  barWidth: typeof barWidthListChance[number];
+  barWidth: (typeof barWidthListChance)[number];
 };
 
 type ColumnCard = {
@@ -479,7 +479,7 @@ export default defineComponent({
       default: "turn",
     },
     cards: {
-      type: Array as () => Uint16Array[] | null,
+      type: Array as () => number[][] | null,
       required: true,
     },
     selectedSpot: {
@@ -709,12 +709,11 @@ export default defineComponent({
 
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
 
-      let cards: Uint16Array;
+      let cards: number[];
       if (props.tableMode === "basics" && props.cards) {
         cards = props.cards[playerIndex];
       } else {
-        const cardsArray = Array.from({ length: 52 }, (_, i) => 0xff00 + i);
-        cards = new Uint16Array(cardsArray);
+        cards = Array.from({ length: 52 }, (_, i) => 0xff00 + i);
       }
 
       let dataRow: (index: number) => number[] | null;

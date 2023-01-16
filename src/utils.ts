@@ -64,10 +64,7 @@ export const cardPairOrder = (pair: number) => {
   return ((((hr * 2 + +isPair) * 2 + +isSuited) * 16 + lr) * 4 + hs) * 4 + ls;
 };
 
-export const average = (
-  values: Float64Array,
-  weights: Float64Array
-): number => {
+export const average = (values: number[], weights: number[]): number => {
   let sum = 0;
   let totalWeight = 0;
   for (let i = 0; i < values.length; ++i) {
