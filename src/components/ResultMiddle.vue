@@ -1,7 +1,7 @@
 <template>
   <div class="flex shrink-0 h-12 border-y border-gray-500">
     <button
-      v-for="mode in ['basics', 'compare'] as const"
+      v-for="mode in ['basics', 'graphs', 'compare'] as const"
       :key="mode"
       :class="
         'flex w-[9%] h-full items-center justify-center font-semibold text-lg transition ' +
@@ -32,7 +32,7 @@
       class="flex ml-auto shrink-0 h-full px-4 items-center justify-start gap-2 snug"
     >
       <div
-        v-if="displayMode === 'basics'"
+        v-if="['basics', 'graphs'].includes(displayMode)"
         class="flex flex-col items-start justify-center h-full"
       >
         <div class="text-sm">Player:</div>
@@ -116,6 +116,22 @@
           <option value="none,eq">EQ</option>
           <option value="none,ev">EV</option>
           <option value="none,eqr">EQR</option>
+        </select>
+      </div>
+
+      <div
+        v-if="displayMode === 'graphs'"
+        class="flex flex-col items-start justify-center h-full"
+      >
+        <div class="text-sm">Display:</div>
+        <select
+          v-model="displayOptions.contentGraphs"
+          class="w-20 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+          @change="updateDisplayOptions"
+        >
+          <option value="eq">EQ</option>
+          <option value="ev">EV</option>
+          <option value="eqr">EQR</option>
         </select>
       </div>
 
@@ -246,14 +262,17 @@ export default defineComponent({
       suit: "grouped",
       strategy: "show",
       contentBasics: "default",
+      contentGraphs: "eq",
       chartChance: "strategy-combos",
     });
 
     const strategyContentPair = ref("show,default");
 
     const savedDisplayOptions = localStorage.getItem("display-options");
+
     if (savedDisplayOptions) {
       const saved = JSON.parse(savedDisplayOptions) as Types.DisplayOptions;
+
       if (Types.barHeightList.includes(saved?.barHeight)) {
         displayOptions.barHeight = saved.barHeight;
       }
@@ -266,13 +285,18 @@ export default defineComponent({
       if (Types.contentBasicsList.includes(saved?.contentBasics)) {
         displayOptions.contentBasics = saved.contentBasics;
       }
+      if (Types.contentGraphsList.includes(saved?.contentGraphs)) {
+        displayOptions.contentGraphs = saved.contentGraphs;
+      }
       if (Types.chartChanceList.includes(saved?.chartChance)) {
         displayOptions.chartChance = saved.chartChance;
       }
+
       strategyContentPair.value = [
         displayOptions.strategy,
         displayOptions.contentBasics,
       ].join(",");
+
       context.emit("update:display-options", displayOptions);
     }
 

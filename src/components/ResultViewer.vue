@@ -42,7 +42,7 @@
     />
 
     <div
-      v-if="store.navView === 'results' && selectedSpot"
+      v-if="store.navView === 'results' && selectedSpot && results"
       class="flex flex-grow min-h-0"
     >
       <template v-if="displayMode === 'basics'">
@@ -66,9 +66,20 @@
           :cards="cards"
           :selected-spot="selectedSpot"
           :results="results"
-          :chance-reports="null"
           :display-player="displayPlayerBasics"
           :hover-content="basicsHoverContent"
+        />
+      </template>
+
+      <template v-else-if="displayMode === 'graphs'">
+        <ResultGraphs
+          :cards="cards"
+          :selected-spot="selectedSpot"
+          :selected-chance="selectedChance"
+          :results="results"
+          :chance-reports="chanceReports"
+          :display-options="displayOptions"
+          :display-player="displayPlayerBasics"
         />
       </template>
 
@@ -123,7 +134,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
-import { useStore, useSavedConfigStore } from "../store";
+import { useStore } from "../store";
 import { handler } from "../global-worker";
 
 import {
@@ -142,6 +153,7 @@ import ResultMiddle from "./ResultMiddle.vue";
 import ResultBasics from "./ResultBasics.vue";
 import ResultTable from "./ResultTable.vue";
 import ResultCompare from "./ResultCompare.vue";
+import ResultGraphs from "./ResultGraphs.vue";
 import ResultChance from "./ResultChance.vue";
 
 export default defineComponent({
@@ -151,12 +163,12 @@ export default defineComponent({
     ResultBasics,
     ResultTable,
     ResultCompare,
+    ResultGraphs,
     ResultChance,
   },
 
   setup() {
     const store = useStore();
-    const config = useSavedConfigStore();
 
     /* Navigation */
 
@@ -168,7 +180,7 @@ export default defineComponent({
 
     const selectedSpot = ref<Spot | null>(null);
     const selectedChance = ref<SpotChance | null>(null);
-    const currentBoard = ref([...config.board]);
+    const currentBoard = ref<number[]>([]);
     const results = ref<Results | null>(null);
     const chanceReports = ref<ChanceReports | null>(null);
     const totalBetAmount = ref([0, 0]);
@@ -201,6 +213,10 @@ export default defineComponent({
 
     const clear = () => {
       cards.value = [[], []];
+      selectedSpot.value = null;
+      selectedChance.value = null;
+      results.value = null;
+      chanceReports.value = null;
     };
 
     const onUpdateSpot = (
@@ -235,6 +251,7 @@ export default defineComponent({
       suit: "grouped",
       strategy: "show",
       contentBasics: "default",
+      contentGraphs: "eq",
       chartChance: "strategy-combos",
     });
 
@@ -318,7 +335,6 @@ export default defineComponent({
 
     return {
       store,
-      config,
       isHandlerUpdated,
       isLocked,
       cards,

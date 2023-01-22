@@ -164,7 +164,7 @@ export default defineComponent({
   props: {
     selectedSpot: { type: Object as () => Spot, required: true },
     selectedChance: { type: Object as () => SpotChance | null, required: true },
-    results: { type: Object as () => Results | null, required: true },
+    results: { type: Object as () => Results, required: true },
   },
 
   setup(props) {
@@ -175,7 +175,6 @@ export default defineComponent({
 
     const combos = computed(() => {
       const results = props.results;
-      if (!results) return [0, 0];
 
       const ret: number[] = [];
       for (let i = 0; i < 2; ++i) {
@@ -184,7 +183,7 @@ export default defineComponent({
         for (let j = 0; j < n; ++j) {
           const weight = results.weights[i][j];
           const normalizer = results.normalizer[i][j];
-          if (weight < 0.0005 || normalizer === 0) continue;
+          if (weight === 0 || normalizer === 0) continue;
           sum += weight;
         }
         ret.push(sum);
@@ -195,7 +194,7 @@ export default defineComponent({
 
     const equity = computed(() => {
       const results = props.results;
-      if (!results || results.isEmpty) return [Number.NaN, Number.NaN];
+      if (results.isEmpty) return [Number.NaN, Number.NaN];
       return [
         average(results.equity[0], results.normalizer[0]),
         average(results.equity[1], results.normalizer[1]),
@@ -204,7 +203,7 @@ export default defineComponent({
 
     const ev = computed(() => {
       const results = props.results;
-      if (!results || results.isEmpty) return [Number.NaN, Number.NaN];
+      if (results.isEmpty) return [Number.NaN, Number.NaN];
       return [
         average(results.ev[0], results.normalizer[0]),
         average(results.ev[1], results.normalizer[1]),
@@ -213,7 +212,7 @@ export default defineComponent({
 
     const eqr = computed(() => {
       const results = props.results;
-      if (!results || results.isEmpty) return [Number.NaN, Number.NaN];
+      if (results.isEmpty) return [Number.NaN, Number.NaN];
       const ret = [
         ev.value[0] / (results.eqrBase[0] * equity.value[0]),
         ev.value[1] / (results.eqrBase[1] * equity.value[1]),
@@ -225,7 +224,7 @@ export default defineComponent({
 
     const evDigits = computed(() => {
       const results = props.results;
-      if (!results || results.isEmpty) return 3;
+      if (results.isEmpty) return 3;
       const maxEv = Math.max(...ev.value.map((x) => Math.abs(x)));
       return maxEv < 9.9995 ? 3 : maxEv < 99.995 ? 2 : 1;
     });

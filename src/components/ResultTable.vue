@@ -5,7 +5,7 @@
         Summary
       </div>
 
-      <div class="flex h-full ml-auto px-4 items-center gap-4 snug">
+      <div class="flex h-full ml-auto pr-4 items-center gap-4 snug">
         <div class="flex flex-col items-start justify-center h-full">
           <div class="text-sm">Bar width:</div>
           <select
@@ -14,7 +14,7 @@
             @change="updateDisplayOptions"
           >
             <option value="normalized">Normalized</option>
-            <option v-if="tableMode === 'basics'" value="absolute">
+            <option v-if="tableMode !== 'chance'" value="absolute">
               Absolute
             </option>
             <option value="full">Full</option>
@@ -22,7 +22,7 @@
         </div>
 
         <div
-          v-if="tableMode === 'basics'"
+          v-if="tableMode !== 'chance'"
           class="flex flex-col items-start justify-center h-full"
         >
           <div class="text-sm">Display:</div>
@@ -70,7 +70,7 @@
                   ? 'sticky left-0 z-40 bg-gray-100 '
                   : '') +
                 (column.type !== 'bar' ? 'cursor-pointer ' : '') +
-                (tableMode !== 'basics' ? 'header-divider' : '')
+                (tableMode === 'chance' ? 'header-divider' : '')
               "
               :style="{
                 'min-width':
@@ -92,7 +92,7 @@
             </th>
           </tr>
 
-          <tr v-if="tableMode === 'basics'" style="height: calc(1.9rem + 1px)">
+          <tr v-if="tableMode !== 'chance'" style="height: calc(1.9rem + 1px)">
             <th
               v-for="column in columns"
               :key="column.label"
@@ -212,7 +212,10 @@
           <tr
             v-for="item in resultsRendered"
             :key="item[0]"
-            class="relative bg-white"
+            :class="
+              'relative ' +
+              (item[0] === scrollTarget ? 'bg-yellow-200' : 'bg-gray-50')
+            "
             style="height: calc(1.9rem + 1px)"
           >
             <td
@@ -221,7 +224,10 @@
               :class="
                 'row-divider ' +
                 (column.type === 'card'
-                  ? 'sticky left-0 z-10 bg-white '
+                  ? 'sticky left-0 z-10 ' +
+                    (item[0] === scrollTarget
+                      ? 'bg-yellow-200 '
+                      : 'bg-gray-50 ')
                   : 'relative ') +
                 (column.type === 'bar' ? 'pt-[0.3125rem] pb-1 px-1' : 'pt-0.5')
               "
@@ -256,7 +262,7 @@
               <template v-else>
                 <div class="inline-block w-12 text-right">
                   <span
-                    v-if="tableMode !== 'basics' && column.type === 'weight'"
+                    v-if="tableMode === 'chance' && column.type === 'weight'"
                     :data-set="
                       (strTmp = toFixedAdaptive(item[columnIndex(column)]))
                     "
@@ -308,14 +314,14 @@
           <!-- No results -->
           <tr v-if="resultsRendered.length === 0">
             <td
-              class="relative bg-white row-divider"
+              class="relative bg-gray-50 row-divider"
               style="height: calc(1.9rem + 1px)"
               :colspan="columns.length"
             >
               {{
-                tableMode === "basics"
-                  ? "No results"
-                  : `${capitalize(chanceType)} reports not available`
+                tableMode === "chance"
+                  ? `${capitalize(chanceType)} reports not available`
+                  : "No results"
               }}
             </td>
           </tr>
@@ -359,6 +365,7 @@ import {
   ChanceReports,
   Spot,
   SpotPlayer,
+  contentGraphsList,
   HoverContent,
   TableMode,
 } from "../result-types";
@@ -452,7 +459,7 @@ const columnIndex = (column: Column) => {
   }
 };
 
-const amber500 = "#f59e0b";
+const yellow500 = "#eab308";
 const neutral800 = "#262626";
 
 const suits = ["c", "d", "h", "s"];
@@ -474,13 +481,17 @@ export default defineComponent({
       type: String as () => TableMode,
       required: true,
     },
+    graphType: {
+      type: String as () => (typeof contentGraphsList)[number],
+      default: "equity",
+    },
     chanceType: {
       type: String as () => "turn" | "river",
       default: "turn",
     },
     cards: {
       type: Array as () => number[][] | null,
-      required: true,
+      default: null,
     },
     selectedSpot: {
       type: Object as () => Spot,
@@ -488,11 +499,11 @@ export default defineComponent({
     },
     results: {
       type: Object as () => Results | null,
-      required: true,
+      default: null,
     },
     chanceReports: {
       type: Object as () => ChanceReports | null,
-      required: true,
+      default: null,
     },
     displayPlayer: {
       type: String as () => "oop" | "ip",
@@ -500,13 +511,17 @@ export default defineComponent({
     },
     hoverContent: {
       type: Object as () => HoverContent | null,
-      required: true,
+      default: null,
+    },
+    scrollTarget: {
+      type: Number as () => number | null,
+      default: null,
     },
   },
 
   setup(props) {
     const displayOptions =
-      props.tableMode === "basics"
+      props.tableMode !== "chance"
         ? reactive<DisplayOptionsBasics>({
             barWidth: "normalized",
             content: "percentage",
@@ -515,11 +530,11 @@ export default defineComponent({
             barWidth: "normalized",
           });
 
-    const storageKey = `display-options-table-${props.tableMode}`;
-    const savedDisplayOptions = localStorage.getItem(storageKey);
+    const optionsStorageKey = `display-options-table-${props.tableMode}`;
+    const savedDisplayOptions = localStorage.getItem(optionsStorageKey);
 
     if (savedDisplayOptions) {
-      if (props.tableMode === "basics") {
+      if (props.tableMode !== "chance") {
         const saved = JSON.parse(savedDisplayOptions) as DisplayOptionsBasics;
         const options = displayOptions as DisplayOptionsBasics;
         if (barWidthListBasics.includes(saved.barWidth)) {
@@ -528,7 +543,7 @@ export default defineComponent({
         if (contentListBasics.includes(saved.content)) {
           options.content = saved.content;
         }
-      } else if (props.tableMode === "chance") {
+      } else {
         const saved = JSON.parse(savedDisplayOptions) as DisplayOptionsChance;
         const options = displayOptions as DisplayOptionsChance;
         if (barWidthListChance.includes(saved.barWidth)) {
@@ -538,7 +553,7 @@ export default defineComponent({
     }
 
     const updateDisplayOptions = () => {
-      localStorage.setItem(storageKey, JSON.stringify(displayOptions));
+      localStorage.setItem(optionsStorageKey, JSON.stringify(displayOptions));
     };
 
     const tableDiv = ref<HTMLDivElement | null>(null);
@@ -563,12 +578,19 @@ export default defineComponent({
       }
     };
 
-    type Key = { key: number; order: "asc" | "desc" };
-    const sortKey = ref<Key>({ key: 0, order: "desc" });
+    const defaultSortKey = computed(() => {
+      if (props.tableMode !== "graphs") return INDEX_CARD_PAIR;
+      if (props.graphType === "eq") return INDEX_EQUITY;
+      if (props.graphType === "ev") return INDEX_EV;
+      return INDEX_EQR;
+    });
 
-    const savedSortKey = sessionStorage.getItem(
-      `sort-key-table-${props.tableMode}`
-    );
+    type Key = { key: number; order: "asc" | "desc" };
+    const sortKey = ref<Key>({ key: defaultSortKey.value, order: "desc" });
+
+    const sortStorageKey = `sort-key-table-${props.tableMode}`;
+    const savedSortKey = sessionStorage.getItem(sortStorageKey);
+
     if (savedSortKey) {
       const saved = JSON.parse(savedSortKey) as Key;
       if (saved.key < INDEX_STRATEGY_BASE) {
@@ -582,34 +604,38 @@ export default defineComponent({
           ? "asc"
           : "desc";
       sortKey.value = { key, order };
-      sessionStorage.setItem(
-        `sort-key-table-${props.tableMode}`,
-        JSON.stringify(sortKey.value)
-      );
+      sessionStorage.setItem(sortStorageKey, JSON.stringify(sortKey.value));
     };
 
     const resetSortKey = () => {
       if (sortKey.value.key >= INDEX_STRATEGY_BASE) {
-        sortKey.value = { key: 0, order: "desc" };
-        sessionStorage.setItem(
-          `sort-key-table-${props.tableMode}`,
-          JSON.stringify(sortKey.value)
-        );
+        sortBy(defaultSortKey.value);
       }
     };
 
     const { selectedSpot, displayPlayer } = toRefs(props);
     watch([selectedSpot, displayPlayer], resetSortKey);
-    if (props.tableMode === "basics") {
+
+    if (props.tableMode !== "chance") {
       watch(
         () => (displayOptions as DisplayOptionsBasics).content,
         resetSortKey
       );
     }
 
+    if (props.tableMode === "graphs") {
+      watch(defaultSortKey, (newValue, oldValue) => {
+        if (sortKey.value.key === oldValue) {
+          const order = sortKey.value.order;
+          sortKey.value = { key: newValue, order };
+          sessionStorage.setItem(sortStorageKey, JSON.stringify(sortKey.value));
+        }
+      });
+    }
+
     const maxEv = computed(() => {
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
-      if (props.tableMode === "basics") {
+      if (props.tableMode !== "chance") {
         const results = props.results;
         if (!results || results.isEmpty) return 0;
         return Math.max(...results.ev[playerIndex].map((v) => Math.abs(v)));
@@ -626,7 +652,7 @@ export default defineComponent({
 
     const numActions = computed(() => {
       let data: Results | ChanceReports | null;
-      if (props.tableMode === "basics") {
+      if (props.tableMode !== "chance") {
         data = props.results;
       } else {
         data = props.chanceReports;
@@ -645,7 +671,7 @@ export default defineComponent({
     const columns = computed(() => {
       const ret: Column[] = [];
 
-      if (props.tableMode === "basics") {
+      if (props.tableMode !== "chance") {
         ret.push({ label: "Hand", type: "card" });
         ret.push({
           label: numActions.value > 0 ? "Strategy" : "Weight (Bar)",
@@ -710,7 +736,7 @@ export default defineComponent({
       const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
 
       let cards: number[];
-      if (props.tableMode === "basics" && props.cards) {
+      if (props.tableMode !== "chance" && props.cards) {
         cards = props.cards[playerIndex];
       } else {
         cards = Array.from({ length: 52 }, (_, i) => 0xff00 + i);
@@ -718,14 +744,14 @@ export default defineComponent({
 
       let dataRow: (index: number) => number[] | null;
 
-      if (props.tableMode === "basics") {
+      if (props.tableMode !== "chance") {
         dataRow = (index: number) => {
           const results = props.results;
           if (!results) return null;
 
           const weight = results.weights[playerIndex][index];
           const normalizer = results.normalizer[playerIndex][index];
-          if (weight < 0.0005 || normalizer === 0) return null;
+          if (weight === 0 || normalizer === 0) return null;
 
           const ret: number[] = [];
 
@@ -735,7 +761,7 @@ export default defineComponent({
           ret.push(results.equity[playerIndex][index] ?? Number.NaN);
           ret.push(results.ev[playerIndex][index] ?? Number.NaN);
 
-          const eqr = results.eqr[playerIndex][index];
+          const eqr = results.eqr[playerIndex][index] ?? Number.NaN;
           ret.push(isFinite(eqr) ? eqr : Number.NaN);
 
           for (let i = numActions.value - 1; i >= 0; --i) {
@@ -805,10 +831,10 @@ export default defineComponent({
         ret.sort((a, b) => {
           if (!isNaN(a[key]) && !isNaN(b[key])) {
             return a[key] - b[key] || cardPairOrder(a[0]) - cardPairOrder(b[0]);
-          } else if (isNaN(a[key])) {
-            return 1;
-          } else if (isNaN(b[key])) {
+          } else if (!isNaN(a[key])) {
             return -1;
+          } else if (!isNaN(b[key])) {
+            return 1;
           } else {
             return cardPairOrder(a[0]) - cardPairOrder(b[0]);
           }
@@ -871,6 +897,18 @@ export default defineComponent({
       );
     });
 
+    const { scrollTarget } = toRefs(props);
+    watch(scrollTarget, () => {
+      if (!tableDiv.value || !scrollTarget.value) return;
+      const scrollIndex = resultsSorted.value.findIndex(
+        (row) => row[0] === scrollTarget.value
+      );
+      if (scrollIndex === -1) return;
+      const scrollTop =
+        scrollIndex * rowHeight - (tableHeight.value - 3 * rowHeight) / 2;
+      tableDiv.value.scrollTop = Math.max(scrollTop, 0);
+    });
+
     const summary = computed(() => {
       const results = resultsFiltered.value;
       if (!props.results || results.length === 0) return null;
@@ -912,7 +950,7 @@ export default defineComponent({
 
     const strategyBarBgImage = (row: number[]) => {
       if (!row || row.length === INDEX_STRATEGY_BASE) {
-        return `linear-gradient(${amber500} 0% 100%)`;
+        return `linear-gradient(${yellow500} 0% 100%)`;
       }
 
       let pos = 0;
@@ -955,7 +993,7 @@ export default defineComponent({
 
       const data: string[] = [];
 
-      if (props.tableMode === "basics") {
+      if (props.tableMode !== "chance") {
         if (!props.results) return;
 
         const ary = ["Hand", "Weight", "Combos"];

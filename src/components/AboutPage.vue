@@ -43,8 +43,8 @@
         class="font-bold link"
         target="_blank"
         >Desktop Postflop</a
-      >: A native desktop application for Windows. Faster and no memory
-      limitations.
+      >: A native desktop application for Windows and Linux. Faster and no
+      memory limitations.
     </li>
   </ul>
 

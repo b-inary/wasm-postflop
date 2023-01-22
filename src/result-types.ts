@@ -76,9 +76,9 @@ export type Spot = SpotRoot | SpotChance | SpotPlayer | SpotTerminal;
 
 export const displayModeList = [
   "basics",
-  "compare",
-  // "graphs",
+  "graphs",
   // "scatter",
+  "compare",
   "chance",
 ] as const;
 
@@ -90,6 +90,7 @@ export const barHeightList = ["normalized", "absolute", "full"] as const;
 export const suitList = ["grouped", "individual"] as const;
 export const strategyList = ["show", "none"] as const;
 export const contentBasicsList = ["default", "eq", "ev", "eqr"] as const;
+export const contentGraphsList = ["eq", "ev", "eqr"] as const;
 export const chartChanceList = [
   "strategy-combos",
   "strategy",
@@ -105,6 +106,7 @@ export type DisplayOptions = {
   suit: (typeof suitList)[number];
   strategy: (typeof strategyList)[number];
   contentBasics: (typeof contentBasicsList)[number];
+  contentGraphs: (typeof contentGraphsList)[number];
   chartChance: (typeof chartChanceList)[number];
 };
 
@@ -113,4 +115,4 @@ export type HoverContent = {
   indices: number[];
 };
 
-export type TableMode = "basics" | "chance";
+export type TableMode = "basics" | "graphs" | "chance";

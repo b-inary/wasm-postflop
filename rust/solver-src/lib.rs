@@ -331,25 +331,22 @@ impl GameManager {
         buf.push((pot_base + total_bet_amount[0]) as f64);
         buf.push((pot_base + total_bet_amount[1]) as f64);
 
-        let weights = [game.weights(0), game.weights(1)];
-        let is_empty = |weights: &[f32]| weights.iter().all(|&w| w < 0.0005);
-        let is_empty_flag = is_empty(weights[0]) as usize + 2 * is_empty(weights[1]) as usize;
+        let trunc = |&w: &f32| if w < 0.0005 { 0.0 } else { w };
+        let weights = [
+            game.weights(0).iter().map(trunc).collect::<Vec<_>>(),
+            game.weights(1).iter().map(trunc).collect::<Vec<_>>(),
+        ];
 
+        let is_empty = |player: usize| weights[player].iter().all(|&w| w == 0.0);
+        let is_empty_flag = is_empty(0) as usize + 2 * is_empty(1) as usize;
         buf.push(is_empty_flag as f64);
+
         buf.extend(round_iter(weights[0].iter()));
         buf.extend(round_iter(weights[1].iter()));
 
         if is_empty_flag > 0 {
-            let board = game.current_board();
-            let board_mask = board.iter().fold(0u64, |mask, &c| mask | (1 << c));
-
-            for player in 0..2 {
-                let normalized_weights_iter = game.private_cards(player).iter().map(|&(c1, c2)| {
-                    let hand_mask = (1 << c1) | (1 << c2);
-                    (hand_mask & board_mask == 0) as usize as f64
-                });
-                buf.extend(normalized_weights_iter);
-            }
+            buf.extend(round_iter(weights[0].iter()));
+            buf.extend(round_iter(weights[1].iter()));
         } else {
             game.cache_normalized_weights();
 
@@ -368,9 +365,7 @@ impl GameManager {
                 let pot = (pot_base + total_bet_amount[player]) as f64;
                 for (&eq, &ev) in equity[player].iter().zip(ev[player].iter()) {
                     let (eq, ev) = (eq as f64, ev as f64);
-                    if ev.abs() < 1e-6 {
-                        buf.push(0.0);
-                    } else if eq < 1e-6 {
+                    if eq < 5e-7 {
                         buf.push(ev / 0.0);
                     } else {
                         buf.push(round(ev / (pot * eq)));
@@ -395,9 +390,6 @@ impl GameManager {
         let game = &mut self.game;
         let history = game.history().to_vec();
 
-        let board = game.current_board();
-        let board_mask = board.iter().fold(0u64, |mask, &c| mask | (1 << c));
-
         let mut status = vec![0.0; 52]; // 0: not possible, 1: empty, 2: not empty
         let mut combos = [vec![0.0; 52], vec![0.0; 52]];
         let mut equity = [vec![0.0; 52], vec![0.0; 52]];
@@ -416,26 +408,40 @@ impl GameManager {
                 game.play(action);
             }
 
-            game.cache_normalized_weights();
+            let trunc = |&w: &f32| if w < 0.0005 { 0.0 } else { w };
+            let weights = [
+                game.weights(0).iter().map(trunc).collect::<Vec<_>>(),
+                game.weights(1).iter().map(trunc).collect::<Vec<_>>(),
+            ];
 
-            let weights = [game.weights(0), game.weights(1)];
+            combos[0][chance] = round(weights[0].iter().fold(0.0, |acc, &w| acc + w as f64));
+            combos[1][chance] = round(weights[1].iter().fold(0.0, |acc, &w| acc + w as f64));
+
+            let is_empty = |player: usize| weights[player].iter().all(|&w| w == 0.0);
+            let is_empty_flag = [is_empty(0), is_empty(1)];
+
+            game.cache_normalized_weights();
             let normalizer = [game.normalized_weights(0), game.normalized_weights(1)];
 
             if !game.is_terminal_node() {
-                let strategy_tmp = game.strategy();
                 let current_player = game.current_player();
-                let num_hands = game.private_cards(current_player).len();
-                for action in 0..num_actions {
-                    let slice = &strategy_tmp[action * num_hands..(action + 1) * num_hands];
-                    let strategy_summary = weighted_average(slice, normalizer[current_player]);
-                    strategy[action * 52 + chance] = round(strategy_summary);
+                if !is_empty_flag[current_player] {
+                    let strategy_tmp = game.strategy();
+                    let num_hands = game.private_cards(current_player).len();
+                    let ws = if is_empty_flag[current_player ^ 1] {
+                        &weights[current_player]
+                    } else {
+                        normalizer[current_player]
+                    };
+                    for action in 0..num_actions {
+                        let slice = &strategy_tmp[action * num_hands..(action + 1) * num_hands];
+                        let strategy_summary = weighted_average(slice, ws);
+                        strategy[action * 52 + chance] = round(strategy_summary);
+                    }
                 }
             }
 
-            let is_oop_empty = weights[0].iter().all(|&w| w < 0.0005);
-            let is_ip_empty = weights[1].iter().all(|&w| w < 0.0005);
-
-            if is_oop_empty || is_ip_empty {
+            if is_empty_flag[0] || is_empty_flag[1] {
                 status[chance] = 1.0;
                 game.apply_history(&history);
                 continue;
@@ -447,21 +453,9 @@ impl GameManager {
             let pot_base = game.tree_config().starting_pot + total_bet_amount.iter().min().unwrap();
 
             for player in 0..2 {
-                let mut c = 0.0;
-                weights[player]
-                    .iter()
-                    .zip(game.private_cards(player))
-                    .for_each(|(&w, &(c1, c2))| {
-                        let hand_mask = (1 << c1) | (1 << c2);
-                        if hand_mask & (board_mask | (1 << chance)) == 0 {
-                            c += w as f64;
-                        }
-                    });
-
                 let pot = (pot_base + total_bet_amount[player]) as f32;
                 let equity_tmp = weighted_average(&game.equity(player), normalizer[player]);
                 let ev_tmp = weighted_average(&game.expected_values(player), normalizer[player]);
-                combos[player][chance] = round(c);
                 equity[player][chance] = round(equity_tmp);
                 ev[player][chance] = round(ev_tmp);
                 eqr[player][chance] = round(ev_tmp / (pot as f64 * equity_tmp));

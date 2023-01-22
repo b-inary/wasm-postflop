@@ -20,7 +20,7 @@
               <div
                 class="absolute w-full h-full left-0 top-0 bg-bottom bg-no-repeat"
                 :style="{
-                  'background-image': `linear-gradient(${amber500} 0% 100%)`,
+                  'background-image': `linear-gradient(${yellow500} 0% 100%)`,
                   'background-size': `100% ${cellValue(row, col)}%`,
                 }"
               ></div>
@@ -53,9 +53,7 @@
             type="text"
             :class="
               'w-[27rem] px-2 py-1 rounded-lg text-sm ' +
-              (rangeTextError
-                ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
-                : '')
+              (rangeTextError ? 'input-error' : '')
             "
             @focus="($event.target as HTMLInputElement).select()"
             @change="onRangeTextChange"
@@ -98,9 +96,7 @@
       type="number"
       :class="
         'w-20 ml-4 px-2 py-1 rounded-lg text-sm text-center ' +
-        (weight < 0 || weight > 100
-          ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
-          : '')
+        (weight < 0 || weight > 100 ? 'input-error' : '')
       "
       min="0"
       max="100"
@@ -125,7 +121,7 @@ import { RangeManager } from "../../pkg/range/range";
 
 import DbItemPicker from "./DbItemPicker.vue";
 
-const amber500 = "#f59e0b";
+const yellow500 = "#eab308";
 
 const rankPat = "[AaKkQqJjTt2-9]";
 const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
@@ -264,7 +260,7 @@ export default defineComponent({
     };
 
     return {
-      amber500,
+      yellow500,
       cellText,
       cellValue,
       rangeStore,
