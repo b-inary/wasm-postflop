@@ -690,18 +690,6 @@
       </div>
 
       <div
-        v-if="errorLines.length > 0"
-        class="flex mt-2 font-semibold text-red-500"
-      >
-        <div class="underline">Error:</div>
-        <div class="ml-2">
-          <div v-for="error in errorLines" :key="error">
-            {{ error }}
-          </div>
-        </div>
-      </div>
-
-      <div
         v-if="
           config.board.length >= 3 &&
           config.expectedBoardLength > 0 &&
@@ -715,6 +703,18 @@
           but the current board consists of {{ config.board.length }} cards.
           <br />
           To reset the edited tree, click the "Clear Edit & Unlock" button.
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="errorLines.length > 0"
+      class="flex mt-2 font-semibold text-red-500"
+    >
+      <div class="underline">Error:</div>
+      <div class="ml-2">
+        <div v-for="error in errorLines" :key="error">
+          {{ error }}
         </div>
       </div>
     </div>

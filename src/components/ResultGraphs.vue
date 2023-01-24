@@ -1,6 +1,6 @@
 <template>
-  <div v-if="!results.isEmpty" class="flex w-full h-full">
-    <div class="flex flex-col h-full" style="flex: 4">
+  <div class="flex w-full h-full">
+    <div v-if="!results.isEmpty" class="flex flex-col h-full" style="flex: 4">
       <div class="w-full px-4 pt-4 pb-2" style="flex: 7">
         <div class="relative h-full">
           <LineChart
@@ -31,6 +31,10 @@
       </div>
     </div>
 
+    <div v-else class="flex h-full items-center justify-center" style="flex: 4">
+      Graphs not available
+    </div>
+
     <ResultTable
       style="flex: 3"
       table-mode="graphs"
@@ -41,9 +45,6 @@
       :display-player="displayPlayer"
       :scroll-target="tableScrollTarget"
     />
-  </div>
-  <div v-else class="flex w-full items-center justify-center">
-    Graphs not available
   </div>
 </template>
 
