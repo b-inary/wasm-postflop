@@ -273,7 +273,12 @@ import {
   saveConfig,
   saveConfigTmp,
 } from "../store";
-import { MAX_AMOUNT, convertBetString } from "../utils";
+import {
+  MAX_AMOUNT,
+  convertBetString,
+  INVALID_LINE_STRING,
+  readableLineString,
+} from "../utils";
 import { detect } from "detect-browser";
 
 import { Tippy } from "vue-tippy";
@@ -361,6 +366,34 @@ const checkConfig = (
     config.board.length !== config.expectedBoardLength
   ) {
     return `Invalid board (expected ${config.expectedBoardLength} cards)`;
+  }
+
+  const addedLinesArray =
+    config.addedLines === ""
+      ? []
+      : config.addedLines.split(",").map(readableLineString);
+
+  const removedLinesArray =
+    config.removedLines === ""
+      ? []
+      : config.removedLines.split(",").map(readableLineString);
+
+  if (
+    addedLinesArray.includes(INVALID_LINE_STRING) ||
+    removedLinesArray.includes(INVALID_LINE_STRING)
+  ) {
+    return "Invalid line found (loaded broken configurations?)";
+  }
+
+  if (
+    ![0, 3, 4, 5].includes(config.expectedBoardLength) ||
+    (config.expectedBoardLength === 0 &&
+      (addedLinesArray.length > 0 || removedLinesArray.length > 0)) ||
+    (config.expectedBoardLength > 0 &&
+      addedLinesArray.length === 0 &&
+      removedLinesArray.length === 0)
+  ) {
+    return "Invalid configurations (loaded broken configurations?)";
   }
 
   return null;

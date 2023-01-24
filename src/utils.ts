@@ -239,6 +239,7 @@ const parseBetAmount = (
   return { amount, indexEnd };
 };
 
+export const INVALID_LINE_STRING = "Invalid line string";
 export const readableLineString = (s: string): string => {
   if (s === "(Root)") return s;
 
@@ -274,7 +275,7 @@ export const readableLineString = (s: string): string => {
       ret += `All-in ${amount}`;
       index = indexEnd;
     } else {
-      return "Invalid line string";
+      return INVALID_LINE_STRING;
     }
   }
 

@@ -690,6 +690,18 @@
       </div>
 
       <div
+        v-if="errorLines.length > 0"
+        class="flex mt-2 font-semibold text-red-500"
+      >
+        <div class="underline">Error:</div>
+        <div class="ml-2">
+          <div v-for="error in errorLines" :key="error">
+            {{ error }}
+          </div>
+        </div>
+      </div>
+
+      <div
         v-if="
           config.board.length >= 3 &&
           config.expectedBoardLength > 0 &&
@@ -716,7 +728,12 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { useConfigStore } from "../store";
-import { MAX_AMOUNT, sanitizeBetString, readableLineString } from "../utils";
+import {
+  MAX_AMOUNT,
+  sanitizeBetString,
+  INVALID_LINE_STRING,
+  readableLineString,
+} from "../utils";
 
 import DbItemPicker from "./DbItemPicker.vue";
 import TreeEditor from "./TreeEditor.vue";
@@ -878,12 +895,35 @@ export default defineComponent({
       return warnings;
     });
 
+    const errorLines = computed(() => {
+      const errors: string[] = [];
+      if (
+        addedLinesArray.value.includes(INVALID_LINE_STRING) ||
+        removedLinesArray.value.includes(INVALID_LINE_STRING)
+      ) {
+        errors.push("Invalid line found (loaded broken configurations?)");
+      }
+      if (
+        ![0, 3, 4, 5].includes(config.expectedBoardLength) ||
+        (config.expectedBoardLength === 0 &&
+          (addedLinesArray.value.length > 0 ||
+            removedLinesArray.value.length > 0)) ||
+        (config.expectedBoardLength > 0 &&
+          addedLinesArray.value.length === 0 &&
+          removedLinesArray.value.length === 0)
+      ) {
+        errors.push("Invalid configurations (loaded broken configurations?)");
+      }
+      return errors;
+    });
+
     const isInputValid = computed(
       () =>
         errorBasics.value.length === 0 &&
         errorOop.value.length === 0 &&
         errorIp.value.length === 0 &&
-        errorMisc.value.length === 0
+        errorMisc.value.length === 0 &&
+        errorLines.value.length === 0
     );
 
     const clearConfig = () => {
@@ -976,10 +1016,6 @@ export default defineComponent({
       config.addedLines = String(configValue.addedLines);
       config.removedLines = String(configValue.removedLines);
 
-      if (![0, 3, 4, 5].includes(config.expectedBoardLength)) {
-        config.expectedBoardLength = 0;
-      }
-
       const betMembers = [
         "oopFlopBet",
         "oopFlopRaise",
@@ -1045,6 +1081,7 @@ export default defineComponent({
       errorIp,
       errorMisc,
       warningMisc,
+      errorLines,
       isInputValid,
       clearConfig,
       oopToIp,

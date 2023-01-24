@@ -1253,7 +1253,9 @@ export default defineComponent({
     };
 
     const importJson = async () => {
-      if (!importJsonInput.value) return;
+      if (errorOccured.value || isEditing.value || !importJsonInput.value) {
+        return;
+      }
 
       const file = importJsonInput.value.files?.[0];
       if (!file) return;
