@@ -2,7 +2,7 @@
   <div class="flex-grow max-w-[18rem]">
     <div
       ref="container"
-      class="w-full h-[23.5rem] px-1 border border-gray-500 rounded-md shadow text-sm overflow-x-auto overflow-y-scroll select-none"
+      class="w-full h-[22.5rem] px-1 border border-gray-500 rounded-md shadow text-sm overflow-x-auto overflow-y-scroll select-none"
       @click="unselect"
       @keydown.f2="renameItem()"
       @keydown.delete="deleteItem(true)"
@@ -384,7 +384,7 @@
     <div class="flex flex-col mt-4 gap-3">
       <div class="grid grid-cols-3 w-full gap-3">
         <button
-          class="flex-grow button-base button-blue button-overrides"
+          class="button-base button-blue button-overrides"
           :disabled="selectedItem?.item?.isGroup ?? true"
           @click="loadItem()"
         >
@@ -392,7 +392,7 @@
         </button>
 
         <button
-          class="flex-grow button-base button-blue button-overrides"
+          class="button-base button-blue button-overrides"
           :disabled="errorOccured || !allowSave || isEditing"
           @click="addOrOverwriteItem()"
         >
@@ -400,7 +400,7 @@
         </button>
 
         <button
-          class="flex-grow button-base button-blue button-overrides"
+          class="button-base button-blue button-overrides"
           :disabled="errorOccured || selectedValue === false"
           @click="renameItem()"
         >
@@ -410,7 +410,7 @@
 
       <div class="grid grid-cols-2 w-full gap-3">
         <button
-          class="flex-grow button-base button-blue button-overrides"
+          class="button-base button-blue button-overrides"
           :disabled="
             errorOccured ||
             (selectedItem !== null &&
@@ -424,13 +424,58 @@
         </button>
 
         <button
-          class="flex-grow button-base button-red button-overrides"
+          class="button-base button-red button-overrides"
           :disabled="errorOccured || selectedValue === false"
           @click="deleteItem(true)"
         >
           Delete
         </button>
+
+        <input
+          ref="importJsonInput"
+          type="file"
+          class="hidden"
+          accept=".json"
+          @change="importJson"
+        />
+        <button
+          class="button-base button-green button-overrides"
+          :disabled="errorOccured || isEditing"
+          @click="importJsonInput?.click()"
+        >
+          Import JSON
+        </button>
+
+        <a
+          ref="exportJsonButton"
+          :class="
+            'button-base button-green button-overrides text-center select-none ' +
+            (errorOccured || isEditing
+              ? 'cursor-default pointer-events-none opacity-40'
+              : 'cursor-pointer')
+          "
+          :download="storeName + '.json'"
+          @click="exportJson"
+        >
+          Export JSON
+        </a>
       </div>
+    </div>
+
+    <div
+      v-if="importError !== ''"
+      class="flex flex-col mt-4 px-2 py-1 text-red-500 bg-red-100 border-2 border-red-500 rounded-md font-semibold"
+    >
+      <div class="flex">
+        Error: Import failed.
+        <button
+          class="w-6 h-6 ml-auto text-gray-700 opacity-70 hover:opacity-100"
+          @click="importError = ''"
+        >
+          <XMarkIcon class="w-full h-full" />
+        </button>
+      </div>
+      <div>- {{ importError }}</div>
     </div>
   </div>
 </template>
@@ -438,6 +483,8 @@
 <script lang="ts">
 import { computed, defineComponent, nextTick, ref } from "vue";
 import * as Db from "../db";
+
+import { XMarkIcon } from "@heroicons/vue/20/solid";
 
 type Item = {
   isGroup: false;
@@ -454,6 +501,28 @@ type Group = {
   opened: boolean;
   isEditing: boolean;
   items: (Item | Group)[];
+};
+
+const isEqual = (lhs: unknown, rhs: unknown) => {
+  if (lhs === null || typeof lhs !== "object") return lhs === rhs;
+  if (Array.isArray(lhs)) {
+    if (!Array.isArray(rhs) || lhs.length !== rhs.length) return false;
+    for (let i = 0; i < lhs.length; ++i) {
+      if (!isEqual(lhs[i], rhs[i])) return false;
+    }
+  } else {
+    if (rhs === null || typeof rhs !== "object") return false;
+    const lhsEntries = Object.entries(lhs);
+    const rhsEntries = Object.entries(rhs);
+    if (lhsEntries.length !== rhsEntries.length) return false;
+    lhsEntries.sort((a, b) => a[0].localeCompare(b[0]));
+    rhsEntries.sort((a, b) => a[0].localeCompare(b[0]));
+    for (let i = 0; i < lhsEntries.length; ++i) {
+      if (lhsEntries[i][0] !== rhsEntries[i][0]) return false;
+      if (!isEqual(lhsEntries[i][1], rhsEntries[i][1])) return false;
+    }
+  }
+  return true;
 };
 
 const clone = (value: unknown) => {
@@ -510,14 +579,23 @@ type DeleteItemMessage = {
   path: string[];
 };
 
+type ImportJsonMessage = {
+  type: "importJson";
+};
+
 type Message =
   | AddItemMessage
   | OverwriteItemMessage
   | RenameItemMessage
   | AddGroupMessage
-  | DeleteItemMessage;
+  | DeleteItemMessage
+  | ImportJsonMessage;
 
 export default defineComponent({
+  components: {
+    XMarkIcon,
+  },
+
   props: {
     storeName: {
       type: String,
@@ -579,6 +657,9 @@ export default defineComponent({
           a.name3.localeCompare(b.name3, undefined, { numeric: true })
       );
 
+      data.value = [];
+      selectedValue.value = false;
+
       const dataMap = new Map<string, Item | Group>();
       const dataItems = new Map<string, (Item | Group)[]>();
       dataItems.set(JSON.stringify([]), data.value);
@@ -592,7 +673,7 @@ export default defineComponent({
             "",
           ];
           const depth = path.findIndex((name) => name === "");
-          path.splice(depth);
+          path.length = depth;
           const pathStr = JSON.stringify(path);
           const parent = path.slice(0, -1);
           const parentStr = JSON.stringify(parent);
@@ -655,7 +736,8 @@ export default defineComponent({
       if (errorOccured.value) return;
 
       const message = event.data;
-      const pathStr = JSON.stringify(message.path);
+      const pathStr =
+        message.type === "importJson" ? "" : JSON.stringify(message.path);
 
       if (message.type === "addItem") {
         // add item
@@ -713,6 +795,9 @@ export default defineComponent({
           return;
         }
         await deleteItem(false);
+      } else if (message.type === "importJson") {
+        // import JSON
+        await loadData();
       }
     };
 
@@ -997,6 +1082,7 @@ export default defineComponent({
 
     const cancelRename = async (item: Item | Group) => {
       item.isEditing = false;
+      isEditing.value = false;
       editingName.value = "";
       if (item.path[item.path.length - 1] === "") {
         selectedValue.value = item.pathStr;
@@ -1069,6 +1155,178 @@ export default defineComponent({
       }
     };
 
+    const importError = ref("");
+    const importJsonInput = ref<HTMLInputElement | null>(null);
+    const exportJsonButton = ref<HTMLAnchorElement | null>(null);
+
+    type JsonItem = {
+      path: string[];
+      isGroup: boolean;
+      value?: unknown;
+    };
+
+    const checkJson = (array: JsonItem[]) => {
+      if (!Array.isArray(array)) return false;
+
+      const map = new Map<string, boolean>();
+      map.set(JSON.stringify([]), true);
+
+      for (const item of array) {
+        if (
+          typeof item.isGroup !== "boolean" ||
+          !Array.isArray(item.path) ||
+          item.path.some((x) => typeof x !== "string") ||
+          item.path.length > (item.isGroup ? 3 : 4)
+        ) {
+          return false;
+        }
+
+        item.path = item.path.map((x) => x.trim());
+
+        if (
+          item.path.some((x) => x === "") ||
+          !map.get(JSON.stringify(item.path.slice(0, -1))) ||
+          map.has(JSON.stringify(item.path))
+        ) {
+          return false;
+        }
+
+        map.set(JSON.stringify(item.path), item.isGroup);
+      }
+
+      return true;
+    };
+
+    const getItemsToAdd = async (array: JsonItem[]) => {
+      const masterData = await Db.getArray(props.storeName);
+      const masterMap = new Map<string, Db.DbItem | Db.DbGroup>();
+      for (const item of masterData) {
+        const path = [item.name0, item.name1, item.name2, item.name3, ""];
+        path.length = path.findIndex((x) => x === "");
+        masterMap.set(JSON.stringify(path), item);
+      }
+
+      const ret: (Db.DbItem | Db.DbGroup)[] = [];
+
+      for (const item of array) {
+        const depth = item.path.length;
+        const name = item.path[depth - 1];
+        let pathStr = JSON.stringify(item.path);
+
+        if (item.isGroup) {
+          const master = masterMap.get(pathStr);
+          if (master && master.isGroup === 0) return name;
+          if (!master) {
+            ret.push({
+              name0: item.path[0],
+              name1: item.path[1] ?? "",
+              name2: item.path[2] ?? "",
+              name3: item.path[3] ?? "",
+              isGroup: 1,
+            });
+          }
+        } else {
+          let i = 2;
+          let master = masterMap.get(pathStr);
+          while (
+            master &&
+            (master.isGroup === 1 || !isEqual(master.value, item.value))
+          ) {
+            item.path[depth - 1] = `${name} (${i++})`;
+            pathStr = JSON.stringify(item.path);
+            master = masterMap.get(pathStr);
+          }
+          if (!master) {
+            ret.push({
+              name0: item.path[0],
+              name1: item.path[1] ?? "",
+              name2: item.path[2] ?? "",
+              name3: item.path[3] ?? "",
+              isGroup: 0,
+              value: item.value,
+            });
+          }
+        }
+      }
+
+      return ret;
+    };
+
+    const importJson = async () => {
+      if (!importJsonInput.value) return;
+
+      const file = importJsonInput.value.files?.[0];
+      if (!file) return;
+
+      importError.value = "";
+      importJsonInput.value.value = "";
+
+      const text = await file.text();
+      let obj: { version: number; name: string; data: JsonItem[] };
+      try {
+        obj = JSON.parse(text);
+      } catch (e) {
+        importError.value = "Parse error (invalid JSON)";
+        return;
+      }
+
+      if (obj.version !== 2) {
+        importError.value = "Version mismatch";
+        return;
+      }
+
+      if (obj.name !== props.storeName) {
+        importError.value = "Data type mismatch";
+        return;
+      }
+
+      if (!checkJson(obj.data)) {
+        importError.value = "Invalid data";
+        return;
+      }
+
+      const itemsToAdd = await getItemsToAdd(obj.data);
+      if (typeof itemsToAdd === "string") {
+        importError.value = `Cannot create group "${itemsToAdd}" because the item already exists`;
+        return;
+      }
+
+      errorOccured.value ||= !(await Db.bulkAdd(props.storeName, itemsToAdd));
+      channel.postMessage({ type: "importJson" });
+      await loadData();
+    };
+
+    const appendRecursive = (item: Item | Group, array: JsonItem[]) => {
+      array.push({
+        path: item.path,
+        isGroup: item.isGroup,
+        value: item.isGroup ? undefined : item.value,
+      });
+      if (item.isGroup) {
+        for (const child of item.items) {
+          appendRecursive(child, array);
+        }
+      }
+    };
+
+    const exportJson = () => {
+      if (errorOccured.value || isEditing.value || !exportJsonButton.value) {
+        return;
+      }
+
+      const array: JsonItem[] = [];
+      for (const item of data.value) {
+        appendRecursive(item, array);
+      }
+
+      const obj = { version: 2, name: props.storeName, data: array };
+      const jsonStr = JSON.stringify(obj, undefined, 2);
+
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      exportJsonButton.value.href = url;
+    };
+
     return {
       data,
       selectedValue,
@@ -1088,6 +1346,11 @@ export default defineComponent({
       cancelRename,
       addGroup,
       deleteItem,
+      importError,
+      importJsonInput,
+      exportJsonButton,
+      importJson,
+      exportJson,
     };
   },
 });

@@ -170,7 +170,9 @@ impl GameManager {
                     .split(&['-', '|'][..])
                     .map(decode_action)
                     .collect::<Vec<_>>();
-                action_tree.add_line(&line).unwrap();
+                if action_tree.add_line(&line).is_err() {
+                    return Some("Failed to add line (loaded broken tree?)".to_string());
+                }
             }
         }
 
@@ -180,7 +182,9 @@ impl GameManager {
                     .split(&['-', '|'][..])
                     .map(decode_action)
                     .collect::<Vec<_>>();
-                action_tree.remove_line(&line).unwrap();
+                if action_tree.remove_line(&line).is_err() {
+                    return Some("Failed to remove line (loaded broken tree?)".to_string());
+                }
             }
         }
 

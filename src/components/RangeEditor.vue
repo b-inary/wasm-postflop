@@ -47,12 +47,12 @@
       </table>
 
       <div class="mt-5">
-        <div class="flex items-center">
+        <div class="flex">
           <input
             v-model="rangeText"
             type="text"
             :class="
-              'w-[27rem] px-2 py-1 rounded-lg text-sm ' +
+              'flex-grow px-2 py-1 rounded-lg text-sm ' +
               (rangeTextError ? 'input-error' : '')
             "
             @focus="($event.target as HTMLInputElement).select()"
@@ -68,6 +68,40 @@
           Error: {{ rangeTextError }}
         </div>
       </div>
+
+      <div class="flex mt-3.5 items-center">
+        <div>
+          Weight:
+          <input
+            v-model="weight"
+            type="range"
+            class="ml-3 w-40 align-middle"
+            min="0"
+            max="100"
+            step="5"
+            @change="onWeightChange"
+          />
+          <input
+            v-model="weight"
+            type="number"
+            :class="
+              'w-20 ml-4 px-2 py-1 rounded-lg text-sm text-center ' +
+              (weight < 0 || weight > 100 ? 'input-error' : '')
+            "
+            min="0"
+            max="100"
+            step="5"
+            @change="onWeightChange"
+          />
+          %
+        </div>
+
+        <span class="inline-block ml-auto">
+          {{ numCombos.toFixed(1) }} combos ({{
+            ((numCombos * 100) / ((52 * 51) / 2)).toFixed(1)
+          }}%)
+        </span>
+      </div>
     </div>
 
     <DbItemPicker
@@ -78,38 +112,6 @@
       :allow-save="rangeText !== '' && rangeTextError === ''"
       @load-item="loadRange"
     />
-  </div>
-
-  <div class="mt-3">
-    Weight:
-    <input
-      v-model="weight"
-      type="range"
-      class="ml-3 w-40 align-middle"
-      min="0"
-      max="100"
-      step="5"
-      @change="onWeightChange"
-    />
-    <input
-      v-model="weight"
-      type="number"
-      :class="
-        'w-20 ml-4 px-2 py-1 rounded-lg text-sm text-center ' +
-        (weight < 0 || weight > 100 ? 'input-error' : '')
-      "
-      min="0"
-      max="100"
-      step="5"
-      @change="onWeightChange"
-    />
-    %
-
-    <span class="inline-block ml-8">
-      {{ numCombos.toFixed(1) }} combos ({{
-        ((numCombos * 100) / ((52 * 51) / 2)).toFixed(1)
-      }}%)
-    </span>
   </div>
 </template>
 
@@ -255,7 +257,7 @@ export default defineComponent({
     };
 
     const loadRange = (rangeStr: unknown) => {
-      rangeText.value = rangeStr as string;
+      rangeText.value = String(rangeStr);
       onRangeTextChange();
     };
 

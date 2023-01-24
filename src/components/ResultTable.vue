@@ -483,7 +483,7 @@ export default defineComponent({
     },
     graphType: {
       type: String as () => (typeof contentGraphsList)[number],
-      default: "equity",
+      default: "eq",
     },
     chanceType: {
       type: String as () => "turn" | "river",

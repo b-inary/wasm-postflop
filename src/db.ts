@@ -267,3 +267,18 @@ export const deleteItem = async (store: string, item: DbItem | DbGroup) => {
     return false;
   }
 };
+
+export const bulkAdd = async (store: string, items: (DbItem | DbGroup)[]) => {
+  try {
+    const table = db.table(store);
+
+    return await db.transaction("rw", table, async () => {
+      // insert
+      await table.bulkAdd(items);
+
+      return true;
+    });
+  } catch {
+    return false;
+  }
+};

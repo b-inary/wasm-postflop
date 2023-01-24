@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct TreeManager {
     tree: ActionTree,
+    is_error: bool,
 }
 
 #[inline]
@@ -151,7 +152,12 @@ impl TreeManager {
                     .split(&['-', '|'][..])
                     .map(decode_action)
                     .collect::<Vec<_>>();
-                tree.add_line(&line).unwrap();
+                if tree.add_line(&line).is_err() {
+                    return Self {
+                        tree,
+                        is_error: true,
+                    };
+                }
             }
         }
 
@@ -161,11 +167,23 @@ impl TreeManager {
                     .split(&['-', '|'][..])
                     .map(decode_action)
                     .collect::<Vec<_>>();
-                tree.remove_line(&line).unwrap();
+                if tree.remove_line(&line).is_err() {
+                    return Self {
+                        tree,
+                        is_error: true,
+                    };
+                }
             }
         }
 
-        Self { tree }
+        Self {
+            tree,
+            is_error: false,
+        }
+    }
+
+    pub fn is_error(&self) -> bool {
+        self.is_error
     }
 
     pub fn added_lines(&self) -> String {

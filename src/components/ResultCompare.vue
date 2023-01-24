@@ -183,8 +183,7 @@ export default defineComponent({
         for (let j = 0; j < n; ++j) {
           const weight = results.weights[i][j];
           const normalizer = results.normalizer[i][j];
-          if (weight === 0 || normalizer === 0) continue;
-          sum += weight;
+          sum += normalizer && weight;
         }
         ret.push(sum);
       }

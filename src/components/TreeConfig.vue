@@ -665,7 +665,7 @@
 
     <div
       v-if="addedLinesArray.length > 0 || removedLinesArray.length > 0"
-      class="mt-6"
+      class="mt-5"
     >
       <div v-if="addedLinesArray.length > 0" class="flex">
         <div class="font-semibold underline w-[7.75rem]">
@@ -716,7 +716,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { useConfigStore } from "../store";
-import { MAX_AMOUNT, readableLineString } from "../utils";
+import { MAX_AMOUNT, sanitizeBetString, readableLineString } from "../utils";
 
 import DbItemPicker from "./DbItemPicker.vue";
 import TreeEditor from "./TreeEditor.vue";
@@ -964,31 +964,44 @@ export default defineComponent({
 
     const loadConfig = (value: unknown) => {
       const configValue = value as ConfigValue;
-      config.startingPot = configValue.startingPot;
-      config.effectiveStack = configValue.effectiveStack;
-      config.rakePercent = configValue.rakePercent;
-      config.rakeCap = configValue.rakeCap;
+      config.startingPot = Number(configValue.startingPot);
+      config.effectiveStack = Number(configValue.effectiveStack);
+      config.rakePercent = Number(configValue.rakePercent);
+      config.rakeCap = Number(configValue.rakeCap);
       config.donkOption = Boolean(configValue.donkOption);
-      config.oopFlopBet = configValue.oopFlopBet;
-      config.oopFlopRaise = configValue.oopFlopRaise;
-      config.oopTurnBet = configValue.oopTurnBet;
-      config.oopTurnRaise = configValue.oopTurnRaise;
-      config.oopTurnDonk = configValue.oopTurnDonk;
-      config.oopRiverBet = configValue.oopRiverBet;
-      config.oopRiverRaise = configValue.oopRiverRaise;
-      config.oopRiverDonk = configValue.oopRiverDonk;
-      config.ipFlopBet = configValue.ipFlopBet;
-      config.ipFlopRaise = configValue.ipFlopRaise;
-      config.ipTurnBet = configValue.ipTurnBet;
-      config.ipTurnRaise = configValue.ipTurnRaise;
-      config.ipRiverBet = configValue.ipRiverBet;
-      config.ipRiverRaise = configValue.ipRiverRaise;
-      config.addAllInThreshold = configValue.addAllInThreshold;
-      config.forceAllInThreshold = configValue.forceAllInThreshold;
-      config.mergingThreshold = configValue.mergingThreshold;
-      config.expectedBoardLength = configValue.expectedBoardLength;
-      config.addedLines = configValue.addedLines;
-      config.removedLines = configValue.removedLines;
+      config.addAllInThreshold = Number(configValue.addAllInThreshold);
+      config.forceAllInThreshold = Number(configValue.forceAllInThreshold);
+      config.mergingThreshold = Number(configValue.mergingThreshold);
+      config.expectedBoardLength = Number(configValue.expectedBoardLength);
+      config.addedLines = String(configValue.addedLines);
+      config.removedLines = String(configValue.removedLines);
+
+      if (![0, 3, 4, 5].includes(config.expectedBoardLength)) {
+        config.expectedBoardLength = 0;
+      }
+
+      const betMembers = [
+        "oopFlopBet",
+        "oopFlopRaise",
+        "oopTurnBet",
+        "oopTurnRaise",
+        "oopTurnDonk",
+        "oopRiverBet",
+        "oopRiverRaise",
+        "oopRiverDonk",
+        "ipFlopBet",
+        "ipFlopRaise",
+        "ipTurnBet",
+        "ipTurnRaise",
+        "ipRiverBet",
+        "ipRiverRaise",
+      ] as const;
+
+      for (const member of betMembers) {
+        const str = String(configValue[member]);
+        const sanitized = sanitizeBetString(str, member.endsWith("Raise"));
+        config[member] = sanitized.valid ? sanitized.s : str;
+      }
     };
 
     const startEdit = () => {
