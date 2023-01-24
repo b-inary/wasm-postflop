@@ -22,7 +22,7 @@
     "chart.js": "^4.2.0",
     "comlink": "^4.3.1",
     "detect-browser": "^5.3.0",
-    "dexie": "^3.2.2",
+    "dexie": "^3.2.3",
     "pinia": "^2.0.29",
     "vue": "^3.2.45",
     "vue-chartjs": "^5.2.0",
