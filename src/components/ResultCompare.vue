@@ -23,6 +23,7 @@
         <Adaptive
           :value="combos[0]"
           :class="{
+            'w-14': true,
             'font-semibold': combos[0] && combos[0] >= (1 - EPS) * combos[1],
           }"
         />
@@ -30,6 +31,8 @@
         <Adaptive
           :value="combos[1]"
           :class="{
+            'w-14': true,
+            'text-right': true,
             'font-semibold': combos[1] && (1 - EPS) * combos[0] <= combos[1],
           }"
         />
@@ -42,6 +45,7 @@
         <Percentage
           :value="equity[0]"
           :class="{
+            'w-14': true,
             'font-semibold':
               !isNaN(equity[0]) && equity[0] >= (1 - EPS) * equity[1],
           }"
@@ -50,6 +54,8 @@
         <Percentage
           :value="equity[1]"
           :class="{
+            'w-14': true,
+            'text-right': true,
             'font-semibold':
               !isNaN(equity[1]) && (1 - EPS) * equity[0] <= equity[1],
           }"
@@ -64,6 +70,7 @@
           :value="ev[0]"
           :digits="evDigits"
           :class="{
+            'w-14': true,
             'font-semibold': !isNaN(ev[0]) && ev[0] >= (1 - EPS) * ev[1],
           }"
         />
@@ -72,6 +79,8 @@
           :value="ev[1]"
           :digits="evDigits"
           :class="{
+            'w-14': true,
+            'text-right': true,
             'font-semibold': !isNaN(ev[1]) && (1 - EPS) * ev[0] <= ev[1],
           }"
         />
@@ -84,6 +93,7 @@
         <Percentage
           :value="eqr[0]"
           :class="{
+            'w-14': true,
             'font-semibold': !isNaN(eqr[0]) && eqr[0] >= (1 - EPS) * eqr[1],
           }"
         />
@@ -91,6 +101,8 @@
         <Percentage
           :value="eqr[1]"
           :class="{
+            'w-14': true,
+            'text-right': true,
             'font-semibold': !isNaN(eqr[1]) && (1 - EPS) * eqr[0] <= eqr[1],
           }"
         />

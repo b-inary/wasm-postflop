@@ -45,15 +45,15 @@
             <ul class="pl-6 list-disc">
               <li class="mt-1">
                 32-bit FP (floating-point): This is recommended if the memory
-                usage is below the limit (= 3.9GB). The significant figures are
-                about 7 digits, and the calculation speed is fast.
+                usage is below the limit (= 3.9GB). It has about 7 significant
+                digits and better performance.
               </li>
               <li class="mt-1">
-                16-bit integer: This setting may help avoid the memory limit
-                even when the 32-bit FP mode is not usable. Since the
-                significant figures are about 4 digits, it is not suitable for
-                satisfying a target exploitability below 0.1%. The calculation
-                speed is also slower than the 32-bit FP mode.
+                16-bit integer: This setting can help to avoid the memory limit
+                if the 32-bit FP mode is not usable. Since the significant
+                digits are about 4 digits, it is not suitable for satisfying an
+                exploitability target below 0.1%. Performance is also worse than
+                in 32-bit FP mode.
               </li>
             </ul>
           </div>
@@ -61,22 +61,14 @@
       </Tippy>
     </div>
     <div class="mt-1 ml-2">
-      <label
-        :class="
-          memoryUsage > maxMemoryUsage
-            ? 'opacity-60'
-            : !store.hasSolverRun
-            ? 'cursor-pointer'
-            : ''
-        "
-      >
+      <label :class="{ 'cursor-pointer': !store.hasSolverRun }">
         <input
           v-model="isCompressionEnabled"
-          class="mr-2 cursor-pointer disabled:opacity-40 disabled:cursor-default"
+          class="mr-2 cursor-pointer disabled:cursor-default"
           type="radio"
           name="compression"
           :value="false"
-          :disabled="store.hasSolverRun || memoryUsage > maxMemoryUsage"
+          :disabled="store.hasSolverRun"
         />
         <span class="inline-block w-[6.75rem] ml-1">32-bit FP:</span>
         needs
@@ -90,24 +82,14 @@
       </label>
     </div>
     <div class="ml-2">
-      <label
-        :class="
-          memoryUsageCompressed > maxMemoryUsage
-            ? 'opacity-60'
-            : !store.hasSolverRun
-            ? 'cursor-pointer'
-            : ''
-        "
-      >
+      <label :class="{ 'cursor-pointer': !store.hasSolverRun }">
         <input
           v-model="isCompressionEnabled"
-          class="mr-2 cursor-pointer disabled:opacity-40 disabled:cursor-default"
+          class="mr-2 cursor-pointer disabled:cursor-default"
           type="radio"
           name="compression"
           :value="true"
-          :disabled="
-            store.hasSolverRun || memoryUsageCompressed > maxMemoryUsage
-          "
+          :disabled="store.hasSolverRun"
         />
         <span class="inline-block w-[6.75rem] ml-1">16-bit integer:</span>
         needs
@@ -139,23 +121,23 @@
           <div class="px-1 py-0.5 text-justify">
             <div>
               Specifies the acceptable distance to the Nash equilibrium. A lower
-              value produces more accurate results but also requires more
+              value gives more accurate results, but also requires more
               computation time.
             </div>
             <div class="mt-3">
               <span class="underline">A more detailed description:</span>
-              If a Nash equilibrium solution is obtained, the strategies of both
-              players become MESs (Maximally Exploitative Strategies). Using
-              this property, we define the distance to the Nash equilibrium of
-              the obtained strategy as follows:
+              When a Nash equilibrium solution is obtained, the strategies of
+              both players become MESs (Maximally Exploitative Strategies) to
+              each other. Using this property, we define the distance to the
+              Nash equilibrium of the obtained strategy as follows:
             </div>
             <div class="my-1 text-center">
               Distance = (Opponent's MES EV) - (Opponent's obtained EV).
             </div>
             <div>
               This distance is always non-negative and is zero if and only if
-              the obtained strategy is a part of a certain Nash equilibrium. The
-              exploitability is defined as the average distance of both players.
+              the obtained strategy is a part of a particular Nash equilibrium.
+              Exploitability is defined as the average distance of both players.
             </div>
           </div>
         </template>
@@ -198,7 +180,7 @@
         class="button-base button-blue"
         :disabled="
           store.hasSolverRun ||
-          memoryUsageCompressed > maxMemoryUsage ||
+          memoryUsageSelected > maxMemoryUsage ||
           targetExploitability <= 0 ||
           maxIterations < 0 ||
           maxIterations % 1 !== 0 ||
@@ -429,6 +411,14 @@ export default defineComponent({
     let startTime = 0;
     let exploitabilityUpdated = false;
 
+    const memoryUsageSelected = computed(() => {
+      if (isCompressionEnabled.value) {
+        return memoryUsageCompressed.value;
+      } else {
+        return memoryUsage.value;
+      }
+    });
+
     const iterationText = computed(() => {
       if (currentIteration.value === -1) {
         return "Allocating memory...";
@@ -639,6 +629,7 @@ export default defineComponent({
       isCompressionEnabled,
       terminateFlag,
       pauseFlag,
+      memoryUsageSelected,
       iterationText,
       exploitabilityText,
       timeText,

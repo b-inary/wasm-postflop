@@ -168,17 +168,44 @@ export const sanitizeBetString = (
           sanitized += `${float}x`;
         }
       }
-    } else if (e.endsWith("c")) {
+    } else if (e.includes("c")) {
       // Additive
-      const float = parseFloat(e.slice(0, -1));
-      if (Number.isNaN(float)) {
+      const split = e.split("c");
+      if (split.length !== 2) {
         return { s: `Invalid additive size: ${e}`, valid: false };
-      } else if (float % 1 !== 0) {
+      }
+      const float1 = parseFloat(split[0]);
+      if (Number.isNaN(float1)) {
+        return { s: `Invalid additive size: ${e}`, valid: false };
+      } else if (float1 % 1 !== 0) {
         return { s: `Addition size must be an integer: ${e}`, valid: false };
-      } else if (float > MAX_AMOUNT) {
+      } else if (float1 > MAX_AMOUNT) {
         return { s: `Addition size too large: ${e}`, valid: false };
+      }
+      if (split[1] === "") {
+        sanitized += `${float1}c`;
       } else {
-        sanitized += `${float}c`;
+        if (!split[1].endsWith("r")) {
+          return { s: `Invalid additive size: ${e}`, valid: false };
+        }
+        if (!is_raise) {
+          return {
+            s: `Addition with raise cap is not allowed: ${e}`,
+            valid: false,
+          };
+        }
+        const float2 = parseFloat(split[1].slice(0, -1));
+        if (Number.isNaN(float2)) {
+          return { s: `Invalid additive size: ${e}`, valid: false };
+        } else if (float2 % 1 !== 0 || float2 === 0) {
+          return {
+            s: `Raise cap must be a positive integer: ${e}`,
+            valid: false,
+          };
+        } else if (float2 > 100) {
+          return { s: `Raise cap too large: ${e}`, valid: false };
+        }
+        sanitized += `${float1}c${float2}r`;
       }
     } else if (e.includes("e")) {
       // Geometric
@@ -225,7 +252,7 @@ export const convertBetString = (s: string): string => {
   return s
     .split(",")
     .map((e) => e.trim())
-    .map((e) => ("acex".includes(e[e.length - 1]) ? e : e + "%"))
+    .map((e) => ("acerx".includes(e[e.length - 1]) ? e : e + "%"))
     .join(",");
 };
 

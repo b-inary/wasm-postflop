@@ -89,6 +89,14 @@ export const useStore = defineStore("app", {
   state: () => ({
     navView: "solver" as NavView,
     sideView: "about" as SideView,
+    headers: {
+      about: ["Welcome to WASM Postflop!"],
+      "oop-range": ["OOP Range"],
+      "ip-range": ["IP Range"],
+      board: ["Board"],
+      "tree-config": ["Tree Configuration"],
+      "run-solver": ["Run Solver"],
+    },
     isSolverRunning: false,
     isSolverPaused: false,
     isSolverFinished: false,

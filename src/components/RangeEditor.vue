@@ -52,19 +52,19 @@
             v-model="rangeText"
             type="text"
             :class="
-              'flex-grow px-2 py-1 rounded-lg text-sm ' +
+              'flex-grow mr-6 px-2 py-1 rounded-lg text-sm ' +
               (rangeTextError ? 'input-error' : '')
             "
             @focus="($event.target as HTMLInputElement).select()"
             @change="onRangeTextChange"
           />
 
-          <button class="ml-6 button-base button-blue" @click="clearRange">
+          <button class="button-base button-blue" @click="clearRange">
             Clear
           </button>
         </div>
 
-        <div v-if="rangeTextError" class="mt-1 text-red-600">
+        <div v-if="rangeTextError" class="mt-1 text-red-500">
           Error: {{ rangeTextError }}
         </div>
       </div>
@@ -104,14 +104,15 @@
       </div>
     </div>
 
-    <DbItemPicker
-      class="ml-6"
-      store-name="ranges"
-      :index="player"
-      :value="rangeText"
-      :allow-save="rangeText !== '' && rangeTextError === ''"
-      @load-item="loadRange"
-    />
+    <div class="flex-grow max-w-[18rem] ml-6">
+      <DbItemPicker
+        store-name="ranges"
+        :index="player"
+        :value="rangeText"
+        :allow-save="rangeText !== '' && rangeTextError === ''"
+        @load-item="loadRange"
+      />
+    </div>
   </div>
 </template>
 

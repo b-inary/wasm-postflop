@@ -25,7 +25,7 @@
       config.expectedBoardLength > 0 &&
       config.board.length !== config.expectedBoardLength
     "
-    class="mt-5 font-semibold text-orange-500"
+    class="mt-5 text-orange-500 font-semibold"
   >
     <span class="underline">Warning:</span>
     The edited tree assumes a {{ config.expectedBoardLength }}-card board.
@@ -51,7 +51,9 @@ export default defineComponent({
         config.board = config.board.filter((card) => card !== cardId);
       } else if (config.board.length < 5) {
         config.board.push(cardId);
-        config.board.sort((a, b) => b - a);
+        if (config.board.length <= 3) {
+          config.board.sort((a, b) => b - a);
+        }
       }
     };
 

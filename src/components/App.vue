@@ -81,17 +81,7 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
-    const header = computed(
-      () =>
-        ({
-          about: "Welcome to WASM Postflop!",
-          "oop-range": "OOP Range",
-          "ip-range": "IP Range",
-          board: "Board",
-          "tree-config": "Tree Configuration",
-          "run-solver": "Run Solver",
-        }[store.sideView])
-    );
+    const header = computed(() => store.headers[store.sideView].join(" > "));
 
     const clientHeight = ref(0);
 

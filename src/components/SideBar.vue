@@ -25,9 +25,11 @@
       Board
       <span class="flex mt-1 justify-center font-semibold">
         <span
-          v-for="item in boardTexts"
-          :key="item.rank + item.suit"
-          :class="'inline-block mx-0.5 ' + item.colorClass"
+          v-for="(item, i) in boardTexts"
+          :key="i"
+          :class="
+            'inline-block ' + (i === 3 ? 'mx-1 ' : 'mx-0.5 ') + item.colorClass
+          "
         >
           {{ item.rank + item.suit }}
         </span>

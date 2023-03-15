@@ -136,27 +136,33 @@
                       <li class="mt-1">
                         A number representing a percentage of the pot (e.g.,
                         "50"). For raises, the size is calculated by first
-                        calling and then combining a betting action of the
-                        specified percentage. For example, if the pot before the
-                        opponent's bet is 100 and the opponent bets 75, a raise
-                        of 50% would result in a bet size of 75 + (100 + 75 +
-                        75) * 50% = 200.
+                        calling and then combining a bet of the specified
+                        percentage. For example, if the pot is 100 before the
+                        bet, and the opponent bets 75, a raise of 50% would
+                        result in a bet of 75 + (100 + 75 + 75) * 50% = 200.
                       </li>
                       <li class="mt-1">
-                        Multiple of the previous bet size (e.g., "2.5x"). Only
+                        A multiple of the previous bet size (e.g., "2.5x"). Only
                         valid for raises.
                       </li>
                       <li class="mt-1">All-in (e.g., "a").</li>
-                      <li class="mt-1">Constant addition (e.g., "100c").</li>
                       <li class="mt-1">
-                        Geometric size, i.e., divide the remaining stack into a
-                        specified number of equal percentage bets (e.g., "3e").
-                        For example, if the current pot is 100 and the effective
-                        stack is 400, "2e" would result in a bet size of 100. If
-                        the number before "e" is omitted, the number of
-                        remaining streets is used (flop=3, turn=2, river=1). You
-                        can also specify a maximum percentage limit by adding a
-                        number after "e" (e.g., "2e200").
+                        Constant addition (e.g., "100c"). For raises, you can
+                        also specify a cap on the number of raises (e.g.,
+                        "20c3r").
+                      </li>
+                      <li class="mt-1">
+                        Geometric size, i.e., dividing the remaining stack into
+                        a specified number of equal percentage bets (e.g.,
+                        "3e"). For example, if the current pot is 100 and the
+                        effective stack is 400, "2e" would result in a bet of
+                        100. If the number before the "e" is omitted, the number
+                        of remaining streets is used (flop=3, turn=2, river=1).
+                        For raises, the number of previous raises is subtracted
+                        from the specified number. For example, "3e" will change
+                        to "2e" on re-raises. You can also specify a maximum
+                        percentage limit by adding a number after the "e" (e.g.,
+                        "2e200").
                       </li>
                     </ul>
                   </div>
@@ -484,8 +490,8 @@
                   <QuestionMarkCircleIcon class="w-5 h-5 text-gray-600" />
                   <template #content>
                     <div class="px-1 py-0.5 text-justify">
-                      Add all-in action at all spots such that the ratio of the
-                      maximum possible bet size to the pot is below this
+                      Add all-in action to all spots where the ratio of the
+                      maximum possible betting size to the pot is less than this
                       threshold.
                     </div>
                   </template>
@@ -519,20 +525,21 @@
                   <template #content>
                     <div class="px-1 py-0.5 text-justify">
                       <div>
-                        Replace betting action with all-in action if the SPR
-                        (Stack/Pot Ratio) is below this threshold after the
+                        Replace the betting action with an all-in action if the
+                        SPR (Stack/Pot Ratio) is below this threshold after the
                         betting action is called by the opponent. The
                         recommended value is around 15% - 20%.
                       </div>
                       <div class="mt-3">
-                        This option is somewhat similar to the "all-in
-                        threshold" in PioSOLVER. PioSOLVER replaces the betting
-                        action with all-in if the percentage of one's pot
-                        commitment to the initial stack exceeds the threshold.
+                        This option is similar to the "all-in threshold" in
+                        PioSOLVER. PioSOLVER will replace the betting action
+                        with an all-in if the percentage of one's pot commitment
+                        to the initial stack exceeds the threshold.
                       </div>
                       <div class="mt-3">
-                        The conversion formula when ignoring decimal rounding is
-                        as follows (s = initial SPR, r = PioSOLVER's threshold):
+                        The conversion formula, when ignoring decimal rounding,
+                        is as follows (s = initial SPR, r = PioSOLVER's
+                        threshold):
                       </div>
                       <div class="mt-1 text-center">
                         Threshold = s * (1 - r) / (1 + 2 * s * r).
@@ -569,21 +576,21 @@
                   <template #content>
                     <div class="px-1 py-0.5 text-justify">
                       <div>
-                        Merge betting actions if there are any betting actions
-                        with similar sizes.
+                        Merge betting actions if there are betting actions of
+                        similar size.
                       </div>
                       <div class="mt-3">
-                        The algorithm is the same as PioSOLVER. That is, select
-                        the highest bet size (= X% of the pot) and remove all
-                        betting actions with sizes (= Y% of the pot) satisfying
-                        the following inequality:
+                        The algorithm is the same as in PioSOLVER. That is,
+                        select the largest bet size (= X% of the pot) and remove
+                        all other betting actions with sizes (= Y% of the pot)
+                        that satisfy the following inequality:
                       </div>
                       <div class="my-1 text-center">
                         (100 + X) / (100 + Y) &lt; 1.0 + Threshold.
                       </div>
                       <div>
-                        Repeat this process with the next highest bet size among
-                        the remainder.
+                        Repeat this process with the next largest bet size among
+                        the remaining bets.
                       </div>
                     </div>
                   </template>
@@ -654,13 +661,14 @@
         </div>
       </div>
 
-      <DbItemPicker
-        class="mt-1 ml-6"
-        store-name="configurations"
-        :value="dbValue"
-        :allow-save="isInputValid"
-        @load-item="loadConfig"
-      />
+      <div class="flex-grow max-w-[18rem] mt-1 ml-6">
+        <DbItemPicker
+          store-name="configurations"
+          :value="dbValue"
+          :allow-save="isInputValid"
+          @load-item="loadConfig"
+        />
+      </div>
     </div>
 
     <div
@@ -727,7 +735,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
-import { useConfigStore } from "../store";
+import { useStore, useConfigStore } from "../store";
 import {
   MAX_AMOUNT,
   sanitizeBetString,
@@ -777,6 +785,7 @@ export default defineComponent({
   },
 
   setup() {
+    const store = useStore();
     const config = useConfigStore();
 
     const isEditMode = ref(false);
@@ -1045,6 +1054,7 @@ export default defineComponent({
       if (config.expectedBoardLength === 0) {
         config.expectedBoardLength = Math.max(config.board.length, 3);
       }
+      store.headers["tree-config"].push("Tree Preview & Edit");
     };
 
     const clearEdit = () => {
@@ -1060,6 +1070,7 @@ export default defineComponent({
       if (config.addedLines === "" && config.removedLines === "") {
         config.expectedBoardLength = 0;
       }
+      store.headers["tree-config"].pop();
     };
 
     const cancelEdit = () => {
@@ -1067,6 +1078,7 @@ export default defineComponent({
       if (config.addedLines === "" && config.removedLines === "") {
         config.expectedBoardLength = 0;
       }
+      store.headers["tree-config"].pop();
     };
 
     return {
