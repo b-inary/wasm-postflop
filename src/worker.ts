@@ -113,8 +113,8 @@ const createHandler = (mod: Mod) => {
       return this.game.actions_after(append);
     },
 
-    possibleCards(append: Uint32Array) {
-      return this.game.possible_cards(append);
+    possibleCards() {
+      return this.game.possible_cards();
     },
 
     getResults() {

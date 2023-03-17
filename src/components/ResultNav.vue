@@ -475,7 +475,7 @@ export default defineComponent({
             spots.value.slice(1, riverIndex).map((spot) => spot.selectedIndex)
           );
           await handler.applyHistory(history);
-          const possibleCards = await handler.possibleCards(new Uint32Array());
+          const possibleCards = await handler.possibleCards();
           for (let i = 0; i < 52; ++i) {
             const isDead = !(possibleCards & (1n << BigInt(i)));
             riverSpot.cards[i].isDead = isDead;
@@ -839,8 +839,7 @@ export default defineComponent({
 
       let possibleCards = 0n;
       if (!(turnSpot?.type === "chance" && turnSpot.selectedIndex === -1)) {
-        const append = new Uint32Array(appendArray);
-        possibleCards = await handler.possibleCards(append);
+        possibleCards = await handler.possibleCards();
       }
 
       appendArray.push(-1);

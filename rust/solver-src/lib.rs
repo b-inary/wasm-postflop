@@ -312,17 +312,8 @@ impl GameManager {
         ret
     }
 
-    pub fn possible_cards(&mut self, append: &[usize]) -> u64 {
-        if append.is_empty() {
-            return self.game.possible_cards();
-        }
-        let history = self.game.history().to_vec();
-        for &action in append {
-            self.game.play(action);
-        }
-        let ret = self.game.possible_cards();
-        self.game.apply_history(&history);
-        ret
+    pub fn possible_cards(&self) -> u64 {
+        self.game.possible_cards()
     }
 
     pub fn get_results(&mut self) -> Box<[f64]> {

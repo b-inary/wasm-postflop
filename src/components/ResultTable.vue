@@ -969,7 +969,9 @@ export default defineComponent({
 
     const strategyBarBgSize = (row: number[]) => {
       const weight = row[INDEX_WEIGHT];
-      if (displayOptions.barWidth === "normalized") {
+      if (weight === 0) {
+        return "0% 100%";
+      } else if (displayOptions.barWidth === "normalized") {
         return `${(weight / maxWeight.value) * 100}% 100%`;
       } else if (displayOptions.barWidth === "absolute") {
         return `${weight * 100}% 100%`;
