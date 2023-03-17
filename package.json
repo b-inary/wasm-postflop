@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "wasm-postflop",
-  "version": "0.2.3",
+  "version": "0.2.6",
   "description": "Postflop solver powered by WebAssembly",
   "license": "AGPL-3.0-or-later",
   "scripts": {
