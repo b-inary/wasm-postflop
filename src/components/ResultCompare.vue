@@ -123,28 +123,28 @@ const EPS = 2e-6;
 const sky500 = "#0ea5e9";
 const lime500 = "#84cc16";
 
-const Adaptive = (props: { value: number }) => {
+const Adaptive = (props: { value: number; class: object }) => {
   const split = computed(() => toFixedAdaptive(props.value).split("."));
   if (isNaN(props.value)) return h("div", { class: "px-1" }, "-");
-  return h("div", {}, [
+  return h("div", { class: props.class }, [
     h("span", {}, split.value[0] + "."),
     h("span", { class: "text-sm" }, split.value[1]),
   ]);
 };
 
-const Percentage = (props: { value: number }) => {
+const Percentage = (props: { value: number; class: object }) => {
   const str = computed(() => toFixed1(props.value * 100));
   if (isNaN(props.value)) return h("div", { class: "px-1" }, "-");
-  return h("div", {}, [
+  return h("div", { class: props.class }, [
     h("span", {}, str.value.slice(0, -1)),
     h("span", { class: "text-sm" }, str.value.slice(-1) + "%"),
   ]);
 };
 
-const Ev = (props: { value: number; digits: number }) => {
+const Ev = (props: { value: number; digits: number; class: object }) => {
   const str = computed(() => toFixed[props.digits - 1](props.value));
   if (isNaN(props.value)) return h("div", { class: "px-1" }, "-");
-  return h("span", {}, [
+  return h("span", { class: props.class }, [
     h("span", {}, str.value.slice(0, -props.digits)),
     h("span", { class: "text-xs" }, str.value.slice(-props.digits)),
   ]);

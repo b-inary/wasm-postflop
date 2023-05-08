@@ -11,7 +11,7 @@ path = "../solver-src/lib.rs"
 
 [dependencies]
 postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features = ["custom-alloc"], default-features = false }
-wasm-bindgen = "=0.2.83"
+wasm-bindgen = "0.2.84"
 
 [profile.release]
 codegen-units = 1

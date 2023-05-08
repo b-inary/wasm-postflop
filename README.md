@@ -115,7 +115,7 @@ $ cargo install wasm-pack
 $ npm install
 
 $ # build
-$ npm run wasm # latest version of binaryen (wasm-opt) might be required
+$ npm run wasm
 $ npm run build
 
 $ # serve

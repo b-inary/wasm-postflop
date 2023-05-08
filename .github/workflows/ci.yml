@@ -12,7 +12,6 @@ jobs:
           rustup +nightly component add rust-src
           rustup target add wasm32-unknown-unknown
           cargo install wasm-pack
-          sudo apt-get install -y binaryen
       - name: Install dependencies
         run: npm ci
       - name: Build
