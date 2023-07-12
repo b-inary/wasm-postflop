@@ -51,5 +51,8 @@
     "vue-loader": "^17.2.2",
     "webpack": "^5.88.1",
     "webpack-cli": "^5.1.4"
+  },
+  "overrides": {
+    "eslint-plugin-prettier": "^5.0.0"
   }
 }
