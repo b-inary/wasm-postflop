@@ -120,24 +120,24 @@ impl TreeManager {
             rake_rate: 0.0,
             rake_cap: 0.0,
             flop_bet_sizes: [
-                BetSizeCandidates::try_from((oop_flop_bet, oop_flop_raise)).unwrap(),
-                BetSizeCandidates::try_from((ip_flop_bet, ip_flop_raise)).unwrap(),
+                BetSizeOptions::try_from((oop_flop_bet, oop_flop_raise)).unwrap(),
+                BetSizeOptions::try_from((ip_flop_bet, ip_flop_raise)).unwrap(),
             ],
             turn_bet_sizes: [
-                BetSizeCandidates::try_from((oop_turn_bet, oop_turn_raise)).unwrap(),
-                BetSizeCandidates::try_from((ip_turn_bet, ip_turn_raise)).unwrap(),
+                BetSizeOptions::try_from((oop_turn_bet, oop_turn_raise)).unwrap(),
+                BetSizeOptions::try_from((ip_turn_bet, ip_turn_raise)).unwrap(),
             ],
             river_bet_sizes: [
-                BetSizeCandidates::try_from((oop_river_bet, oop_river_raise)).unwrap(),
-                BetSizeCandidates::try_from((ip_river_bet, ip_river_raise)).unwrap(),
+                BetSizeOptions::try_from((oop_river_bet, oop_river_raise)).unwrap(),
+                BetSizeOptions::try_from((ip_river_bet, ip_river_raise)).unwrap(),
             ],
             turn_donk_sizes: match donk_option {
                 false => None,
-                true => DonkSizeCandidates::try_from(oop_turn_donk).ok(),
+                true => DonkSizeOptions::try_from(oop_turn_donk).ok(),
             },
             river_donk_sizes: match donk_option {
                 false => None,
-                true => DonkSizeCandidates::try_from(oop_river_donk).ok(),
+                true => DonkSizeOptions::try_from(oop_river_donk).ok(),
             },
             add_allin_threshold,
             force_allin_threshold,
