@@ -51,7 +51,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from "vue";
-import { ranks, suits, toFixed1, toFixedAdaptive } from "../utils";
+import { ranks, suits, cardId, toFixed1, toFixedAdaptive } from "../utils";
 import {
   ChanceReports,
   Spot,
@@ -170,7 +170,7 @@ export default defineComponent({
             if (action.amount !== "0") label += ` ${action.amount}`;
             return {
               data: Array.from({ length: 13 }, (_, rank) => {
-                const card = 4 * rank + suit;
+                const card = cardId(rank, suit);
                 if (reports.status[card] === 0) return 0;
                 const coef = isCombos ? reports.combos[playerIndex][card] : 1;
                 return coef * reports.strategy[actionIndex * 52 + card];
@@ -184,7 +184,7 @@ export default defineComponent({
         } else {
           datasets = Array.from({ length: 4 }, (_, suit) => ({
             data: Array.from({ length: 13 }, (_, rank) => {
-              const card = 4 * rank + suit;
+              const card = cardId(rank, suit);
               if (reports.status[card] === 0) return 0;
               return isCombos ? reports.combos[playerIndex][card] : 1;
             }).reverse(),

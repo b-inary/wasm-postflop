@@ -352,6 +352,7 @@ import { computed, defineComponent, reactive, ref, toRefs, watch } from "vue";
 
 import {
   ranks,
+  suitLetters,
   cardText,
   cardPairOrder,
   toFixed1,
@@ -462,11 +463,9 @@ const columnIndex = (column: Column) => {
 const yellow500 = "#eab308";
 const neutral800 = "#262626";
 
-const suits = ["c", "d", "h", "s"];
-
 const cardStr = (card: number) => {
   const rank = ranks[card >>> 2];
-  const suit = suits[card & 3];
+  const suit = suitLetters[card & 3];
   return rank + suit;
 };
 

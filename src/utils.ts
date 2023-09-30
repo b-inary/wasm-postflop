@@ -15,6 +15,10 @@ export const ranks = [
 ];
 
 export const suits = ["♣", "♦", "♥", "♠"];
+export const suitLetters = ["c", "d", "h", "s"];
+
+export const rankPat = "[AaKkQqJjTt2-9]";
+const cardRegex = new RegExp(`^(${rankPat})([cdhs])$`);
 
 const suitClasses = [
   "text-green-600",
@@ -27,8 +31,22 @@ export const cardText = (card: number) => {
   return {
     rank: ranks[card >>> 2],
     suit: suits[card & 3],
+    suitLetter: suitLetters[card & 3],
     colorClass: suitClasses[card & 3],
   };
+};
+
+export const cardId = (rank: number, suit: number) => {
+  return 4 * rank + suit;
+};
+
+export const parseCardString = (text: string) => {
+  const match = text.match(cardRegex);
+  if (!match) return null;
+
+  const rank = ranks.indexOf(match[1].toUpperCase());
+  const suit = suitLetters.indexOf(match[2]);
+  return cardId(rank, suit);
 };
 
 export const cardPairCellIndex = (card1: number, card2: number) => {

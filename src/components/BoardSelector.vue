@@ -11,9 +11,14 @@
   </div>
 
   <div class="flex mt-4 mx-1 gap-3">
-    <button class="button-base button-blue" @click="config.board = []">
-      Clear
-    </button>
+    <input
+      v-model="boardText"
+      type="text"
+      class="w-40 px-2 py-1 rounded-lg text-sm"
+      @focus="($event.target as HTMLInputElement).select()"
+      @change="onBoardTextChange"
+    />
+    <button class="button-base button-blue" @click="clearBoard">Clear</button>
     <button class="button-base button-blue" @click="generateRandomBoard">
       Random Flop
     </button>
@@ -33,8 +38,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import { useConfigStore } from "../store";
+import { cardText, parseCardString } from "../utils";
 
 import BoardSelectorCard from "./BoardSelectorCard.vue";
 
@@ -45,8 +51,9 @@ export default defineComponent({
 
   setup() {
     const config = useConfigStore();
+    const boardText = ref("");
 
-    const toggleCard = (cardId: number) => {
+    const toggleCard = (cardId: number, updateText = true) => {
       if (config.board.includes(cardId)) {
         config.board = config.board.filter((card) => card !== cardId);
       } else if (config.board.length < 5) {
@@ -55,6 +62,38 @@ export default defineComponent({
           config.board.sort((a, b) => b - a);
         }
       }
+
+      if (updateText) {
+        setBoardTextFromButtons();
+      }
+    };
+
+    const setBoardTextFromButtons = () => {
+      boardText.value = config.board
+        .map(cardText)
+        .map(({ rank, suitLetter }) => rank + suitLetter)
+        .join(", ");
+    };
+
+    const onBoardTextChange = () => {
+      config.board = [];
+
+      const cardIds = boardText.value
+        // Allow pasting in things like [Ah Kd Qc], by reformatting to Ah,Kd,Qc
+        .trim()
+        .replace(/[^A-Za-z0-9\s,]/g, "")
+        .replace(/\s+/g, ",")
+        .split(",")
+        .map(parseCardString)
+        .filter((cardId): cardId is number => cardId !== null);
+
+      new Set(cardIds).forEach((cardId) => toggleCard(cardId, false));
+      setBoardTextFromButtons();
+    };
+
+    const clearBoard = () => {
+      config.board = [];
+      setBoardTextFromButtons();
     };
 
     const generateRandomBoard = () => {
@@ -68,11 +107,15 @@ export default defineComponent({
       }
 
       config.board.sort((a, b) => b - a);
+      setBoardTextFromButtons();
     };
 
     return {
       config,
+      boardText,
       toggleCard,
+      onBoardTextChange,
+      clearBoard,
       generateRandomBoard,
     };
   },

@@ -119,14 +119,13 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { useConfigStore } from "../store";
-import { ranks } from "../utils";
+import { ranks, rankPat } from "../utils";
 import { RangeManager } from "../../pkg/range/range";
 
 import DbItemPicker from "./DbItemPicker.vue";
 
 const yellow500 = "#eab308";
 
-const rankPat = "[AaKkQqJjTt2-9]";
 const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
 const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
 const trimRegex = /\s*([-:,])\s*/g;
