@@ -47,9 +47,10 @@
 
     <div
       v-show="store.navView === 'results'"
-      style="height: calc(max(100%, 720px) - 2.5rem)"
+      class="overflow-y-auto"
+      style="height: calc(100% - 2.5rem)"
     >
-      <ResultViewer />
+      <ResultViewer style="height: calc(max(100%, 720px - 2.5rem))" />
     </div>
   </div>
 </template>

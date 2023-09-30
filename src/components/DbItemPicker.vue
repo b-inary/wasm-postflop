@@ -1272,13 +1272,13 @@ export default defineComponent({
         return;
       }
 
-      if (obj.version !== 2) {
-        importError.value = "Version mismatch";
+      if (obj.name !== props.storeName) {
+        importError.value = "Data type mismatch";
         return;
       }
 
-      if (obj.name !== props.storeName) {
-        importError.value = "Data type mismatch";
+      if (obj.version !== 2) {
+        importError.value = "Version mismatch";
         return;
       }
 

@@ -17,7 +17,14 @@
     />
     <button
       class="ml-3 button-base button-blue"
-      :disabled="isTreeBuilding || store.isSolverRunning || store.isFinalizing"
+      :disabled="
+        isTreeBuilding ||
+        store.isSolverRunning ||
+        store.isFinalizing ||
+        numThreads < 1 ||
+        numThreads > (isSafari ? 1 : 64) ||
+        numThreads % 1 !== 0
+      "
       @click="buildTree"
     >
       Build New Tree
@@ -266,7 +273,7 @@ import { detect } from "detect-browser";
 import { Tippy } from "vue-tippy";
 import { QuestionMarkCircleIcon } from "@heroicons/vue/20/solid";
 
-const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024;
+const maxMemoryUsage = 3.9 * 1024 * 1024 * 1024; // 3.9 GB
 const browser = detect();
 const isSafari = browser && (browser.name === "safari" || browser.os === "iOS");
 
@@ -449,22 +456,6 @@ export default defineComponent({
     const buildTree = async () => {
       isTreeBuilt.value = false;
 
-      if (numThreads.value < 1 || numThreads.value % 1 !== 0) {
-        treeStatus.value = "Error: Invalid number of threads";
-        return;
-      }
-
-      if (numThreads.value > 64) {
-        treeStatus.value = "Error: Too many threads";
-        return;
-      }
-
-      if (isSafari && numThreads.value > 1) {
-        treeStatus.value =
-          "Error: Multithreading is not supported on iOS and Safari";
-        return;
-      }
-
       const configError = checkConfig(config);
       if (configError !== null) {
         treeStatus.value = `Error: ${configError}`;
@@ -473,6 +464,8 @@ export default defineComponent({
 
       saveConfigTmp();
       isTreeBuilding.value = true;
+      store.isSolverPaused = false;
+      store.isSolverFinished = false;
       treeStatus.value = "Building tree...";
 
       await init(numThreads.value);
@@ -533,10 +526,6 @@ export default defineComponent({
       isTreeBuilding.value = false;
       isTreeBuilt.value = true;
       treeStatus.value = `Successfully built tree (${threadText})`;
-
-      store.isSolverRunning = false;
-      store.isSolverPaused = false;
-      store.isSolverFinished = false;
     };
 
     const runSolver = async () => {

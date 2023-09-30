@@ -1,21 +1,20 @@
 <template>
-  <div
-    v-if="!store.isSolverFinished"
-    class="flex w-full max-w-screen-xl mx-auto px-4 py-6 items-center"
-  >
-    <span
-      v-if="store.isSolverRunning || store.isFinalizing"
-      class="spinner inline-block mr-3"
-    ></span>
-    {{
-      !store.hasSolverRun
-        ? "Solver has not run."
-        : store.isSolverRunning
-        ? "Solver running..."
-        : store.isFinalizing
-        ? "Finalizing..."
-        : "Solver paused."
-    }}
+  <div v-if="!store.isSolverFinished">
+    <div class="flex w-full max-w-screen-xl mx-auto px-4 py-6 items-center">
+      <span
+        v-if="store.isSolverRunning || store.isFinalizing"
+        class="spinner inline-block mr-3"
+      ></span>
+      {{
+        !store.hasSolverRun
+          ? "Solver has not run."
+          : store.isSolverRunning
+          ? "Solver running..."
+          : store.isFinalizing
+          ? "Finalizing..."
+          : "Solver paused."
+      }}
+    </div>
   </div>
 
   <div v-else class="flex flex-col h-full">

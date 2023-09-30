@@ -98,18 +98,18 @@ export const useStore = defineStore("app", {
       "run-solver": ["Run Solver"],
     },
     isSolverRunning: false,
+    isFinalizing: false,
     isSolverPaused: false,
     isSolverFinished: false,
-    isFinalizing: false,
   }),
 
   getters: {
     hasSolverRun: (state) => {
       return (
         state.isSolverRunning ||
+        state.isFinalizing ||
         state.isSolverPaused ||
-        state.isSolverFinished ||
-        state.isFinalizing
+        state.isSolverFinished
       );
     },
   },
