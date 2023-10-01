@@ -1,6 +1,6 @@
 [package]
 name = "range"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["Wataru Inariba"]
 edition = "2021"
 license = "AGPL-3.0-or-later"

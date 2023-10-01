@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "wasm-postflop",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Postflop solver powered by WebAssembly",
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -27,7 +27,7 @@
     "vue-tippy": "^6.3.1"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "^1.5.0",
+    "@rushstack/eslint-patch": "^1.5.1",
     "@tailwindcss/forms": "^0.5.6",
     "@vue/eslint-config-prettier": "^8.0.0",
     "@vue/eslint-config-typescript": "^12.0.0",
