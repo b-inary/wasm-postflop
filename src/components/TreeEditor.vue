@@ -364,9 +364,9 @@ export default defineComponent({
       return ret;
     });
 
-    const addedLines = ref(config.addedLines);
-    const removedLines = ref(config.removedLines);
-    const invalidLines = ref("");
+    const addedLines = ref(treeManager.added_lines());
+    const removedLines = ref(treeManager.removed_lines());
+    const invalidLines = ref(treeManager.invalid_terminals());
 
     const addedLinesArray = computed(() =>
       addedLines.value === ""

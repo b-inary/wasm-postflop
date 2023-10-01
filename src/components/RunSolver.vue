@@ -265,6 +265,7 @@ import {
 import {
   MAX_AMOUNT,
   convertBetString,
+  ROOT_LINE_STRING,
   INVALID_LINE_STRING,
   readableLineString,
 } from "../utils";
@@ -368,7 +369,9 @@ const checkConfig = (
       : config.removedLines.split(",").map(readableLineString);
 
   if (
+    addedLinesArray.includes(ROOT_LINE_STRING) ||
     addedLinesArray.includes(INVALID_LINE_STRING) ||
+    removedLinesArray.includes(ROOT_LINE_STRING) ||
     removedLinesArray.includes(INVALID_LINE_STRING)
   ) {
     return "Invalid line found (loaded broken configurations?)";

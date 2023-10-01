@@ -274,54 +274,62 @@ export const convertBetString = (s: string): string => {
     .join(",");
 };
 
-const parseBetAmount = (
-  s: string,
-  index: number
-): { amount: number; indexEnd: number } => {
+const parseBetAmount = (s: string, index: number) => {
   let indexEnd = index;
   while (indexEnd < s.length && /\d/.test(s[indexEnd])) indexEnd++;
   const amount = Number(s.slice(index, indexEnd));
   return { amount, indexEnd };
 };
 
+export const ROOT_LINE_STRING = "(Root)";
 export const INVALID_LINE_STRING = "Invalid line string";
+
 export const readableLineString = (s: string): string => {
-  if (s === "(Root)") return s;
+  if (s === ROOT_LINE_STRING) return s;
 
   let ret = "";
   let index = 0;
+  let isSeparatorExpected = false;
 
   while (index < s.length) {
-    if (s[index] === "-") {
-      ret += " - ";
-      index += 1;
-    } else if (s[index] === "|") {
-      ret += ", ";
-      index += 1;
-    } else if (s[index] === "F") {
-      ret += "Fold";
-      index += 1;
-    } else if (s[index] === "X") {
-      ret += "Check";
-      index += 1;
-    } else if (s[index] === "C") {
-      ret += "Call";
-      index += 1;
-    } else if (s[index] === "B") {
-      const { amount, indexEnd } = parseBetAmount(s, index + 1);
-      ret += `Bet ${amount}`;
-      index = indexEnd;
-    } else if (s[index] === "R") {
-      const { amount, indexEnd } = parseBetAmount(s, index + 1);
-      ret += `Raise ${amount}`;
-      index = indexEnd;
-    } else if (s[index] === "A") {
-      const { amount, indexEnd } = parseBetAmount(s, index + 1);
-      ret += `All-in ${amount}`;
-      index = indexEnd;
-    } else {
+    let isOk = false;
+
+    switch (s[index]) {
+      case "-":
+      case "|": {
+        ret += s[index] === "-" ? " - " : ", ";
+        index += 1;
+        isOk = isSeparatorExpected;
+        break;
+      }
+      case "F":
+      case "X":
+      case "C": {
+        ret += { F: "Fold", X: "Check", C: "Call" }[s[index]];
+        index += 1;
+        isOk = !isSeparatorExpected;
+        break;
+      }
+      case "B":
+      case "R":
+      case "A": {
+        const { amount, indexEnd } = parseBetAmount(s, index + 1);
+        ret += { B: "Bet", R: "Raise", A: "All-in" }[s[index]] + ` ${amount}`;
+        index = indexEnd;
+        isOk = !isSeparatorExpected && amount > 0;
+        break;
+      }
+    }
+
+    if (!isOk) {
       return INVALID_LINE_STRING;
     }
+
+    isSeparatorExpected = !isSeparatorExpected;
+  }
+
+  if (!isSeparatorExpected) {
+    return INVALID_LINE_STRING;
   }
 
   return ret;
