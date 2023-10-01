@@ -1,5 +1,24 @@
 <template>
-  <p>
+  <div class="flex">
+    <div
+      class="flex pl-2.5 pr-3 py-1 text-cyan-600 bg-cyan-50 border-2 border-cyan-600 rounded-md font-semibold"
+    >
+      <InformationCircleIcon class="inline w-5 h-5 mt-[0.1875rem] mr-1.5" />
+      <div>
+        This website will no longer be updated. Please see
+        <a
+          href="https://github.com/b-inary/postflop-solver/issues/46"
+          class="link"
+          target="_blank"
+          >this GitHub issue</a
+        >
+        for more information.<br />
+        If you try to find similar tools, please beware of malicious fake sites.
+      </div>
+    </div>
+  </div>
+
+  <p class="mt-4">
     <span class="font-bold">WASM Postflop</span> is a free, open-source
     <span class="font-bold">GTO solver</span> that works on web browsers.<br />
     <span class="font-bold">WASM</span> stands for
@@ -77,29 +96,16 @@
     </li>
     <li>Mobile use is not considered</li>
   </ul>
-
-  <p class="mt-4 underline">Change log:</p>
-
-  <ul class="mt-4 ml-8 list-disc">
-    <li>
-      <span class="font-semibold">2023-01-16</span>:
-      <span class="font-semibold"
-        >We are experiencing memory leaks on Google Chrome 109</span
-      >.
-      <ul class="ml-8" style="list-style-type: circle">
-        <li>
-          We have made a tentative fix, but we recommend closing tabs
-          periodically (not just reloading).
-        </li>
-      </ul>
-    </li>
-    <li>
-      <span class="font-semibold">2022-12-25</span>: Various updates. "Results"
-      tab has been moved to the top.
-    </li>
-    <li><span class="font-semibold">2022-06-01</span>: Initial release</li>
-  </ul>
 </template>
+
+<script lang="ts">
+import { defineComponent } from "vue";
+import { InformationCircleIcon } from "@heroicons/vue/20/solid";
+
+export default defineComponent({
+  components: { InformationCircleIcon },
+});
+</script>
 
 <style scoped>
 .link {

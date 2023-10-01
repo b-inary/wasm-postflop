@@ -1,5 +1,12 @@
 # WASM Postflop
 
+> [!IMPORTANT]
+> **As of October 2023, I have started developing a poker solver as a business and have decided to suspend development of this open-source project. See [this issue] for more information.**
+
+[this issue]: https://github.com/b-inary/postflop-solver/issues/46
+
+---
+
 **WASM Postflop** is a free, open-source GTO solver for Texas hold'em poker that works on web browsers.
 
 Website: https://wasm-postflop.pages.dev/
